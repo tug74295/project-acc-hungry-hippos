@@ -41,9 +41,9 @@ Discuss what you need to develop this project. This includes background informat
 <tr>
     <td align="center">
         <a href="https://github.com/ApplebaumIan">
-            <img src="https://avatars.githubusercontent.com/u/9451941?v=4" width="100;" alt="ApplebaumIan"/>
+            <img src="https://avatars.githubusercontent.com/u/122761457?v=4" width="100;" alt="ArvindhVelrajan"/>
             <br />
-            <sub><b>Ian Tyler Applebaum</b></sub>
+            <sub><b>Arvindh Velrajan</b></sub>
         </a>
     </td>
     <td align="center">
