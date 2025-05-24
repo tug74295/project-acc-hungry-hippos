@@ -40,7 +40,7 @@ Discuss what you need to develop this project. This includes background informat
 <table>
 <tr>
     <td align="center">
-        <a href="https://github.com/ApplebaumIan">
+        <a href="https://github.com/tun67213">
             <img src="https://avatars.githubusercontent.com/u/122761457?v=4" width="100;" alt="ArvindhVelrajan"/>
             <br />
             <sub><b>Arvindh Velrajan</b></sub>
