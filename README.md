@@ -10,13 +10,13 @@
 </div>
 
 ## Table of Contents
-    1. [Keywords](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#keywords)
-    2. Project Abstract
-    3. High Level Requirement
-    4. Conceptual Design
-    5. Background
-    6. Required Resources
-    7. Collaborators
+### 1. [Keywords](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#keywords)
+### 2. [Project Abstract](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#project-abstract)
+### 3. [High Level Requirement](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#high-level-requirement)
+### 4. [Conceptual Design](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#conceptual-design)
+### 5. [Background](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#background)
+### 6. [Required Resources](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#required-resources)
+### 7. [Collaborators](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#collaborators)
 
 ## Keywords
 Section #701
