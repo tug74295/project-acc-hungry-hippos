@@ -1,7 +1,7 @@
 [![Open in Codespaces](https://classroom.github.com/assets/launch-codespace-2972f46106e565e64193e422d61a12cf1da4916b45550586e14ef0a7c637dd04.svg)](https://classroom.github.com/open-in-codespaces?assignment_repo_id=19552926)
 <div align="center">
 
-# Project Name
+# The Hungry Hippos Project
 [![Report Issue on Jira](https://img.shields.io/badge/Report%20Issues-Jira-0052CC?style=flat&logo=jira-software)](https://temple-cis-projects-in-cs.atlassian.net/jira/software/c/projects/DT/issues)
 [![Deploy Docs](https://github.com/ApplebaumIan/tu-cis-4398-docs-template/actions/workflows/deploy.yml/badge.svg)](https://github.com/ApplebaumIan/tu-cis-4398-docs-template/actions/workflows/deploy.yml)
 [![Documentation Website Link](https://img.shields.io/badge/-Documentation%20Website-brightgreen)](https://applebaumian.github.io/tu-cis-4398-docs-template/)
@@ -9,6 +9,14 @@
 
 </div>
 
+## Table of Contents
+### 1. [Keywords](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#keywords)
+### 2. [Project Abstract](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#project-abstract)
+### 3. [High Level Requirement](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#high-level-requirement)
+### 4. [Conceptual Design](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#conceptual-design)
+### 5. [Background](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#background)
+### 6. [Required Resources](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#required-resources)
+### 7. [Collaborators](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#collaborators)
 
 ## Keywords
 Section #701
@@ -16,7 +24,7 @@ Section #, as well as any words that quickly give your peers insights into the a
 
 ## Project Abstract
 
-This document proposes a novel application of a text message (SMS or Email) read-out and hands-free call interacted between an Android Smartphone and an infotainment platform (headunit) in a car environment. When a phone receives an SMS or Email, the text message is transferred from the phone to the headunit through a Bluetooth connection. On the headunit, user can control which and when the received SMS or E-mail to be read out through the in-vehicle audio system. The user may press one button on the headunit to activate the hands-free feature to call back the SMS sender.
+This project proposes the development of a web-based application that digitally recreates the classic Hungry Hungry Hippos game. The application will be publicly accessible, allowing users to interact with the game through a web browser. A key feature of this version is its compatibility with Augmentative and Alternative Communication (AAC) devices, ensuring accessibility for users with speech or motor impairments. Players will control their hippos using input from an AAC device, promoting gameplay that is inclusive of all people. The project emphasizes accessible design, real-time interactivity, and an engaging, competitive experience.
 
 ## High Level Requirement
 
@@ -40,10 +48,10 @@ Discuss what you need to develop this project. This includes background informat
 <table>
 <tr>
     <td align="center">
-        <a href="https://github.com/ApplebaumIan">
-            <img src="https://avatars.githubusercontent.com/u/9451941?v=4" width="100;" alt="ApplebaumIan"/>
+        <a href="https://github.com/tun67213">
+            <img src="https://avatars.githubusercontent.com/u/122761457?v=4" width="100;" alt="ArvindhVelrajan"/>
             <br />
-            <sub><b>Ian Tyler Applebaum</b></sub>
+            <sub><b>Arvindh Velrajan</b></sub>
         </a>
     </td>
     <td align="center">
