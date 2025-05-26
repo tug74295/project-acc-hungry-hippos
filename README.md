@@ -55,12 +55,34 @@ Discuss what you need to develop this project. This includes background informat
         </a>
     </td>
     <td align="center">
-        <a href="https://github.com/leighflagg">
-            <img src="https://avatars.githubusercontent.com/u/77810293?v=4" width="100;" alt="leighflagg"/>
+        <a href="https://github.com/MKarimF9">
+            <img src="https://www.gravatar.com/avatar/?d=mp&s=200" width="100" alt="Default profile picture" />
             <br />
-            <sub><b>Null</b></sub>
+            <sub><b>Mohammed Karim</b></sub>
         </a>
-    </td></tr>
+    </td>
+    <td align="center">
+        <a href="https://github.com/tug74295">
+            <img src="https://www.gravatar.com/avatar/?d=mp&s=200" width="100" alt="Default profile picture" />
+            <br />
+            <sub><b>Kostandin Jorgji</b></sub>
+        </a>
+    </td>
+        <td align="center">
+        <a href="https://github.com/jdoooodler">
+            <img src="https://www.gravatar.com/avatar/?d=mp&s=200" width="100" alt="Default profile picture" />
+            <br />
+            <sub><b>Jasmine Liu</b></sub>
+        </a>
+    </td>
+        <td align="center">
+        <a href="https://github.com/tun70323">
+            <img src="https://www.gravatar.com/avatar/?d=mp&s=200" width="100" alt="Default profile picture" />
+            <br />
+            <sub><b>Omais Khan</b></sub>
+        </a>
+    </td>
+</tr>
 </table>
 
 [//]: # ( readme: collaborators -end )
