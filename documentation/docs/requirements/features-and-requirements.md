@@ -7,11 +7,11 @@ sidebar_position: 4
 ## Functional Requirements
 #### AAC user interaction
 - The AAC Game Conductor must be able to select fruits from a displayed set on the game.
-- The AAC Game Conductor must be able to see which fruit is coming up next on the game.
+- The AAC Game Conductor must be able to see which fruit is coming up next in the game.
 - The AAC Game Conductor must be able to signal "GO!" via the game to initiate a round for the Hippo players.
 - The AAC Game Conductor must be able to confirm which physical fruit was eaten by a Hippo player via the game.
 - The game will automatically update and display the score on the game based on confirmed eaten fruits.
-- New fruits will appear on the game after current fruits are eaten or a round is completed.
+- New fruits will appear in the game after the current fruits are eaten or a round is completed.
 - The game will end after a set number of rounds or a time limit is reached, displaying the final score to the AAC Game Conductor.
 - The AAC Game Conductor can reset the game at any time to start a new session via the game.
 - The game will provide visual feedback for all AAC Game Conductor interactions, such as fruit selection and score updates.
@@ -24,7 +24,7 @@ sidebar_position: 4
 
 ## Nonfunctional Requirements
 
-- The game will load quickly, typically within 5 seconds.
+- The game will load quickly, typically within 2 seconds.
 - The game's animations and transitions will be smooth and without lag.
 - The game will operate reliably without unexpected crashes or errors during play.
 - The game will maintain an accurate score and game state throughout a session.
@@ -34,9 +34,9 @@ sidebar_position: 4
 - The game's overall design (visuals and sounds) will promote clear communication and engagement between the AAC Game Conductor and the Hippo players.
 
 - The game will be fully compatible and responsive on various AAC devices and their input methods (e.g., touch, eye-gaze, switches).
-- All visual elements on the game will have high contrast and be clearly legible for the AAC Game Conductor.
+- All visual elements in the game will have high contrast and be clearly legible for the AAC Game Conductor.
 - The game will be intuitive and easy for the AAC Game Conductor to understand and operate.
 
 - The game's design (e.g., clear visual signals from the Game Conductor's screen, distinct audio cues) will ensure Hippo players can easily understand their task.
-- The game setup will allow for easy physical interaction for the Hippo players to "eat" the fruits.
+- The game setup will allow for easy physical interaction so that the Hippo players can "eat" the fruits.
 
