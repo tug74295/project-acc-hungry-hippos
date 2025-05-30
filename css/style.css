@@ -85,6 +85,7 @@ h1 {
   justify-content: space-around;
   min-height: 8rem; 
   text-align: center;
+  touch-action: manipulation;
 }
 
 .aac-button:hover {
