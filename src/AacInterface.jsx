@@ -6,7 +6,7 @@ const AAC_ITEMS = [
 ];
 
 function AacInterface() {
-   /*
+  /*
   selectedFruit is used to track the currently selected fruit in the AAC.
   setSelectedFruit is a function that updates the selectedFruit state.
   */
@@ -16,7 +16,6 @@ function AacInterface() {
     // Update the selected fruit when an AAC item is clicked
     // ============ TODO: Add logic to handle item selection (Audio, Firebase, Game) ============ //
     setSelectedFruit(fruit);
-    console.log(`${fruit.name} selected!`); // For demonstration
   };
 
   return (
@@ -24,6 +23,7 @@ function AacInterface() {
       <div className="aac-device">
         <h1 className="aac-title"> AAC Device </h1>
 
+        {/* Display the selected fruit */}
         <div className="aac-fruits">
           {selectedFruit ? (
             <p className="aac-selected-fruit"> You selected: {selectedFruit.name} {selectedFruit.imagePath && (
@@ -39,6 +39,7 @@ function AacInterface() {
           )}
         </div>
 
+        {/* Display the AAC items in a grid */}
         <div className="aac-grid">
           {AAC_ITEMS.map((fruit) => (
             <button
