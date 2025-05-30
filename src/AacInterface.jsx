@@ -2,7 +2,7 @@ const AAC_ITEMS = [
   {id: "apple", name: "Apple", imagePath: "static/img/apple.png"},
   {id: "banana", name: "Banana", imagePath: "static/img/banana.png"},
   {id: "cherry", name: "Cherry", imagePath: "static/img/cherry.png"},
-  {id: "grapes", name: "Grapes", imagePath: "static/img/grapes.png"},
+  {id: "grapes", name: "Grapes", imagePath: "static/img/grape.png"},
 ];
 
 function AacInterface() {
