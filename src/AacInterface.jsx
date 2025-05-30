@@ -21,7 +21,7 @@ function AacInterface() {
   return (
     <div className="aac-container">
       <div className="aac-device">
-        <h1 className="aac-title"> AAC Device </h1>
+        <h1> AAC Device </h1>
 
         {/* Display the selected fruit */}
         <div className="aac-fruits">
