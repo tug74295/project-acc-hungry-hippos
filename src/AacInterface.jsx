@@ -16,6 +16,19 @@ function AacInterface() {
     // Update the selected fruit when an AAC item is clicked
     // ============ TODO: Add logic to handle item selection (Audio, Firebase, Game) ============ //
     setSelectedFruit(fruit);
+
+    // Dispatch a custom event to notify the game when a fruit is selected
+    const event = new CustomEvent("aacFruitSelected", {
+      // Include details for the fruit as input 
+      detail:
+        {
+          fruitID: fruit.id,
+          fruitName: fruit.name
+        }
+    });
+
+    // Command the window to dispatch the event
+    window.dispatchEvent(event);
   };
 
   return (
