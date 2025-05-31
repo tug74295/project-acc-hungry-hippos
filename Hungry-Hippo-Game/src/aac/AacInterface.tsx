@@ -1,34 +1,30 @@
+import React from "react";
+
 const AAC_ITEMS = [
-  {id: "apple", name: "Apple", imagePath: "static/img/apple.png"},
-  {id: "banana", name: "Banana", imagePath: "static/img/banana.png"},
-  {id: "cherry", name: "Cherry", imagePath: "static/img/cherry.png"},
-  {id: "grapes", name: "Grapes", imagePath: "static/img/grape.png"},
+  {id: "apple", name: "Apple", imagePath: "/assets/apple.png"},
+  {id: "banana", name: "Banana", imagePath: "/assets/banana.png"},
+  {id: "cherry", name: "Cherry", imagePath: "/assets/cherry.png"},
+  {id: "grapes", name: "Grapes", imagePath: "/assets/grape.png"},
 ];
+
+type Fruit = {
+    id: string;
+    name: string;
+    imagePath: string;
+};
+
 
 function AacInterface() {
   /*
   selectedFruit is used to track the currently selected fruit in the AAC.
   setSelectedFruit is a function that updates the selectedFruit state.
   */
-  const [selectedFruit, setSelectedFruit] = React.useState(null);
+  const [selectedFruit, setSelectedFruit] = React.useState<Fruit | null>(null);
 
-  const handleFruitClick = (fruit) => {
+  const handleFruitClick = (fruit: Fruit) => {
     // Update the selected fruit when an AAC item is clicked
     // ============ TODO: Add logic to handle item selection (Audio, Firebase, Game) ============ //
     setSelectedFruit(fruit);
-
-    // Dispatch a custom event to notify the game when a fruit is selected
-    const event = new CustomEvent("aacFruitSelected", {
-      // Include details for the fruit as input 
-      detail:
-        {
-          fruitID: fruit.id,
-          fruitName: fruit.name
-        }
-    });
-
-    // Command the window to dispatch the event
-    window.dispatchEvent(event);
   };
 
   return (
@@ -73,5 +69,4 @@ function AacInterface() {
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<AacInterface />);
+export default AacInterface;
