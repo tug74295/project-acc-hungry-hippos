@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { IRefPhaserGame, PhaserGame } from './PhaserGame';
+import AacInterface from './aac/AacInterface';
 
 function App()
 {
@@ -28,6 +29,7 @@ function App()
 
     return (
         <div id="app">
+            <AacInterface />
             <PhaserGame ref={phaserRef} />
             <div>
                 <div>

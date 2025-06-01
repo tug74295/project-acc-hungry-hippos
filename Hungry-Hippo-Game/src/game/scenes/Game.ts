@@ -15,8 +15,9 @@ export class Game extends Scene
     {
         this.load.setPath('assets');
         
+
         // Background and logo
-        this.load.image('background', 'bg.png');
+        this.load.image('background', 'squareTiles.png');
         this.load.image('logo', 'logo.png');
 
         // Fruit images
@@ -48,7 +49,6 @@ export class Game extends Scene
             callbackScope: this,
             loop: true
         })
-
         
         EventBus.emit('current-scene-ready', this);
     
