@@ -6,6 +6,8 @@ export class Game extends Scene
     private fruits: Phaser.Physics.Arcade.Group;
     private fruitKeys = ['apple', 'banana', 'cherry', 'grape'];
 
+    private lanePositions = [256, 512, 768]; // tweak as needed
+
     constructor ()
     {
         super('Game');
@@ -14,11 +16,9 @@ export class Game extends Scene
     preload ()
     {
         this.load.setPath('assets');
-        
 
-        // Background and logo
+        // Background
         this.load.image('background', 'squareTiles.png');
-        this.load.image('logo', 'logo.png');
 
         // Fruit images
         this.load.image('apple', 'apple.png');
@@ -55,18 +55,21 @@ export class Game extends Scene
     }
 
     spawnFruit() {
-        // Random fruit key
+        // Random lane position
+        const randomLaneX = Phaser.Utils.Array.GetRandom(this.lanePositions);
+
+        // Random fruit type
         const randomKey = Phaser.Utils.Array.GetRandom(this.fruitKeys);
 
         // Random position within game canvas
         const x = Phaser.Math.Between(50, 974);
 
         // Fruit spawned from top
-        const fruit = this.fruits.create(x, 0, randomKey) as Phaser.Physics.Arcade.Image;
+        const fruit = this.fruits.create(randomLaneX, 0, randomKey) as Phaser.Physics.Arcade.Image;
         fruit.setScale(0.25); // Fruit 25% of original size
 
         // Gravity
-        fruit.setVelocityY(400); // Will move 500 pixels/sec down
+        fruit.setVelocityY(750); // Will move 750 pixels/sec down
         fruit.setBounce(0.2); // Slight bounce at bottom but used to trigger falling
         fruit.setCollideWorldBounds(true);
     }
