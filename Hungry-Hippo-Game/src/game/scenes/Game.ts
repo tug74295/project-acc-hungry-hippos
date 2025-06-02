@@ -5,8 +5,9 @@ export class Game extends Scene
 {
     private fruits: Phaser.Physics.Arcade.Group;
     private fruitKeys = ['apple', 'banana', 'cherry', 'grape'];
-
     private lanePositions = [256, 512, 768]; // tweak as needed
+
+    private fruitSpawnTimer: Phaser.Time.TimerEvent; // store timer reference
 
     constructor ()
     {
@@ -41,17 +42,21 @@ export class Game extends Scene
 
         // Initialize physics for "fruit" group
         this.fruits = this.physics.add.group();
-
-        // Spawning fruit with a delay
-        this.time.addEvent({
-            delay: 1500,
-            callback: this.spawnFruit,
-            callbackScope: this,
-            loop: true
-        })
         
         EventBus.emit('current-scene-ready', this);
     
+    }
+
+    // Starts the timer to spawn fruits
+    public startSpawningFruit() {
+        if (!this.fruitSpawnTimer) {
+            this.fruitSpawnTimer = this.time.addEvent({
+                delay: 1500,
+                callback: this.spawnFruit,
+                callbackScope: this,
+                loop: true
+            });
+        }
     }
 
     spawnFruit() {
@@ -60,9 +65,6 @@ export class Game extends Scene
 
         // Random fruit type
         const randomKey = Phaser.Utils.Array.GetRandom(this.fruitKeys);
-
-        // Random position within game canvas
-        const x = Phaser.Math.Between(50, 974);
 
         // Fruit spawned from top
         const fruit = this.fruits.create(randomLaneX, 0, randomKey) as Phaser.Physics.Arcade.Image;
