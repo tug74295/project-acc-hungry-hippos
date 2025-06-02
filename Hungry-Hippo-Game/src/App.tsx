@@ -21,10 +21,28 @@ function App()
                 const y = Phaser.Math.Between(64, scene.scale.height - 64);
     
                 //  `add.sprite` is a Phaser GameObjectFactory method and it returns a Sprite Game Object instance
-                const star = scene.add.sprite(x, y, 'star');
+                const grape = scene.add.sprite(x, y, 'grape');
+                grape.setScale(0.1);
     
             }
         }
+    }
+
+    const addCharacter = () =>{
+
+        if (phaserRef.current)
+            {
+                const scene = phaserRef.current.scene;
+    
+                if (scene)
+                {
+                    const character = scene.add.sprite (100, 100, 'character');
+
+                    character.setScale(0.3); 
+
+                 }
+            }
+        
     }
 
     return (
@@ -32,9 +50,9 @@ function App()
             <AacInterface />
             <PhaserGame ref={phaserRef} />
             <div>
-                <div>
+                {/* <div>
                     <button className="button" onClick={addSprite}>Add New Sprite</button>
-                </div>
+                </div> */}
             </div>
         </div>
     )
