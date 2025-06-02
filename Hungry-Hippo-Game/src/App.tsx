@@ -17,17 +17,10 @@ function App()
 
         if (phaserRef.current)
         {
-            const scene = phaserRef.current.scene;
+            const scene = phaserRef.current.scene as any;
 
-            if (scene)
-            {
-                // Add a new sprite to the current scene at a random position
-                const x = Phaser.Math.Between(64, scene.scale.width - 64);
-                const y = Phaser.Math.Between(64, scene.scale.height - 64);
-    
-                //  `add.sprite` is a Phaser GameObjectFactory method and it returns a Sprite Game Object instance
-                // const star = scene.add.sprite(x, y, 'star');
-    
+            if (scene && typeof scene.startSpawningFruit === 'function') {
+                scene.startSpawningFruit();
             }
         }
     }
@@ -44,13 +37,35 @@ function App()
        });
     };
 
+    // Get the current selected fruit (top of stack)
+    const currentFruit = fruitStack.length > 0 ? fruitStack[0] : null;
+
     return (
         <div id="app">
             <AacInterface onFruitSelected={handleSelectedFruit}/>
-            <PhaserGame ref={phaserRef} />
-            <div>
+            <div className="game-container">
+                <PhaserGame ref={phaserRef} />
+                
+                <div className="current-fruit-indicator">
+                    <h3>Current Fruit to Eat:</h3>
+                    {currentFruit ? (
+                        <>
+                            <img
+                                src={currentFruit.imagePath}
+                                alt={currentFruit.name}
+                                className="current-fruit-image"
+                            />
+                            <p className="current-fruit-name">{currentFruit.name}</p>
+                        </>
+                    ) : (
+                        <p className="current-fruit-placeholder">No Fruit Selected</p>
+                    )}
+                </div>
+                
                 <div>
-                    <button className="button" onClick={addSprite}>Add New Sprite</button>
+                    <div>
+                        <button className="button" onClick={addSprite}>Start</button>
+                    </div>
                 </div>
             </div>
         </div>
