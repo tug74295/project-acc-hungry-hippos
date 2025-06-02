@@ -21,7 +21,7 @@ function App()
                 const y = Phaser.Math.Between(64, scene.scale.height - 64);
     
                 //  `add.sprite` is a Phaser GameObjectFactory method and it returns a Sprite Game Object instance
-                const star = scene.add.sprite(x, y, 'star');
+                // const star = scene.add.sprite(x, y, 'star');
     
             }
         }

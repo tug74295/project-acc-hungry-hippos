@@ -9,6 +9,13 @@ const config: Types.Core.GameConfig = {
     height: 768,
     parent: 'game-container',
     backgroundColor: '#028af8',
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { x: 0, y: 0 }, // no global gravity; using velocity
+            debug: false // change to true if you want to see hitboxes
+        }
+    },
     scene: [
         MainGame
     ]
