@@ -4,7 +4,7 @@ const AAC_ITEMS = [
   {id: "apple", name: "Apple", imagePath: "/assets/apple.png"},
   {id: "banana", name: "Banana", imagePath: "/assets/banana.png"},
   {id: "cherry", name: "Cherry", imagePath: "/assets/cherry.png"},
-  {id: "grapes", name: "Grapes", imagePath: "/assets/grape.png"},
+  {id: "grape", name: "Grape", imagePath: "/assets/grape.png"},
 ];
 
 interface Fruit {
