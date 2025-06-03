@@ -32,6 +32,13 @@ export class Game extends Scene
         });
         
 
+
+        this.load.spritesheet('character', 'spritesheet.png',{
+            frameWidth: 350,
+            frameHeight: 425,
+        });
+        
+
     }
 
     create ()
@@ -50,6 +57,7 @@ export class Game extends Scene
         //     frameRate: 4,
         //     repeat: -1
         // });
+       
         this.anims.create({
             key: 'walking',
             frames: this.anims.generateFrameNumbers('character', { start: 0, end: 4 }),
