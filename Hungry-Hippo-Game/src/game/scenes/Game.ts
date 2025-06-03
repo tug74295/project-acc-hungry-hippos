@@ -17,8 +17,6 @@ export class Game extends Scene
     preload ()
     {
         this.load.setPath('assets');
-
-        // Background
         this.load.image('background', 'squareTiles.png');
 
         // Fruit images
@@ -26,6 +24,14 @@ export class Game extends Scene
         this.load.image('banana', 'banana.png');
         this.load.image('cherry', 'cherry.png');
         this.load.image('grape', 'grape.png');
+        this.load.image('logo', 'logo.png');
+
+        this.load.spritesheet('character', 'spritesheet.png',{
+            frameWidth: 350,
+            frameHeight: 425,
+        });
+        
+
     }
 
     create ()
@@ -33,19 +39,37 @@ export class Game extends Scene
         
         this.add.image(512, 384, 'background');
 
-        // this.add.image(512, 350, 'logo').setDepth(100);
-        // this.add.text(512, 490, 'Make something fun!\nand share it with us:\nsupport@phaser.io', {
-        //     fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
-        //     stroke: '#000000', strokeThickness: 8,
-        //     align: 'center'
-        // }).setOrigin(0.5).setDepth(100);
+        // this.anims.create({
+        //     key: 'walking',
+        //     frames: [
+        //         { key: 'character', frame: 0 },
+        //         { key: 'character', frame: 1 },
+        //         { key: 'character', frame: 1 },
+        //         { key: 'character', frame: 0 }
+        //     ],
+        //     frameRate: 4,
+        //     repeat: -1
+        // });
+        this.anims.create({
+            key: 'walking',
+            frames: this.anims.generateFrameNumbers('character', { start: 0, end: 4 }),
+            frameRate: 4,
+            repeat: -1
+        });
 
-        // Initialize physics for "fruit" group
-        this.fruits = this.physics.add.group();
+        
+        const hippo = this.add.sprite(350, 425, 'character', 0);
+        hippo.play('walking');
+
         
         EventBus.emit('current-scene-ready', this);
-    
+     // Initialize physics for "fruit" group
+     this.fruits = this.physics.add.group();
+
+
     }
+
+    
 
     // Starts the timer to spawn fruits
     public startSpawningFruit() {
@@ -76,10 +100,20 @@ export class Game extends Scene
         fruit.setCollideWorldBounds(true);
     }
 
+    public addFruitManually(fruitKey: string) {
+        const x = Phaser.Math.Between(64, this.scale.width - 64);
+        const fruit = this.fruits.create(x, 0, fruitKey) as Phaser.Physics.Arcade.Image;
+        fruit.setScale(0.25);
+        fruit.setVelocityY(600);
+        fruit.setBounce(0.2);
+        fruit.setCollideWorldBounds(true);
+    }
+    
+
     update() {
         this.fruits.getChildren().forEach((fruit) => {
             const sprite = fruit as Phaser.Physics.Arcade.Image;
-            if (sprite.body.blocked.down) {
+            if (sprite.body && sprite.body.blocked.down) {
                 sprite.destroy(); // Immediately remove fruits after touching bottom
             }
         });

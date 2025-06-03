@@ -13,28 +13,19 @@ function App()
     //  References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
-    const addSprite = () => {
 
-        if (phaserRef.current)
-        {
-            const scene = phaserRef.current.scene as any;
-
-            if (scene && typeof scene.startSpawningFruit === 'function') {
-                scene.startSpawningFruit();
-            }
-        }
-    }
-
-    
     const [fruitStack, setFruitStack] = React.useState<Fruit[]>([]);
     const handleSelectedFruit = (selectedFruit: Fruit) => {
-        // Update the fruit stack with the selected fruit
-        setFruitStack(previousStack => {
-            console.log("Selected Fruit:", selectedFruit);
-            const newStack = [selectedFruit, ...previousStack];
-            console.log('Selected Fruit:', newStack);
-            return newStack;
-       });
+        setFruitStack(previousStack => [selectedFruit, ...previousStack]);
+
+        // Spawn the selected fruit in the Phaser scene and make it fall
+        if (phaserRef.current) {
+            const scene = phaserRef.current.scene as any;
+            if (scene && typeof scene.addFruitManually === 'function') {
+                scene.addFruitManually(selectedFruit.id);
+            }
+            
+        }
     };
 
     // Get the current selected fruit (top of stack)
@@ -60,12 +51,6 @@ function App()
                     ) : (
                         <p className="current-fruit-placeholder">No Fruit Selected</p>
                     )}
-                </div>
-                
-                <div>
-                    <div>
-                        <button className="button" onClick={addSprite}>Start</button>
-                    </div>
                 </div>
             </div>
         </div>
