@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from './LandingPage.module.css';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
 import { useRef, useState } from 'react';
+import { generateSessionId, saveSessionId } from '../../utils/session';
 
 // handles navigation to GamePage
 // TODO: add functionality to check if game code is valid
@@ -24,12 +25,20 @@ function LandingPage() {
 
     setIsValidCode(true);
     console.log('User entered game code:', gameCode);
+    // TODO: validate code against Firebase
 
     try {
       navigate('/GamePage');
     } catch (error) {
       console.error('Navigation failed:', error);
     }
+  };
+
+  // Handles creating a new game (generates and stores session ID)
+  const handleCreateGame = () => {
+    const newSessionId = generateSessionId();
+    saveSessionId(newSessionId);
+    console.log('New game session ID:', newSessionId);
   };
 
   // Handles input 
@@ -65,19 +74,27 @@ function LandingPage() {
         {code.map((char, i) => (
           <input
             key={i}
-            ref={(el) => (inputsRef.current[i] = el)}
+            ref={(el) => {
+              inputsRef.current[i] = el;
+            }}
             type="text"
             value={char}
             onChange={(e) => handleChange(e.target.value, i)}
             onKeyDown={(e) => handleKeyDown(e, i)}
             maxLength={1}
             className={`${styles.codeInputBox} ${!isValidCode ? styles.errorInputBox : ''}`}
+
           />
         ))}
       </div>
 
-      <p className={styles.createGameText}>No code? Create new game! </p>
-
+      <p
+        className={styles.createGameText}
+        onClick={handleCreateGame}
+        role="button"
+      >
+        No code? Create new game!
+      </p>
       <ButtonClick text="Join Game" onClick={handleStart} />
     </div>
   );
