@@ -17,17 +17,11 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
     setSelectedFruit(fruit);
     onFruitSelected(fruit);
 
-
     // Play the audio for the selected fruit
     if (fruit.audioPath) {
       const audio = new Audio(fruit.audioPath);
-      audio.play().catch(error => {
-        // Autoplay was prevented, or an error occurred.
-        // You might want to handle this, e.g., by showing a play button
-        // or logging the error. For now, we'll log it.
-        console.error("Error playing audio:", error);
-      });
-      currentAudioRef.current = audio; // Store reference to the new audio
+      audio.play()
+      currentAudioRef.current = audio;
     }
   };
 
