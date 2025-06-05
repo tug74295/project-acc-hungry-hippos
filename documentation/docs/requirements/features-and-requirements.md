@@ -26,7 +26,7 @@ sidebar_position: 4
 ## Nonfunctional Requirements
 
 - The game will load quickly, typically within 2 seconds.
-- All visual elements in the game will have high contrast and be clearly legible for the AAC Game Conductor.
+- All visual elements in the game will have high contrast and be clearly legible for all players (Above 90% in Lighthouse).
 - The game's layout will adapt well to different screen sizes and orientations (desktop, tablet, mobile).
 - The game's animations and transitions will be smooth and without lag.
 - The game will operate reliably without unexpected crashes or errors during play.
