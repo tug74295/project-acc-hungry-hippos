@@ -1,17 +1,5 @@
 import React from "react";
-
-const AAC_ITEMS = [
-  {id: "apple", name: "Apple", imagePath: "/assets/apple.png"},
-  {id: "banana", name: "Banana", imagePath: "/assets/banana.png"},
-  {id: "cherry", name: "Cherry", imagePath: "/assets/cherry.png"},
-  {id: "grape", name: "Grape", imagePath: "/assets/grape.png"},
-];
-
-interface Fruit {
-    id: string;
-    name: string;
-    imagePath: string;
-};
+import { Fruit, AAC_ITEMS } from "../Fruits";
 
 // Callback function to handle fruit selection
 interface AacInterfaceProps {
@@ -21,12 +9,19 @@ interface AacInterfaceProps {
 const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
   // State to keep track of the selected fruit
   const [selectedFruit, setSelectedFruit] = React.useState<Fruit | null>(null);
-
+  const currentAudioRef = React.useRef<HTMLAudioElement | null>(null);
   const handleFruitClick = (fruit: Fruit) => {
     // Update the selected fruit when an AAC item is clicked
     // Send the selected fruit to the parent component via the onFruitSelected callback
     setSelectedFruit(fruit);
     onFruitSelected(fruit);
+
+    // Play the audio for the selected fruit
+    if (fruit.audioPath) {
+      const audio = new Audio(fruit.audioPath);
+      audio.play()
+      currentAudioRef.current = audio;
+    }
   };
 
   return (
