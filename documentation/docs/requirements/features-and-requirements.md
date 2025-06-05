@@ -8,7 +8,6 @@ sidebar_position: 4
 #### AAC user interaction
 - The AAC Game Conductor must be able to select fruits from a displayed set on the game.
 - The AAC Game Conductor must be able to see which fruit is coming up next in the game.
-- The AAC Game Conductor must be able to signal "GO!" via the game to initiate a round for the Hippo players.
 - The game will automatically update and display the score on the game based on confirmed eaten fruits.
 - New fruits will appear in the game after the current fruits are eaten or a round is completed.
 - The game will end after a set number of rounds or a time limit is reached, displaying the final score to the AAC Game Conductor.
