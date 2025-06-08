@@ -37,14 +37,14 @@ sidebar_position: 5
 3. The selected fruit is queued to drop into the play area.
 4. The next 1 fruit are visible on screen to all players.
 
-## Use Case 5 – Tap to Catch Correct Fruit (Player)
-*As a player, I want to tap the screen when the correct fruit falls so that I can earn points.*
+## Use Case 5 – Eats Fruit (Player)
+*As a player, I want to move my hippo around the arena and eat the correct fruit so that I can earn points.*
 
-1. Fruits fall from the top of the screen in real time.
-2. The player watches the queue to know which fruit is “correct.”
-3. The player taps the screen when the correct fruit falls into the target zone.
+1. Fruits spawn and are placed randomly across the arena in real time.
+2. The player watches the displayed queue to know which fruit is “correct.”
+3. The player moves their hippo toward fruits on the arena.
 4. If correct, a point is awarded.
-5. If incorrect, no point is awarded.
+5. If incorrect, no point is awarded (or a penalty is applied).
 
 ## Use Case 6 – Game Timer and End State
 *As a player or AAC user, I want the game to end automatically after 1 minute so we know when the round is over.*
