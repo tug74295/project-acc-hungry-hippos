@@ -3,15 +3,17 @@ sidebar_position: 5
 ---
 
 # Use-case descriptions
-
-## Use Case 1 - Start Game Session (Player or AAC User)
-*As an player or an AAC user, I want to start a game session from my device so that others can join and I can host the game.*
-
-1. The player or AAC user opens the game interface/ website on their device.
-2. They select the "Create Game" button or using audio.
-3. A unique room code is generated and displayed. They are now the host.
-4. The host communicates or shows the code to nearby players.
-5. The interface shows a waiting screen of players who players join.
+## Use Case 1 - Start Game Session (Host Player) 
+*As a player, I want to initiate a new game session from my device, acting as the host, so that other players can join and I can control the game flow. *
+1. The Host Player opens the Hippo Player App on their device and, after successful authentication via Firebase, navigates to the session creation screen.
+2. The Host Player selects the "Create Session" or "Host Game" control within their Hippo Player App interface.
+3. The Hippo Player App sends a request to the Game Conductor App (server) to create a new game session, identifying itself as the session host.
+4. The Game Conductor App generates a unique Room Code for the session, registers the Host Player, initializes the game state to "Lobby," and updates its internal lobby management.
+5. The Game Conductor App sends the generated Room Code back to the Host Player's Hippo Player App.
+6. The Host Player's Hippo Player App displays the unique Room Code clearly on their screen.
+7. The Host Player communicates or shows the Room Code to nearby players.
+8. The Game Conductor App updates the Game Conductor Monitor to show the active lobby and connected players. The Host Player's Hippo Player App shows a "Waiting for Players" screen.
+9. AAC Device Identification: Separately (either upon launch of their Hippo Player App or via a specific in-app selection by a facilitator), the Hippo Player App on the AAC user's device indicates to the Game Conductor App that it is the designated AAC device for the session. This allows the Game Conductor App to properly direct AAC-specific game state (like current viewport fruits for selection) and process AAC user inputs.
 
 ## Use Case 2 – Join Game Session (Player or AAC User)
 *As a player or AAC User, I want to join a game session using a code so that I can play the game.*
