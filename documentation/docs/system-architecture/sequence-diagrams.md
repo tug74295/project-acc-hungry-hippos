@@ -4,6 +4,54 @@ sidebar_position: 3
 
 # Sequence Diagrams
 
+## Use Case 2 – Join Game Session (Player or AAC User)
+*As a player or AAC User, I want to join a game session using a code so that I can play the game.*
+
+1. A player opens the game/ website on their device.
+2. They enter the room code or using audio provided by the host.
+3. They tap “Join Game” or using audio.
+4. Once the code is accepted, they are added to the game lobby.
+5. The player waits until the host starts the game.
+
+
+```mermaid
+---
+title: Sequence Diagram 2 – Join Game Session
+---
+
+sequenceDiagram
+    participant AAC_User as AAC User
+    participant Hippo_Player as Player
+    participant Interface as AAC/Player Interface
+    participant Vercel as Vercel Hosting
+    participant Firebase as Firebase Realtime DB
+
+    %% Step 1: Users open the game via Vercel
+    AAC_User->>Vercel: Open game URL
+    Hippo_Player->>Vercel: Open game URL
+    Vercel-->>AAC_User: Serve Interface
+    Vercel-->>Hippo_Player: Serve Interface
+
+    %% Step 2: Users interact with interface to join
+    AAC_User->>Interface: Enter room code & tap "Join"
+    Hippo_Player->>Interface: Enter room code & tap "Join"
+
+    %% Step 3: Interface validates with backend
+    Interface->>Firebase: Validate room code
+    Firebase-->>Interface: Room code valid / invalid
+
+    %% Step 4: Add user to session if valid
+    Interface->>Firebase: Add AAC_User to lobby
+    Interface->>Firebase: Add Hippo_Player to lobby
+
+    %% Step 5: Show lobby state
+    Firebase-->>Interface: Return lobby data
+    Interface-->>AAC_User: Display lobby
+    Interface-->>Hippo_Player: Display lobby
+
+
+```
+
 ## Use Case 4 – Control Fruit Queue (AAC User)
 
 *As an AAC user, I want to control the next three fruits in the queue so that I can challenge players.*
