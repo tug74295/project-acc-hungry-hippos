@@ -20,7 +20,8 @@ sidebar_position: 4
 - Hippo players must be able to physically "eat" or collect the designated fruit.
 - Hippo players will be able to observe the outcome of their actions as the Game Conductor confirms fruit consumption and the score updates.
 - Hippo players will be able to move freely around the map to collect fruits.
-- Players must be able to signal "Start" via the game to initiate a round for the Hippo players.
+- The first Hippo player will be assigned as host
+- Once all the players indicate readiness, the host must be able to signal "Start" via the game to initiate a round.
 
 
 ## Nonfunctional Requirements
