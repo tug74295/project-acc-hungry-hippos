@@ -17,11 +17,8 @@ sidebar_position: 3
 9. AAC Device Identification: Separately (either upon launch of their Hippo Player App or via a specific in-app selection by a facilitator), the Hippo Player App on the AAC user's device indicates to the Game Conductor App that it is the designated AAC device for the session. This allows the Game Conductor App to properly direct AAC-specific game state (like current viewport fruits for selection) and process AAC user inputs.
 
 ```mermaid
----
-title: Sequence Diagram 1 – Start Game Session (Host Player)
----
 
-sequenceDiagram
+   sequenceDiagram
     participant Host_Player_App as Hippo Player App (Host Player Device)
     participant GC_App as Game Conductor App (Server)
     participant Firebase_Auth as Firebase Authentication
@@ -36,7 +33,8 @@ sequenceDiagram
     Host_Player_App->>GC_App: Request to create new game session (as host)
     activate GC_App
     GC_App->>GC_App: Generates unique Room Code
-    GC_App->>GC_App: Registers Host Player; Initializes GameState to "Lobby"
+    GC_App->>GC_App: Registers Host Player
+    GC_App->>GC_App: Initializes GameState to "Lobby"
     GC_App->>GC_User: Updates Game Conductor Monitor (shows empty lobby)
     GC_App-->>Host_Player_App: Sends Room Code
     deactivate GC_App
@@ -50,6 +48,7 @@ sequenceDiagram
     activate GC_App
     GC_App->>GC_App: Registers AAC device's PlayerID internally
     deactivate GC_App
+
 ```
     
 ## Use Case 4 – Control Fruit Queue (AAC User)
