@@ -73,25 +73,20 @@ sequenceDiagram
     participant Vercel as Vercel Hosting
     participant Firebase as Firebase Realtime DB
 
-    %% Step 1: Users open the game via Vercel
     AAC_User->>Vercel: Open game URL
     Hippo_Player->>Vercel: Open game URL
     Vercel-->>AAC_User: Serve Interface
     Vercel-->>Hippo_Player: Serve Interface
 
-    %% Step 2: Users interact with interface to join
     AAC_User->>Interface: Enter room code & tap "Join"
     Hippo_Player->>Interface: Enter room code & tap "Join"
 
-    %% Step 3: Interface validates with backend
     Interface->>Firebase: Validate room code
     Firebase-->>Interface: Room code valid / invalid
 
-    %% Step 4: Add user to session if valid
     Interface->>Firebase: Add AAC_User to lobby
     Interface->>Firebase: Add Hippo_Player to lobby
 
-    %% Step 5: Show lobby state
     Firebase-->>Interface: Return lobby data
     Interface-->>AAC_User: Display lobby
     Interface-->>Hippo_Player: Display lobby
