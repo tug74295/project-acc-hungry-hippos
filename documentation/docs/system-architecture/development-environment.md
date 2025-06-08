@@ -43,3 +43,13 @@ sidebar_position: 4
  * iOS
  * Desktop Web Browser
  
+## Setup Tasks
+
+| ID     | Task                                 | Status      |
+|--------|--------------------------------------|-------------|
+| HHP-1  | Check hardware compatibility         | Done        |
+| HHP-2  | Install Node.js & npm                | Done        |
+| HHP-3  | Install Visual Studio Code           | Done        |
+| HHP-4  | Clone repository (`git clone`)       | Done        |
+| HHP-5  | Run `npm install`                    | Done        |
+| HHP-6  | Verify dev server (`npm run dev`)    | Done        |
