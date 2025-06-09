@@ -215,3 +215,65 @@ end
 Firebase-->>Hippo_Player: Sync updated score
 
 ```
+
+## Use Case 6 – Game Timer and End State (Host)
+*As a player or AAC user, I want the game to end automatically after 1 minute so we know when the round is over.*
+
+1. The host sees a timer selection screen.
+2. There is a 60-second default timer. The host can use buttons or audio to change the time.
+3. The host starts the game. See User Case 3.
+4. When the timer reaches 0, the game ends.
+5. A score screen is shown to all players.
+6. The host sees a “Play Again” or “End Game” option.
+
+```mermaid
+---
+title: Sequence Diagram 6 - Game Timer and End State (Host)
+---
+sequenceDiagram
+participant Host as Host Player
+participant Game_UI as Game UI
+participant Timer as Game Timer
+participant All_Players as All Players
+participant Firebase as Firebase Realtime DB
+
+Host->>Game_UI: Open timer selection screen
+Game_UI-->>Host: Show default timer (60 seconds)
+Host->>Game_UI: Adjust timer (optional via button/audio)
+Host->>Game_UI: Start game
+Game_UI->>Timer: Start countdown
+
+Timer-->>Game_UI: Timer ticks down
+Timer-->>Game_UI: Timer reaches 0
+Game_UI->>All_Players: Show score screen
+Game_UI->>Host: Show “Play Again” or “End Game” options
+
+```
+
+
+## Use Case 7 – Play Again (AAC User or Player)
+*As an AAC user or player, I want to play another game session after a round ends.*
+
+1. After the game ends, if the host taps or uses audio to “Play Again”, go to Use Case 3.
+2. If the host taps or uses audio to “End Game”, all users are redirected to the game homescreen.
+
+```mermaid
+---
+title: Sequence Diagram – Play Again Option
+---
+
+sequenceDiagram
+participant Host as Host Player
+participant Game_UI as Game UI
+participant All_Players as All Players
+participant Firebase as Firebase Realtime DB
+
+alt Host chooses "Play Again"
+    Host->>Game_UI: Tap/voice "Play Again"
+    Game_UI->>Firebase: Reset game state
+    Game_UI->>All_Players: Go to Use Case 3 (Start New Game)
+else Host chooses "End Game"
+    Host->>Game_UI: Tap/voice "End Game"
+    Game_UI->>All_Players: Redirect to game home screen
+end
+```
