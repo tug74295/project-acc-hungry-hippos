@@ -4,6 +4,8 @@ sidebar_position: 5
 
 # Class Diagrams
 
+**Note this project still being completed so parts of front and backend documentation are not completely finished**
+
 ## Backend
 
 ```mermaid
@@ -63,3 +65,75 @@ Each GameSession then contains the list of connected Player objects and is compo
 
 ## Frontend
 
+```mermaid
+classDiagram
+direction RL
+
+class App {
+  +LandingPage
+  +GamePage
+}
+
+class LandingPage {
+  -code: string[]
+  -inputsRef: HTMLInputElement[]
+  -handleStart()
+  -handleCreateGame()
+  -handleChange()
+}
+
+class GamePage {
+  -phaserRef: IRefPhaserGame
+  -fruitStack: Fruit[]
+  -handleSelectedFruit()
+}
+
+class AacInterface {
+  -selectedFruit: Fruit
+  +onFruitSelected(fruit)
+}
+
+class PhaserGame {
+  +scene: GameScene
+}
+
+class ButtonClick {
+  +text: string
+  +onClick()
+}
+
+class Fruit {
+  +id: string
+  +name: string
+  +imagePath: string
+}
+
+
+class GameScene {
+  -fruits: Group
+  -fruitKeys: string[]
+  -lanePositions: number[]
+  -fruitSpawnTimer: TimerEvent
+  +startSpawningFruit()
+  +addFruitManually(fruitKey: string)
+  +spawnFruit()
+  +update()
+}
+
+App --> LandingPage
+App --> GamePage
+
+LandingPage --> ButtonClick
+GamePage --> AacInterface
+GamePage --> PhaserGame
+AacInterface --> Fruit
+GamePage --> Fruit
+
+PhaserGame --> GameScene : manages
+```
+
+### Relationships
+
+This diagram illustrates the architecture of our frontend.
+
+The frontend of the game is built with React and Phaser, structured into key pages and components. The App component handles routing between the LandingPage and GamePage. On the LandingPage, users can join or create a game. The GamePage displays both the AAC interface—where users select fruits—and the game area powered by Phaser. The selected fruit is sent to the PhaserGame, which triggers falling fruit animations. Game logic, including asset loading and physics, is managed in the GameScene class. This setup cleanly separates UI and game logic, supporting accessibility and smooth interaction.
