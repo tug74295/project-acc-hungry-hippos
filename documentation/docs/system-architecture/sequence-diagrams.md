@@ -5,50 +5,51 @@ sidebar_position: 4
 # Sequence Diagrams
 
 ## Use Case 1 - Start Game Session (Host Player) 
-*As a player, I want to initiate a new game session from my device, acting as the host, so that other players can join and I can control the game flow. *
-1. The Host Player opens the Hippo Player App on their device and, after successful authentication via Firebase, navigates to the session creation screen.
-2. The Host Player selects the "Create Session" or "Host Game" control within their Hippo Player App interface.
-3. The Hippo Player App sends a request to the Game Conductor App (server) to create a new game session, identifying itself as the session host.
-4. The Game Conductor App generates a unique Room Code for the session, registers the Host Player, initializes the game state to "Lobby," and updates its internal lobby management.
-5. The Game Conductor App sends the generated Room Code back to the Host Player's Hippo Player App.
-6. The Host Player's Hippo Player App displays the unique Room Code clearly on their screen.
+*As a player, I want to initiate a new game session from my device, acting as the host, so that other players can join and I can control the game session. *
+1. The Host Player opens their Host Interface and authenticates with the Auth Service (Firebase), navigating to the session creation screen.
+2. The Host Player selects the "Create Session" or "Host Game" control on their Host Interface.
+3. The Host Interface sends a request to the Game Server to create a new game session, identifying itself as the session host.
+4. The Game Server generates a unique Room Code, registers the Host Player, initializes the game state to "Lobby," and updates its internal lobby management.
+5. The Game Server sends the generated Room Code back to the Host Interface.
+6. The Host Interface displays the unique Room Code.
 7. The Host Player communicates or shows the Room Code to nearby players.
-8. The Game Conductor App updates the Game Conductor Monitor to show the active lobby and connected players. The Host Player's Hippo Player App shows a "Waiting for Players" screen.
-9. AAC Device Identification: Separately (either upon launch of their Hippo Player App or via a specific in-app selection by a facilitator), the Hippo Player App on the AAC user's device indicates to the Game Conductor App that it is the designated AAC device for the session. This allows the Game Conductor App to properly direct AAC-specific game state (like current viewport fruits for selection) and process AAC user inputs.
-
+8. The Host Interface shows a "Waiting for Players" screen.
+9. AAC Device Identification: Separately, the AAC Interface (Hippo_Player_App on AAC user's device) indicates to the Game Server that it is the designated AAC device for the session. This allows the Game Server to properly direct AAC-specific game state and process AAC user inputs.
+    
 ```mermaid
+---
+title: Sequence Diagram 1 – Start Game Session (Host Player) - No Facilitator Monitor
+---
 
-   sequenceDiagram
-    participant Host_Player_App as Hippo Player App (Host Player Device)
-    participant GC_App as Game Conductor App (Server)
-    participant Firebase_Auth as Firebase Authentication
-    participant GC_User as Game Conductor User (Facilitator)
-    participant AAC_Player_App as Hippo Player App (AAC User Device)
+sequenceDiagram
+    participant Host_Interface as Host Player Interface
+    participant Game_Server as Game Server
+    participant Auth_Service as Auth Service (Firebase Auth)
+    participant AAC_Interface as AAC Player Interface
 
-    Host_Player_App->>Firebase_Auth: Authenticate (get PlayerID)
-    Firebase_Auth-->>Host_Player_App: PlayerID
-    Host_Player_App->>Host_Player_App: Host Player opens app & navigates to session creation screen
-    Host_Player_App->>Host_Player_App: Host Player selects "Create Session" / "Host Game"
+    Host_Interface->>Auth_Service: Authenticate (PlayerID request)
+    Auth_Service-->>Host_Interface: PlayerID received
 
-    Host_Player_App->>GC_App: Request to create new game session (as host)
-    activate GC_App
-    GC_App->>GC_App: Generates unique Room Code
-    GC_App->>GC_App: Registers Host Player
-    GC_App->>GC_App: Initializes GameState to "Lobby"
-    GC_App->>GC_User: Updates Game Conductor Monitor (shows empty lobby)
-    GC_App-->>Host_Player_App: Sends Room Code
-    deactivate GC_App
+    Host_Interface->>Host_Interface: Host opens app & navigates to host screen
+    Host_Interface->>Host_Interface: Host selects "Create Session" / "Host Game"
 
-    Host_Player_App->>Host_Player_App: Displays unique Room Code on screen
-    Host_Player_App->>Host_Player_App: Host_Player_App shows "Waiting for Players" screen
-    Host_Player_App->>Host_Player_App: Host Player communicates code to nearby players
+    Host_Interface->>Game_Server: Request new game session (as host)
+    activate Game_Server
+    Game_Server->>Game_Server: Generate unique Room Code
+    Game_Server->>Game_Server: Register Host Player : Init Lobby GameState
+    Game_Server-->>Host_Interface: Send Room Code
+    deactivate Game_Server
 
-    AAC_Player_App->>AAC_Player_App: AAC User (or facilitator) indicates this is AAC device
-    AAC_Player_App->>GC_App: Sends "I am AAC device" signal
-    activate GC_App
-    GC_App->>GC_App: Registers AAC device's PlayerID internally
-    deactivate GC_App
+    Host_Interface->>Host_Interface: Display Room Code
+    Host_Interface->>Host_Interface: Display "Waiting for Players" screen
+    Host_Interface->>Host_Interface: Host communicates code to nearby players
 
+    AAC_Interface->>AAC_Interface: AAC User (or facilitator) indicates this is an AAC device
+    AAC_Interface->>Game_Server: Send "I am AAC device" signal
+    activate Game_Server
+    Game_Server->>Game_Server: Register AAC device's PlayerID internally
+    deactivate Game_Server
+   
 ```
 
 ## Use Case 2 – Join Game Session (Player or AAC User)
