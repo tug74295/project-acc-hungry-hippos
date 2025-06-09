@@ -6,6 +6,7 @@ sidebar_position: 5
 
 ## Backend
 
+```mermaid
 classDiagram
     direction RL
 
@@ -51,6 +52,7 @@ classDiagram
     GameSession "1" *-- "1" GameState : has
     WebSocketServer ..> AuthValidator : uses
     GameSession ..> FirebaseDB : uses
+```
 
 ### Relationships
 This diagram illustrates the architecture of our backend services.
