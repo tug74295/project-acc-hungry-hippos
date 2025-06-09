@@ -19,25 +19,27 @@ sidebar_position: 5
 *As a player or AAC User, I want to join a game session using a code so that I can play the game.*
 
 1. A player opens the game/ website on their device.
-2. They enter the room code or using audio provided by the host.
-3. They tap “Join Game” or using audio.
+2. They enter the room code or use the audio provided by the host.
+3. They tap “Join Game” or use audio.
 3. Once the code is accepted, they are added to the game lobby.
 4. The player waits until the host starts the game.
 
 ## Use Case 3 – Start Game (Host)
-*As an host, I want to start the game after players have joined so that everyone can begin playing.*
+*As a host, I want to start the game after players have joined so that everyone can begin playing.*
 
-1. The host (AAC user or player) sees a "Begin Game” button on their screen and lobby of all joined players.
-2. They select "Begin Game” by clicking the button or with audio.
-3. All connected devices (iPad/ tablet/ laptop) switch to the gameplay screen.
-4. A 3-second countdown begins before the game starts.
+1. The Host Player sees a "Start Game" button on their game interface.
+2. The Host Player taps "Start Game".
+3. The Host Player's interface sends a command to Firebase to start the game.
+4. Firebase updates the central game state to begin a 3-second countdown.
+5. All connected player interfaces (Host, AAC User, and other players) receive the updated game state and switch to a gameplay screen, displaying the countdown.
+6. When the countdown ends, the game officially starts, and gameplay begins on all connected screens.
 
 ## Use Case 4 – Control Fruit Queue (AAC User)
 *As an AAC user, I want to control the next three fruits in the queue so that I can challenge players.*
 
 1. During gameplay, the AAC interface shows options for fruits to appear. There is also a queue able to hold 3 fruits.
 2. The AAC user selects a fruit from a set of fruit buttons or with audio.
-3. The selected fruit is displayed to the next available index of the queue. 
+3. The selected fruit is displayed at the next available index of the queue. 
 4. AAC user repeats steps 2 - 3 until queue is full. If queue is full and AAC player selects a fruit, it will replace fruit in the queue's first index. 
 4. The fruit in the queue's first index is visible on screen to all players.
 
@@ -46,7 +48,7 @@ sidebar_position: 5
 
 1. Fruits spawn and are placed randomly across the arena in real time.
 2. The player watches the displayed queue to know which fruit is “correct.”
-3. The player moves their hippo toward fruits on the arena.
+3. The player moves their hippo toward the fruits on the arena.
 4. If correct, a point is awarded.
 5. If incorrect, no point is awarded (or a penalty is applied).
 
@@ -54,9 +56,9 @@ sidebar_position: 5
 ## Use Case 6 – Game Timer and End State (Host)
 *As a player or AAC user, I want the game to end automatically after 1 minute so we know when the round is over.*
 
-1. The host (AAC user or player) sees a timer selection screen. 
-2. There is a 60-second dafault timer. Host can use buttons or audio to change time.
-3. Host starts game. See User Case 3.
+1. The host sees a timer selection screen. 
+2. There is a 60-second default timer. The host can use buttons or audio to change the time.
+3. The host starts the game. See User Case 3.
 4. When the timer reaches 0, the game ends.
 5. A score screen is shown to all players.
 6. The host sees a “Play Again” or “End Game” option.
@@ -65,4 +67,4 @@ sidebar_position: 5
 *As an AAC user or player, I want to play another game session after a round ends.*
 
 1. After the game ends, if the host taps or uses audio to “Play Again”, go to Use Case 3. 
-2. If host taps or uses audio to “End Game”, all users are redirected to game homescreen.
+2. If the host taps or uses audio to “End Game”, all users are redirected to the game homescreen.
