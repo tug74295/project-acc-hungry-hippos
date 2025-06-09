@@ -55,8 +55,8 @@ sidebar_position: 4
 *As a player or AAC User, I want to join a game session using a code so that I can play the game.*
 
 1. A player opens the game/ website on their device.
-2. They enter the room code or using audio provided by the host.
-3. They tap “Join Game” or using audio.
+2. They enter the room code or use the audio provided by the host.
+3. They tap “Join Game” or use audio.
 4. Once the code is accepted, they are added to the game lobby.
 5. The player waits until the host starts the game.
 
@@ -91,6 +91,54 @@ sequenceDiagram
     Interface-->>AAC_User: Display lobby
     Interface-->>Hippo_Player: Display lobby
 
+
+```
+
+## Use Case 3 – Start Game (Host)
+*As a host, I want to start the game after players have joined so that everyone can begin playing.*
+
+1. The Host Player sees a "Start Game" button on their game interface.
+2. The Host Player taps "Start Game".
+3. The Host Player's interface sends a command to Firebase to start the game.
+4. Firebase updates the central game state to begin a 3-second countdown.
+5. All connected player interfaces (Host, AAC User, and other players) receive the updated game state and switch to a gameplay screen, displaying the countdown.
+6. When the countdown ends, the game officially starts, and gameplay begins on all connected screens.
+
+```mermaid
+---
+title: Sequence Diagram 3 – Start Game
+---
+
+sequenceDiagram
+    participant Host_Player  as Host Player
+    participant AAC_User     as AAC User
+    participant Other_Player as Other Player
+    participant Interface    as Game Interface (Client Apps)
+    participant Firebase     as Firebase Realtime DB
+
+    %% ─── Host starts the game ─────────────────────────────
+    Host_Player ->> Interface: Sees “Start Game” button
+    Host_Player ->> Interface: Taps “Start Game”
+
+    %% ─── Command sent to backend ──────────────────────────
+    Interface   ->> Firebase  : start_game command
+    Firebase    ->> Firebase : Set state to countdown (3 s)
+
+    %% ─── Countdown broadcast to all clients ───────────────
+    Firebase  -->> Interface : Broadcast state – countdown
+    Interface  ->> Host_Player  : Show 3-second countdown
+    Interface  ->> AAC_User     : Show 3-second countdown
+    Interface  ->> Other_Player : Show 3-second countdown
+
+    %% ─── Countdown ends ───────────────────────────────────
+    Firebase    ->> Firebase : Countdown ends
+    Firebase    ->> Firebase : Set state to playing
+    Firebase  -->> Interface : Broadcast state – playing
+
+    %% ─── Gameplay screen appears ──────────────────────────
+    Interface  ->> Host_Player  : Display gameplay screen
+    Interface  ->> AAC_User     : Display gameplay screen
+    Interface  ->> Other_Player : Display gameplay screen
 
 ```
 
