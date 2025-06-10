@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { IRefPhaserGame, PhaserGame } from '../../PhaserGame';
 import AacInterface from '../../aac/AacInterface';
-import { Fruit } from '../../Fruits';
+import { Fruit } from '../../Foods';
 
 const GamePage: React.FC = () => {
     //  References to the PhaserGame component (game and scene are exposed)

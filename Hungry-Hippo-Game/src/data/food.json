@@ -1,0 +1,80 @@
+{
+    "Fruits": [
+        {
+            "id": "apple",
+            "name": "Apple",
+            "imagePath": "/assets/apple.png",
+            "audioPath": "/audio/apple.mp3"
+        },
+        {
+            "id": "banana",
+            "name": "Banana",
+            "imagePath": "/assets/banana.png",
+            "audioPath": "/audio/banana.mp3"
+        },
+        {
+            "id": "cherry",
+            "name": "Cherry",
+            "imagePath": "/assets/cherry.png",
+            "audioPath": "/audio/cherry.mp3"
+        },
+        {
+            "id": "grape",
+            "name": "Grape",
+            "imagePath": "/assets/grape.png",
+            "audioPath": "/audio/grape.mp3"
+        }
+    ],
+    "Vegetables": [
+        {
+            "id": "carrot",
+            "name": "Carrot",
+            "imagePath": "/assets/carrot.png",
+            "audioPath": "/audio/carrot.mp3"
+        },
+        {
+            "id": "broccoli",
+            "name": "Broccoli",
+            "imagePath": "/assets/broccoli.png",
+            "audioPath": "/audio/broccoli.mp3"
+        },
+        {
+            "id": "spinach",
+            "name": "Spinach",
+            "imagePath": "/assets/spinach.png",
+            "audioPath": "/audio/spinach.mp3"
+        },
+        {
+            "id": "pepper",
+            "name": "Pepper",
+            "imagePath": "/assets/pepper.png",
+            "audioPath": "/audio/pepper.mp3"
+        }
+    ],
+    "Fast Foods": [
+        {
+            "id": "burger",
+            "name": "Burger",
+            "imagePath": "/assets/burger.png",
+            "audioPath": "/audio/burger.mp3"
+        },
+        {
+            "id": "pizza",
+            "name": "Pizza",
+            "imagePath": "/assets/pizza.png",
+            "audioPath": "/audio/pizza.mp3"
+        },
+        {
+            "id": "fries",
+            "name": "Fries",
+            "imagePath": "/assets/fries.png",
+            "audioPath": "/audio/fries.mp3"
+        },
+        {
+            "id": "hotdog",
+            "name": "Hot Dog",
+            "imagePath": "/assets/hotdog.png",
+            "audioPath": "/audio/hotdog.mp3"
+        }
+    ]
+}
