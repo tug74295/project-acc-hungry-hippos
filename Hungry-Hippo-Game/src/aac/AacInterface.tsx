@@ -64,7 +64,6 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
               key={category}
               onClick={() => setSelectedCategory(category)}
               className={`aac-category-button ${selectedCategory === category ? 'aac-category-selected' : ''}`}
-              disabled={isAudioPlaying}
             >
               {category}
             </button>
