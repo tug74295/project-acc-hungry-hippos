@@ -20,10 +20,13 @@ export class Game extends Scene
         this.load.image('background', 'squareTiles.png');
 
         // Fruit images
+        this.load.setPath('assets/fruits');
         this.load.image('apple', 'apple.png');
         this.load.image('banana', 'banana.png');
         this.load.image('cherry', 'cherry.png');
         this.load.image('grape', 'grape.png');
+
+        this.load.setPath('assets');
         this.load.image('logo', 'logo.png');
 
         this.load.spritesheet('character', 'spritesheet.png',{
