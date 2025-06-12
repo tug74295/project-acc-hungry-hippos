@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import StartGame from './game/main';
 import { EventBus } from './game/EventBus';
+import { CATEGORIZED_AAC_ITEMS } from './Foods';
 
 export interface IRefPhaserGame
 {
@@ -51,6 +52,11 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
     {
         EventBus.on('current-scene-ready', (scene_instance: Phaser.Scene) =>
         {
+            const fruitKeys = Object.values(CATEGORIZED_AAC_ITEMS).flat().map(food => food.id);
+            if ('setFruitKeys' in scene_instance && typeof scene_instance['setFruitKeys'] === 'function') {
+                scene_instance['setFruitKeys'](fruitKeys);
+            }
+            
             if (currentActiveScene && typeof currentActiveScene === 'function')
             {
 

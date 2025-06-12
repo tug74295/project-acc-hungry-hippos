@@ -1,10 +1,11 @@
 import { Scene } from 'phaser';
 import { EventBus } from '../EventBus';
+import { CATEGORIZED_AAC_ITEMS } from '../../Foods';
 
 export class Game extends Scene
 {
     private fruits: Phaser.Physics.Arcade.Group;
-    private fruitKeys = ['apple', 'banana', 'cherry', 'grape'];
+    private fruitKeys: string[] = [];
     private lanePositions = [256, 512, 768]; // tweak as needed
 
     private fruitSpawnTimer: Phaser.Time.TimerEvent; // store timer reference
@@ -16,27 +17,22 @@ export class Game extends Scene
 
     preload ()
     {
-        this.load.setPath('assets');
-        this.load.image('background', 'squareTiles.png');
+        this.load.image('background', 'assets/squareTiles.png');
 
-        // Fruit images
-        this.load.setPath('assets/fruits');
-        this.load.image('apple', 'apple.png');
-        this.load.image('banana', 'banana.png');
-        this.load.image('cherry', 'cherry.png');
-        this.load.image('grape', 'grape.png');
+        // Dynamically load fruit images from AAC data
+        Object.values(CATEGORIZED_AAC_ITEMS).flat().forEach(fruit => {
+            if (fruit.imagePath) {
+                console.log(`[PRELOAD] Loading fruit: ${fruit.id} from ${fruit.imagePath}`);
+                this.load.image(fruit.id, fruit.imagePath); // now uses full path
+            }
+        })
 
-        this.load.setPath('assets');
-        this.load.image('logo', 'logo.png');
-
-        this.load.spritesheet('character', 'spritesheet.png',{
+        this.load.spritesheet('character', 'assets/spritesheet.png',{
             frameWidth: 350,
             frameHeight: 425,
         });
-        
 
-
-        this.load.spritesheet('character', 'spritesheet.png',{
+        this.load.spritesheet('character', 'assets/spritesheet.png',{
             frameWidth: 350,
             frameHeight: 425,
         });
@@ -80,7 +76,9 @@ export class Game extends Scene
 
     }
 
-    
+    public setFruitKeys(keys: string[]) {
+        this.fruitKeys = keys;
+    }
 
     // Starts the timer to spawn fruits
     public startSpawningFruit() {
@@ -95,6 +93,8 @@ export class Game extends Scene
     }
 
     spawnFruit() {
+        if (this.fruitKeys.length === 0) return;
+
         // Random lane position
         const randomLaneX = Phaser.Utils.Array.GetRandom(this.lanePositions);
 
