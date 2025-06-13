@@ -64,34 +64,34 @@ app.post('/sessions', (req, res) => {
 });
 
 // POST /create-session
-// Generates session ID, saves it, and returns updated sessions list
-app.post('/create-session', (req, res) => {
-  let sessionsData = { sessions: [] };
+// Generates session ID, saves it, and returns updated sessions list 
+// app.post('/create-session', (req, res) => {
+//   let sessionsData = { sessions: [] };
 
-  try {
-    if (fs.existsSync(sessionFilePath)) {
-      const fileContent = fs.readFileSync(sessionFilePath, 'utf-8');
-      sessionsData = JSON.parse(fileContent);
+//   try {
+//     if (fs.existsSync(sessionFilePath)) {
+//       const fileContent = fs.readFileSync(sessionFilePath, 'utf-8');
+//       sessionsData = JSON.parse(fileContent);
 
-      if (!Array.isArray(sessionsData.sessions)) {
-        sessionsData.sessions = [];
-      }
-    }
+//       if (!Array.isArray(sessionsData.sessions)) {
+//         sessionsData.sessions = [];
+//       }
+//     }
 
-    // Generate a unique session ID that does not exist in sessionsData.sessions
-    const sessionId = generateUniqueSessionId(sessionsData.sessions);
+//     // Generate a unique session ID that does not exist in sessionsData.sessions
+//     const sessionId = generateUniqueSessionId(sessionsData.sessions);
 
-    // Add new session ID and write back to file
-    sessionsData.sessions.push(sessionId);
-    fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+//     // Add new session ID and write back to file
+//     sessionsData.sessions.push(sessionId);
+//     fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
 
-    // Respond with the new session ID and updated list
-    res.status(200).json({ sessionId, sessions: sessionsData.sessions });
-  } catch (error) {
-    console.error('Error saving session ID:', error);
-    res.status(500).json({ error: 'Failed to save session ID' });
-  }
-});
+//     // Respond with the new session ID and updated list
+//     res.status(200).json({ sessionId, sessions: sessionsData.sessions });
+//   } catch (error) {
+//     console.error('Error saving session ID:', error);
+//     res.status(500).json({ error: 'Failed to save session ID' });
+//   }
+// });
 
 // POST /validate-session
 // If the game code is valid, returns 
