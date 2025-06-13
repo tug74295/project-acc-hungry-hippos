@@ -93,6 +93,30 @@ app.post('/create-session', (req, res) => {
   }
 });
 
+// POST /validate-session
+// If the game code is valid, returns 
+app.post('/validate-session', (req, res) => {
+  const { gameCode } = req.body;
+
+  if (!gameCode || typeof gameCode !== 'string') {
+    return res.status(400).json({ valid: false, error: 'Invalid game code format' });
+  }
+
+  let data = { sessions: [] };
+  if (fs.existsSync(sessionFilePath)) {
+    try {
+      data = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+    } catch (e) {
+      console.error('Error reading session file:', e);
+      return res.status(500).json({ valid: false });
+    }
+  }
+
+  const isValid = data.sessions.includes(gameCode);
+  res.status(200).json({ valid: isValid });
+});
+
+
 // Start the Express server
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
