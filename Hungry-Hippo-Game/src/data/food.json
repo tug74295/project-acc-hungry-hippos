@@ -1,0 +1,94 @@
+{
+    "categories": [ 
+        {
+            "categoryName": "Fruits",
+            "categoryIcon": "/assets/categories/fruits.png",
+            "foods": [
+                {
+                    "id": "apple",
+                    "name": "Apple",
+                    "imagePath": "/assets/fruits/apple.png",
+                    "audioPath": "/audio/fruits/apple.mp3"
+                },
+                {
+                    "id": "banana",
+                    "name": "Banana",
+                    "imagePath": "/assets/fruits/banana.png",
+                    "audioPath": "/audio/fruits/banana.mp3"
+                },
+                {
+                    "id": "cherry",
+                    "name": "Cherry",
+                    "imagePath": "/assets/fruits/cherry.png",
+                    "audioPath": "/audio/fruits/cherry.mp3"
+                },
+                {
+                    "id": "grape",
+                    "name": "Grape",
+                    "imagePath": "/assets/fruits/grape.png",
+                    "audioPath": "/audio/fruits/grape.mp3"
+                }
+            ]
+        },
+        {
+            "categoryName": "Vegetables",
+            "categoryIcon": "/assets/categories/vegetables.png",
+            "foods": [
+                {
+                    "id": "carrot",
+                    "name": "Carrot",
+                    "imagePath": "/assets/vegetables/carrot.png",
+                    "audioPath": "/audio/vegetables/carrot.mp3"
+                },
+                {
+                    "id": "broccoli",
+                    "name": "Broccoli",
+                    "imagePath": "/assets/vegetables/broccoli.png",
+                    "audioPath": "/audio/vegetables/broccoli.mp3"
+                },
+                {
+                    "id": "spinach",
+                    "name": "Spinach",
+                    "imagePath": "/assets/vegetables/spinach.png",
+                    "audioPath": "/audio/vegetables/spinach.mp3"
+                },
+                {
+                    "id": "pea",
+                    "name": "Pea",
+                    "imagePath": "/assets/vegetables/pea.png",
+                    "audioPath": "/audio/vegetables/pea.mp3"
+                }
+            ]
+        },
+        {
+            "categoryName": "Fast Foods",
+            "categoryIcon": "/assets/categories/fastfoods.png",
+            "foods": [
+                {
+                    "id": "burger",
+                    "name": "Burger",
+                    "imagePath": "/assets/fast-foods/burger.png",
+                    "audioPath": "/audio/fast-foods/burger.mp3"
+                },
+                {
+                    "id": "pizza",
+                    "name": "Pizza",
+                    "imagePath": "/assets/fast-foods/pizza.png",
+                    "audioPath": "/audio/fast-foods/pizza.mp3"
+                },
+                {
+                    "id": "fries",
+                    "name": "Fries",
+                    "imagePath": "/assets/fast-foods/fries.png",
+                    "audioPath": "/audio/fast-foods/fries.mp3"
+                },
+                {
+                    "id": "hotdog",
+                    "name": "Hot Dog",
+                    "imagePath": "/assets/fast-foods/hot-dog.png",
+                    "audioPath": "/audio/fast-foods/hot-dog.mp3"
+                }
+            ]
+        }
+    ]
+}

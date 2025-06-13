@@ -1,54 +1,49 @@
 import React, { useRef } from 'react';
 import { IRefPhaserGame, PhaserGame } from '../../PhaserGame';
 import AacInterface from '../../aac/AacInterface';
-
-interface Fruit {
-  id: string;
-  name: string;
-  imagePath: string;
-}
+import { AacFood } from '../../Foods';
 
 const GamePage: React.FC = () => {
     //  References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
 
-    const [fruitStack, setFruitStack] = React.useState<Fruit[]>([]);
-    const handleSelectedFruit = (selectedFruit: Fruit) => {
-        setFruitStack(previousStack => [selectedFruit, ...previousStack]);
+    const [foodStack, setFoodStack] = React.useState<AacFood[]>([]);
+    const handleSelectedFood = (selectedFood: AacFood) => {
+        setFoodStack(previousStack => [selectedFood, ...previousStack]);
 
-        // Spawn the selected fruit in the Phaser scene and make it fall
+        // Spawn the selected food in the Phaser scene and make it fall
         if (phaserRef.current) {
             const scene = phaserRef.current.scene as any;
-            if (scene && typeof scene.addFruitManually === 'function') {
-                scene.addFruitManually(selectedFruit.id);
+            if (scene && typeof scene.addFoodManually === 'function') {
+                scene.addFoodManually(selectedFood.id);
             }
             
         }
     };
 
-    // Get the current selected fruit (top of stack)
-    const currentFruit = fruitStack.length > 0 ? fruitStack[0] : null;
+    // Get the current selected food (top of stack)
+    const currentFood = foodStack.length > 0 ? foodStack[0] : null;
 
     return (
         <div id="app">
-            <AacInterface onFruitSelected={handleSelectedFruit}/>
+            <AacInterface onFoodSelected={handleSelectedFood}/>
             <div className="game-container">
                 <PhaserGame ref={phaserRef} />
                 
-                <div className="current-fruit-indicator">
-                    <h3>Current Fruit to Eat:</h3>
-                    {currentFruit ? (
+                <div className="current-food-indicator">
+                    <h3>Current Food to Eat:</h3>
+                    {currentFood ? (
                         <>
                             <img
-                                src={currentFruit.imagePath}
-                                alt={currentFruit.name}
-                                className="current-fruit-image"
+                                src={currentFood.imagePath}
+                                alt={currentFood.name}
+                                className="current-food-image"
                             />
-                            <p className="current-fruit-name">{currentFruit.name}</p>
+                            <p className="current-food-name">{currentFood.name}</p>
                         </>
                     ) : (
-                        <p className="current-fruit-placeholder">No Fruit Selected</p>
+                        <p className="current-food-placeholder">No Food Selected</p>
                     )}
                 </div>
             </div>

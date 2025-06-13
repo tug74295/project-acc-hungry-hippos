@@ -1,13 +1,15 @@
 import { Scene } from 'phaser';
 import { EventBus } from '../EventBus';
+import { AAC_DATA } from '../../Foods';
 
 export class Game extends Scene
 {
-    private fruits: Phaser.Physics.Arcade.Group;
-    private fruitKeys = ['apple', 'banana', 'cherry', 'grape'];
+    private hippo: Phaser.Physics.Arcade.Sprite;
+    private foods: Phaser.Physics.Arcade.Group;
+    private foodKeys: string[] = [];
     private lanePositions = [256, 512, 768]; // tweak as needed
 
-    private fruitSpawnTimer: Phaser.Time.TimerEvent; // store timer reference
+    private foodSpawnTimer: Phaser.Time.TimerEvent; // store timer reference
 
     constructor ()
     {
@@ -16,28 +18,22 @@ export class Game extends Scene
 
     preload ()
     {
-        this.load.setPath('assets');
-        this.load.image('background', 'squareTiles.png');
+        this.load.image('background', 'assets/squareTiles.png');
 
-        // Fruit images
-        this.load.image('apple', 'apple.png');
-        this.load.image('banana', 'banana.png');
-        this.load.image('cherry', 'cherry.png');
-        this.load.image('grape', 'grape.png');
-        this.load.image('logo', 'logo.png');
+        // Dynamically load food images from AAC data
+        AAC_DATA.categories.forEach(category => {
+            category.foods.forEach(food => {
+                if (food.imagePath) {
+                console.log(`[PRELOAD] Loading food: ${food.id} from ${food.imagePath}`);
+                this.load.image(food.id, food.imagePath);
+                }
+            });
+        });
 
-        this.load.spritesheet('character', 'spritesheet.png',{
+        this.load.spritesheet('character', 'assets/spritesheet.png',{
             frameWidth: 350,
             frameHeight: 425,
         });
-        
-
-
-        this.load.spritesheet('character', 'spritesheet.png',{
-            frameWidth: 350,
-            frameHeight: 425,
-        });
-        
 
     }
 
@@ -66,63 +62,84 @@ export class Game extends Scene
         });
 
         
-        const hippo = this.add.sprite(350, 425, 'character', 0);
-        hippo.play('walking');
+        this.hippo = this.physics.add.sprite(350, 425, 'character', 0);
+        this.hippo.play('walking');
 
         
         EventBus.emit('current-scene-ready', this);
-     // Initialize physics for "fruit" group
-     this.fruits = this.physics.add.group();
+        // Initialize physics for food group
+        this.foods = this.physics.add.group();
 
+        // Detects when a food overlaps with the hippo and trigger eating logic
+        this.physics.add.overlap(this.hippo, this.foods, this.handleFoodCollision, undefined, this);
 
     }
 
-    
+    public setFoodKeys(keys: string[]) {
+        this.foodKeys = keys;
+    }
 
-    // Starts the timer to spawn fruits
-    public startSpawningFruit() {
-        if (!this.fruitSpawnTimer) {
-            this.fruitSpawnTimer = this.time.addEvent({
+    // Starts the timer to spawn food
+    public startSpawningFood() {
+        if (!this.foodSpawnTimer) {
+            this.foodSpawnTimer = this.time.addEvent({
                 delay: 1500,
-                callback: this.spawnFruit,
+                callback: this.spawnFood,
                 callbackScope: this,
                 loop: true
             });
         }
     }
 
-    spawnFruit() {
+    spawnFood() {
+        if (this.foodKeys.length === 0) return;
+
         // Random lane position
         const randomLaneX = Phaser.Utils.Array.GetRandom(this.lanePositions);
 
-        // Random fruit type
-        const randomKey = Phaser.Utils.Array.GetRandom(this.fruitKeys);
+        // Random food type
+        const randomKey = Phaser.Utils.Array.GetRandom(this.foodKeys);
 
-        // Fruit spawned from top
-        const fruit = this.fruits.create(randomLaneX, 0, randomKey) as Phaser.Physics.Arcade.Image;
-        fruit.setScale(0.25); // Fruit 25% of original size
+        // Food spawned from top
+        const food = this.foods.create(randomLaneX, 0, randomKey) as Phaser.Physics.Arcade.Image;
+        console.log(`[SPAWN] ${randomKey} at lane X=${randomLaneX}`);
+
+        food.setScale(0.25); // Food 25% of original size
 
         // Gravity
-        fruit.setVelocityY(750); // Will move 750 pixels/sec down
-        fruit.setBounce(0.2); // Slight bounce at bottom but used to trigger falling
-        fruit.setCollideWorldBounds(true);
+        food.setVelocityY(750); // Will move 750 pixels/sec down
+        food.setBounce(0.2); // Slight bounce at bottom but used to trigger falling
+        food.setCollideWorldBounds(true);
     }
 
-    public addFruitManually(fruitKey: string) {
+    public addFoodManually(foodKey: string) {
         const x = Phaser.Math.Between(64, this.scale.width - 64);
-        const fruit = this.fruits.create(x, 0, fruitKey) as Phaser.Physics.Arcade.Image;
-        fruit.setScale(0.25);
-        fruit.setVelocityY(600);
-        fruit.setBounce(0.2);
-        fruit.setCollideWorldBounds(true);
+        const food = this.foods.create(x, 0, foodKey) as Phaser.Physics.Arcade.Image;
+        console.log(`[SPAWN-MANUAL] ${foodKey} at X=${x}`);
+
+        food.setScale(0.25);
+        food.setVelocityY(600);
+        food.setBounce(0.2);
+        food.setCollideWorldBounds(true);
+    }
+
+    /**
+     * Called when the hippo collides with a food
+     * Destroys the food and logs the event
+     */
+    private handleFoodCollision(hippoObj: Phaser.GameObjects.GameObject, foodObj: Phaser.GameObjects.GameObject) {
+        const food = foodObj as Phaser.Physics.Arcade.Image;
+        console.log(`[EAT] ${food.texture.key} eaten by hippo`);
+        food.destroy();
     }
     
 
     update() {
-        this.fruits.getChildren().forEach((fruit) => {
-            const sprite = fruit as Phaser.Physics.Arcade.Image;
+        this.foods.getChildren().forEach((food) => {
+            const sprite = food as Phaser.Physics.Arcade.Image;
             if (sprite.body && sprite.body.blocked.down) {
-                sprite.destroy(); // Immediately remove fruits after touching bottom
+                sprite.destroy(); // Immediately remove food after touching bottom
+                console.log(`[EAT] ${sprite.texture.key} removed after hitting ground`);
             }
         });
     }

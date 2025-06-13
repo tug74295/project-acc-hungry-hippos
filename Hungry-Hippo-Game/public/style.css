@@ -57,6 +57,8 @@ h1 {
   margin-bottom: 2rem;
 }
 
+/***** AAC Interface *****/
+
 /* Main container for the AAC interface */
 .aac-container {
   display: flex;
@@ -76,8 +78,8 @@ h1 {
   max-width: 28rem;
 }
 
-/* Container for the selected fruit text */
-.aac-fruits {
+/* Container for the selected food text */
+.aac-foods {
   margin-bottom: 2rem;
   padding: 1.5rem;
   background-color: #f0f9ff; 
@@ -89,8 +91,8 @@ h1 {
   justify-content: center;
 }
 
-/* Text style for "You selected: FruitName */
-.aac-selected-fruit {
+/* Text style for "You selected: FoodName */
+.aac-selected-food {
   font-size: 1.5rem;
   color: #0369a1;
   font-weight: 600;
@@ -99,20 +101,34 @@ h1 {
 }
 
 /* Small image displayed next to the "You selected" text */
-.aac-selected-fruit-image-display {
+.aac-selected-food-image-display {
   height: 3rem;
   width: 3rem;
 }
 
-/* Grid for the fruit buttons */
+/* Instruction Text */
+.aac-instruction {
+  font-size: 1.25rem;
+  color: #1e40af;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+
+/* Food & Category layout */
 .aac-grid {
+  grid-template-columns: repeat(3, 1fr);
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
-/* Fruit buttons */
-.aac-button {
+.aac-back-button:hover {
+  background-color: #475569;
+}
+
+/* Food buttons */
+.aac-food-button {
   padding: 0.5rem; 
   background-color: #0ea5e9;
   color: white;
@@ -131,17 +147,26 @@ h1 {
   touch-action: manipulation;
 }
 
-.aac-button:hover {
+.aac-food-button:hover {
   background-color: #0369a1;
 }
 
-.aac-button:active {
+.aac-food-button:active {
   background-color: #0284c7;
   transform: translateY(1px);
 }
 
+/* Category buttons extending food buttons*/
+.aac-category-button {
+  background-color: #f97316;
+}
+
+.aac-category-button:hover {
+  background-color: #9e4616;
+}
+
 /* Image within the button */
-.aac-fruit-image { 
+.aac-food-image { 
   max-width: 80%; 
   max-height: 4.5rem; 
   object-fit: contain; 
@@ -149,19 +174,22 @@ h1 {
 }
 
 /* Button when it's selected */
-.aac-button.aac-selected { 
+.aac-food-button.aac-food-selected { 
   outline: 3px solid #e6c611;
   background-color: #0284c7;
 }
 
-/* Instruction Text */
-.aac-instruction {
-  font-size: 1.25rem;
-  color: #1e40af;
-  margin-bottom: 1rem;
-  text-align: center;
-  font-weight: 600;
+.aac-food-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none; 
 }
+
+.aac-food-button:disabled:hover {
+  background-color: #0ea5e9; 
+}
+
+/***** End of AAC Interface Styles *****/
 
 /* Container around the Phaser game and the indicator */
 .game-container {
@@ -178,7 +206,7 @@ h1 {
 }
 
 /* Indicator box */
-.current-fruit-indicator {
+.current-food-indicator {
     position: absolute;
     top: 20px;
     right: 20px;
@@ -192,22 +220,22 @@ h1 {
 }
 
 /* Image inside indicator */
-.current-fruit-image {
+.current-food-image {
     width: 80px;
     height: 80px;
     object-fit: contain;
 }
 
-/* Fruit name text */
-.current-fruit-name {
+/* Food name text */
+.current-food-name {
     margin-top: 0.5rem;
     font-size: 1.25rem;
     color: #0ea5e9;
     font-weight: 600;
 }
 
-/* Placeholder text when no fruit is selected */
-.current-fruit-placeholder {
+/* Placeholder text when no food is selected */
+.current-food-placeholder {
     font-size: 1rem;
     color: #94a3b8;
 }
