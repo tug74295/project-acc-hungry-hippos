@@ -27,7 +27,7 @@ const GamePage: React.FC = () => {
 
     return (
         <div id="app">
-            <AacInterface onFruitSelected={handleSelectedFruit}/>
+            <AacInterface onFoodSelected={handleSelectedFruit}/>
             <div className="game-container">
                 <PhaserGame ref={phaserRef} />
                 
