@@ -1,7 +1,7 @@
 import React from "react";
 import { AacFood, AAC_DATA } from "../Foods";
 
-// Callback function to handle fruit selection
+// Callback function to handle food selection
 interface AacInterfaceProps {
   onFoodSelected: (food: AacFood) => void;
 }

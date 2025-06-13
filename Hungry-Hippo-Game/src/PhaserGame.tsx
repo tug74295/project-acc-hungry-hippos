@@ -52,9 +52,9 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
     {
         EventBus.on('current-scene-ready', (scene_instance: Phaser.Scene) =>
         {
-            const fruitKeys = Object.values(CATEGORIZED_AAC_ITEMS).flat().map(food => food.id);
-            if ('setFruitKeys' in scene_instance && typeof scene_instance['setFruitKeys'] === 'function') {
-                scene_instance['setFruitKeys'](fruitKeys);
+            const foodKeys = Object.values(CATEGORIZED_AAC_ITEMS).flat().map(food => food.id);
+            if ('setFoodKeys' in scene_instance && typeof scene_instance['setFoodKeys'] === 'function') {
+                scene_instance['setFoodKeys'](foodKeys);
             }
             
             if (currentActiveScene && typeof currentActiveScene === 'function')

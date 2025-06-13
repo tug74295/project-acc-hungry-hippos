@@ -15,8 +15,8 @@ const GamePage: React.FC = () => {
         // Spawn the selected food in the Phaser scene and make it fall
         if (phaserRef.current) {
             const scene = phaserRef.current.scene as any;
-            if (scene && typeof scene.addFruitManually === 'function') {
-                scene.addFruitManually(selectedFood.id);
+            if (scene && typeof scene.addFoodManually === 'function') {
+                scene.addFoodManually(selectedFood.id);
             }
             
         }
@@ -43,7 +43,7 @@ const GamePage: React.FC = () => {
                             <p className="current-food-name">{currentFood.name}</p>
                         </>
                     ) : (
-                        <p className="current-food-placeholder">No Fruit Selected</p>
+                        <p className="current-food-placeholder">No Food Selected</p>
                     )}
                 </div>
             </div>
