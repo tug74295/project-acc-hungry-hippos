@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { EventBus } from '../EventBus';
-import { CATEGORIZED_AAC_ITEMS } from '../../Foods';
+import { AAC_DATA } from '../../Foods';
 
 export class Game extends Scene
 {
@@ -21,12 +21,14 @@ export class Game extends Scene
         this.load.image('background', 'assets/squareTiles.png');
 
         // Dynamically load food images from AAC data
-        Object.values(CATEGORIZED_AAC_ITEMS).flat().forEach(food => {
-            if (food.imagePath) {
+        AAC_DATA.categories.forEach(category => {
+            category.foods.forEach(food => {
+                if (food.imagePath) {
                 console.log(`[PRELOAD] Loading food: ${food.id} from ${food.imagePath}`);
-                this.load.image(food.id, food.imagePath); // now uses full path
-            }
-        })
+                this.load.image(food.id, food.imagePath);
+                }
+            });
+        });
 
         this.load.spritesheet('character', 'assets/spritesheet.png',{
             frameWidth: 350,
