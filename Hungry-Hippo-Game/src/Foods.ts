@@ -7,8 +7,14 @@ export interface AacFood {
     audioPath: string; 
 }
 
-export interface AacCategories {
-    [category: string]: AacFood[];
+export interface AacCategory {
+    categoryName: string;
+    categoryIcon: string;
+    foods: AacFood[];
 }
 
-export const CATEGORIZED_AAC_ITEMS: AacCategories = aacData as AacCategories;
+export interface AacData {
+    categories: AacCategory[];
+}
+
+export const AAC_DATA: AacData = aacData as AacData;

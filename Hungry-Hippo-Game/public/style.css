@@ -79,7 +79,7 @@ h1 {
 }
 
 /* Container for the selected food text */
-.aac-food {
+.aac-foods {
   margin-bottom: 2rem;
   padding: 1.5rem;
   background-color: #f0f9ff; 
@@ -106,39 +106,25 @@ h1 {
   width: 3rem;
 }
 
-/* Container for the category buttons */
-.aac-category-selector {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-/* Individual category button style */
-.aac-category-button {
-  padding: 0.5rem 1rem;
-  border: 2px solid #0ea5e9;
-  background-color: transparent;
-  color: #0ea5e9;
-  border-radius: 100px;
+/* Instruction Text */
+.aac-instruction {
+  font-size: 1.25rem;
+  color: #1e40af;
+  margin-bottom: 1rem;
+  text-align: center;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  font-size: 1.2rem;
 }
 
-/* Style for the active/selected category button */
-.aac-category-button.aac-category-selected,
-.aac-category-button:hover {
-  background-color: #0ea5e9;
-  color: white;
-}
 
-/* Grid for the food buttons */
+/* Food & Category layout */
 .aac-grid {
+  grid-template-columns: repeat(3, 1fr);
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+}
+
+.aac-back-button:hover {
+  background-color: #475569;
 }
 
 /* Food buttons */
@@ -170,6 +156,15 @@ h1 {
   transform: translateY(1px);
 }
 
+/* Category buttons extending food buttons*/
+.aac-category-button {
+  background-color: #f97316;
+}
+
+.aac-category-button:hover {
+  background-color: #9e4616;
+}
+
 /* Image within the button */
 .aac-food-image { 
   max-width: 80%; 
@@ -182,15 +177,6 @@ h1 {
 .aac-food-button.aac-food-selected { 
   outline: 3px solid #e6c611;
   background-color: #0284c7;
-}
-
-/* Instruction Text */
-.aac-instruction {
-  font-size: 1.25rem;
-  color: #1e40af;
-  margin-bottom: 1rem;
-  text-align: center;
-  font-weight: 600;
 }
 
 .aac-food-button:disabled {
