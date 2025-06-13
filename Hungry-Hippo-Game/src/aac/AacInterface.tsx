@@ -1,26 +1,23 @@
 import React from "react";
-import { AacFood, CATEGORIZED_AAC_ITEMS } from "../Foods";
+import { AacFood, AAC_DATA } from "../Foods";
 
 // Callback function to handle fruit selection
 interface AacInterfaceProps {
-  onFruitSelected: (fruit: AacFood) => void;
+  onFoodSelected: (food: AacFood) => void;
 }
 
-const categories = Object.keys(CATEGORIZED_AAC_ITEMS)
-
-const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
-  // State to keep track of the selected fruit
-  const [selectedFruit, setSelectedFruit] = React.useState<AacFood | null>(null);
+const AacInterface: React.FC<AacInterfaceProps> = ({ onFoodSelected }) => {
+  // State to keep track of the selected foods
+  const [selectedFood, setSelectedFood] = React.useState<AacFood | null>(null);
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = React.useState(false);
-  const [selectedCategory, setSelectedCategory] = React.useState<string>(categories[0]);
 
-  const handleFruitClick = (food: AacFood) => {
-    // Update the selected fruit when an AAC item is clicked
-    // Send the selected fruit to the parent component via the onFruitSelected callback
-    setSelectedFruit(food);
-    onFruitSelected(food);
+  const handleFoodClick = (food: AacFood) => {
+    // Send the selected food to the parent component via the onFoodSelected callback
+    setSelectedFood(food);
+    onFoodSelected(food);
 
-    // Play the audio for the selected fruit
+    // Play the audio for the selected food
     if (food.audioPath) {
       const audio = new Audio(food.audioPath);
       setIsAudioPlaying(true);
@@ -36,19 +33,82 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
     }
   };
 
+  // Categorize AAC items by category
+  const renderCategoryView = () => {
+    return (
+      <div className="aac-grid aac-grid-categories">
+        {AAC_DATA.categories.map((category) => (
+          <button
+            key={category.categoryName}
+            onClick={() => setSelectedCategory(category.categoryName)}
+            disabled={isAudioPlaying}
+            className={"aac-food-button aac-category-button"}
+          >
+            <img
+              src={category.categoryIcon}
+              alt={category.categoryName}
+              className="aac-food-image aac-category-icon"
+            />
+            {category.categoryName}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // Get the categorized AAC foods based on the selected category
+  const renderFoodsView = () => {
+    const category = AAC_DATA.categories.find(cat => cat.categoryName === selectedCategory);
+    if (!category) return null;
+    return (
+      <div className="aac-grid aac-grid-foods">
+        {/* Back Button */}
+        <button
+          onClick={() => setSelectedCategory(null)}
+          disabled={isAudioPlaying}
+          className="aac-food-button aac-back-button"
+        >
+          <img
+            src="/assets/categories/back.png"
+            alt="Back"
+            className="aac-food-image aac-back-icon"
+          />
+          Back
+        </button>
+        
+        {/* Food items for the selected category */}
+        {category.foods.map((food) => (
+          <button
+            key={food.id}
+            onClick={() => handleFoodClick(food)}
+            disabled={isAudioPlaying}
+            className={`aac-food-button ${selectedFood && selectedFood.id === food.id ? 'aac-food-selected' : ''}`}
+          >
+            <img
+              src={food.imagePath}
+              alt={food.name}
+              className="aac-food-image" />
+            {food.name}
+          </button>
+        ))}
+      </div>
+    );
+  };
+        
+
   return (
     <div className="aac-container">
       <div className="aac-device">
         <h1> AAC Device </h1>
 
         {/* Display the selected fruit */}
-        <div className="aac-fruits">
-          {selectedFruit ? (
-            <p className="aac-selected-fruit"> You selected: {selectedFruit.name} {selectedFruit.imagePath && (
+        <div className="aac-foods">
+          {selectedFood ? (
+            <p className="aac-selected-food"> You selected: {selectedFood.name} {selectedFood.imagePath && (
                 <img
-                  src={selectedFruit.imagePath}
-                  alt={selectedFruit.name}
-                  className="aac-selected-fruit-image-display"
+                  src={selectedFood.imagePath}
+                  alt={selectedFood.name}
+                  className="aac-selected-food-image-display"
                 />
               )}
             </p>
@@ -56,40 +116,10 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
             <p className="aac-instruction">Click a food to select it</p>
           )}
         </div>
-
-        {/* Category Buttons */}
-        <div className="aac-category-selector">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`aac-category-button ${selectedCategory === category ? 'aac-category-selected' : ''}`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-
-        {/* Display the AAC items in a grid */}
-        <div className="aac-grid">
-          {CATEGORIZED_AAC_ITEMS[selectedCategory].map((food) => (
-            <button
-              key={food.id}
-              onClick={() => handleFruitClick(food)}
-              disabled={isAudioPlaying}
-              className={`aac-food-button ${selectedFruit && selectedFruit.id === food.id ? 'aac-food-selected' : ''}`}
-            >
-              <img
-                src={food.imagePath}
-                alt={food.name}
-                className="aac-food-image" />
-              {food.name}
-            </button>
-          ))}
-        </div>
+        {selectedCategory === null ? renderCategoryView() : renderFoodsView()}
       </div>
     </div>
   );
-}
+};
 
 export default AacInterface;
