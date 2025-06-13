@@ -8,13 +8,22 @@ export function generateSessionId(length = 5): string {
   return id;
 }
 
-// Saves session ID to sessionStorage
-export function saveSessionId(sessionId: string): void {
-  sessionStorage.setItem('sessionId', sessionId);
+// Generates a unique session ID not in the existing sessions array
+export function generateUniqueSessionId(existingSessions: string[], length = 5): string {
+  let newId: string;
+  do {
+    newId = generateSessionId(length);
+  } while (existingSessions.includes(newId));
+  return newId;
 }
 
-// Get session ID from sessionStorage
-export function getSessionId(): string | null {
-  return sessionStorage.getItem('sessionId');
+// // Saves session ID to sessionStorage
+// export function saveSessionId(sessionId: string): void {
+//   sessionStorage.setItem('sessionId', sessionId);
+// }
 
-}
+// // Get session ID from sessionStorage
+// export function getSessionId(): string | null {
+//   return sessionStorage.getItem('sessionId');
+
+// }
