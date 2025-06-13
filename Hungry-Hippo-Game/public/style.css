@@ -78,8 +78,8 @@ h1 {
   max-width: 28rem;
 }
 
-/* Container for the selected fruit text */
-.aac-fruits {
+/* Container for the selected food text */
+.aac-food {
   margin-bottom: 2rem;
   padding: 1.5rem;
   background-color: #f0f9ff; 
@@ -91,8 +91,8 @@ h1 {
   justify-content: center;
 }
 
-/* Text style for "You selected: FruitName */
-.aac-selected-fruit {
+/* Text style for "You selected: FoodName */
+.aac-selected-food {
   font-size: 1.5rem;
   color: #0369a1;
   font-weight: 600;
@@ -101,7 +101,7 @@ h1 {
 }
 
 /* Small image displayed next to the "You selected" text */
-.aac-selected-fruit-image-display {
+.aac-selected-food-image-display {
   height: 3rem;
   width: 3rem;
 }
@@ -134,14 +134,14 @@ h1 {
   color: white;
 }
 
-/* Grid for the fruit buttons */
+/* Grid for the food buttons */
 .aac-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
-/* Fruit buttons */
+/* Food buttons */
 .aac-food-button {
   padding: 0.5rem; 
   background-color: #0ea5e9;
@@ -220,7 +220,7 @@ h1 {
 }
 
 /* Indicator box */
-.current-fruit-indicator {
+.current-food-indicator {
     position: absolute;
     top: 20px;
     right: 20px;
@@ -234,22 +234,22 @@ h1 {
 }
 
 /* Image inside indicator */
-.current-fruit-image {
+.current-food-image {
     width: 80px;
     height: 80px;
     object-fit: contain;
 }
 
-/* Fruit name text */
-.current-fruit-name {
+/* Food name text */
+.current-food-name {
     margin-top: 0.5rem;
     font-size: 1.25rem;
     color: #0ea5e9;
     font-weight: 600;
 }
 
-/* Placeholder text when no fruit is selected */
-.current-fruit-placeholder {
+/* Placeholder text when no food is selected */
+.current-food-placeholder {
     font-size: 1rem;
     color: #94a3b8;
 }

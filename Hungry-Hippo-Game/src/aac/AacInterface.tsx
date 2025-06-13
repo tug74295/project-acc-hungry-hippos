@@ -1,26 +1,26 @@
 import React from "react";
 import { AacFood, CATEGORIZED_AAC_ITEMS } from "../Foods";
 
-// Callback function to handle fruit selection
+// Callback function to handle food selection
 interface AacInterfaceProps {
-  onFruitSelected: (fruit: AacFood) => void;
+  onFoodSelected: (food: AacFood) => void;
 }
 
 const categories = Object.keys(CATEGORIZED_AAC_ITEMS)
 
-const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
-  // State to keep track of the selected fruit
-  const [selectedFruit, setSelectedFruit] = React.useState<AacFood | null>(null);
+const AacInterface: React.FC<AacInterfaceProps> = ({ onFoodSelected: onFoodSelected }) => {
+  // State to keep track of the selected food
+  const [selectedFood, setSelectedFood] = React.useState<AacFood | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = React.useState(false);
   const [selectedCategory, setSelectedCategory] = React.useState<string>(categories[0]);
 
-  const handleFruitClick = (food: AacFood) => {
-    // Update the selected fruit when an AAC item is clicked
-    // Send the selected fruit to the parent component via the onFruitSelected callback
-    setSelectedFruit(food);
-    onFruitSelected(food);
+  const handleFoodClick = (food: AacFood) => {
+    // Update the selected food when an AAC item is clicked
+    // Send the selected food to the parent component via the onFoodSelected callback
+    setSelectedFood(food);
+    onFoodSelected(food);
 
-    // Play the audio for the selected fruit
+    // Play the audio for the selected food
     if (food.audioPath) {
       const audio = new Audio(food.audioPath);
       setIsAudioPlaying(true);
@@ -41,14 +41,14 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
       <div className="aac-device">
         <h1> AAC Device </h1>
 
-        {/* Display the selected fruit */}
-        <div className="aac-fruits">
-          {selectedFruit ? (
-            <p className="aac-selected-fruit"> You selected: {selectedFruit.name} {selectedFruit.imagePath && (
+        {/* Display the selected food */}
+        <div className="aac-food">
+          {selectedFood ? (
+            <p className="aac-selected-food"> You selected: {selectedFood.name} {selectedFood.imagePath && (
                 <img
-                  src={selectedFruit.imagePath}
-                  alt={selectedFruit.name}
-                  className="aac-selected-fruit-image-display"
+                  src={selectedFood.imagePath}
+                  alt={selectedFood.name}
+                  className="aac-selected-food-image-display"
                 />
               )}
             </p>
@@ -75,9 +75,9 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
           {CATEGORIZED_AAC_ITEMS[selectedCategory].map((food) => (
             <button
               key={food.id}
-              onClick={() => handleFruitClick(food)}
+              onClick={() => handleFoodClick(food)}
               disabled={isAudioPlaying}
-              className={`aac-food-button ${selectedFruit && selectedFruit.id === food.id ? 'aac-food-selected' : ''}`}
+              className={`aac-food-button ${selectedFood && selectedFood.id === food.id ? 'aac-food-selected' : ''}`}
             >
               <img
                 src={food.imagePath}

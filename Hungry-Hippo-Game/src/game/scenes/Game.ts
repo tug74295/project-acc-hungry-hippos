@@ -5,11 +5,11 @@ import { CATEGORIZED_AAC_ITEMS } from '../../Foods';
 export class Game extends Scene
 {
     private hippo: Phaser.Physics.Arcade.Sprite;
-    private fruits: Phaser.Physics.Arcade.Group;
-    private fruitKeys: string[] = [];
+    private foods: Phaser.Physics.Arcade.Group;
+    private foodKeys: string[] = [];
     private lanePositions = [256, 512, 768]; // tweak as needed
 
-    private fruitSpawnTimer: Phaser.Time.TimerEvent; // store timer reference
+    private foodSpawnTimer: Phaser.Time.TimerEvent; // store timer reference
 
     constructor ()
     {
@@ -20,11 +20,11 @@ export class Game extends Scene
     {
         this.load.image('background', 'assets/squareTiles.png');
 
-        // Dynamically load fruit images from AAC data
-        Object.values(CATEGORIZED_AAC_ITEMS).flat().forEach(fruit => {
-            if (fruit.imagePath) {
-                console.log(`[PRELOAD] Loading fruit: ${fruit.id} from ${fruit.imagePath}`);
-                this.load.image(fruit.id, fruit.imagePath); // now uses full path
+        // Dynamically load food images from AAC data
+        Object.values(CATEGORIZED_AAC_ITEMS).flat().forEach(food => {
+            if (food.imagePath) {
+                console.log(`[PRELOAD] Loading food: ${food.id} from ${food.imagePath}`);
+                this.load.image(food.id, food.imagePath); // now uses full path
             }
         })
 
@@ -32,12 +32,6 @@ export class Game extends Scene
             frameWidth: 350,
             frameHeight: 425,
         });
-
-        this.load.spritesheet('character', 'assets/spritesheet.png',{
-            frameWidth: 350,
-            frameHeight: 425,
-        });
-        
 
     }
 
@@ -71,78 +65,78 @@ export class Game extends Scene
 
         
         EventBus.emit('current-scene-ready', this);
-        // Initialize physics for "fruit" group
-        this.fruits = this.physics.add.group();
+        // Initialize physics for food group
+        this.foods = this.physics.add.group();
 
-        // Detects when a fruit overlaps with the hippo and trigger eating logic
-        this.physics.add.overlap(this.hippo, this.fruits, this.handleFruitCollision, undefined, this);
+        // Detects when a food overlaps with the hippo and trigger eating logic
+        this.physics.add.overlap(this.hippo, this.foods, this.handleFoodCollision, undefined, this);
 
     }
 
-    public setFruitKeys(keys: string[]) {
-        this.fruitKeys = keys;
+    public setFoodKeys(keys: string[]) {
+        this.foodKeys = keys;
     }
 
-    // Starts the timer to spawn fruits
-    public startSpawningFruit() {
-        if (!this.fruitSpawnTimer) {
-            this.fruitSpawnTimer = this.time.addEvent({
+    // Starts the timer to spawn food
+    public startSpawningFood() {
+        if (!this.foodSpawnTimer) {
+            this.foodSpawnTimer = this.time.addEvent({
                 delay: 1500,
-                callback: this.spawnFruit,
+                callback: this.spawnFood,
                 callbackScope: this,
                 loop: true
             });
         }
     }
 
-    spawnFruit() {
-        if (this.fruitKeys.length === 0) return;
+    spawnFood() {
+        if (this.foodKeys.length === 0) return;
 
         // Random lane position
         const randomLaneX = Phaser.Utils.Array.GetRandom(this.lanePositions);
 
-        // Random fruit type
-        const randomKey = Phaser.Utils.Array.GetRandom(this.fruitKeys);
+        // Random food type
+        const randomKey = Phaser.Utils.Array.GetRandom(this.foodKeys);
 
-        // Fruit spawned from top
-        const fruit = this.fruits.create(randomLaneX, 0, randomKey) as Phaser.Physics.Arcade.Image;
+        // Food spawned from top
+        const food = this.foods.create(randomLaneX, 0, randomKey) as Phaser.Physics.Arcade.Image;
         console.log(`[SPAWN] ${randomKey} at lane X=${randomLaneX}`);
 
-        fruit.setScale(0.25); // Fruit 25% of original size
+        food.setScale(0.25); // Food 25% of original size
 
         // Gravity
-        fruit.setVelocityY(750); // Will move 750 pixels/sec down
-        fruit.setBounce(0.2); // Slight bounce at bottom but used to trigger falling
-        fruit.setCollideWorldBounds(true);
+        food.setVelocityY(750); // Will move 750 pixels/sec down
+        food.setBounce(0.2); // Slight bounce at bottom but used to trigger falling
+        food.setCollideWorldBounds(true);
     }
 
-    public addFruitManually(fruitKey: string) {
+    public addFoodManually(foodKey: string) {
         const x = Phaser.Math.Between(64, this.scale.width - 64);
-        const fruit = this.fruits.create(x, 0, fruitKey) as Phaser.Physics.Arcade.Image;
-        console.log(`[SPAWN-MANUAL] ${fruitKey} at X=${x}`);
+        const food = this.foods.create(x, 0, foodKey) as Phaser.Physics.Arcade.Image;
+        console.log(`[SPAWN-MANUAL] ${foodKey} at X=${x}`);
 
-        fruit.setScale(0.25);
-        fruit.setVelocityY(600);
-        fruit.setBounce(0.2);
-        fruit.setCollideWorldBounds(true);
+        food.setScale(0.25);
+        food.setVelocityY(600);
+        food.setBounce(0.2);
+        food.setCollideWorldBounds(true);
     }
 
     /**
-     * Called when the hippo collides with a fruit
-     * Destroys the fruit and logs the event
+     * Called when the hippo collides with a food
+     * Destroys the food and logs the event
      */
-    private handleFruitCollision(hippoObj: Phaser.GameObjects.GameObject, fruitObj: Phaser.GameObjects.GameObject) {
-        const fruit = fruitObj as Phaser.Physics.Arcade.Image;
-        console.log(`[EAT] ${fruit.texture.key} eaten by hippo`);
-        fruit.destroy();
+    private handleFoodCollision(hippoObj: Phaser.GameObjects.GameObject, foodObj: Phaser.GameObjects.GameObject) {
+        const food = foodObj as Phaser.Physics.Arcade.Image;
+        console.log(`[EAT] ${food.texture.key} eaten by hippo`);
+        food.destroy();
     }
     
 
     update() {
-        this.fruits.getChildren().forEach((fruit) => {
-            const sprite = fruit as Phaser.Physics.Arcade.Image;
+        this.foods.getChildren().forEach((food) => {
+            const sprite = food as Phaser.Physics.Arcade.Image;
             if (sprite.body && sprite.body.blocked.down) {
-                sprite.destroy(); // Immediately remove fruits after touching bottom
+                sprite.destroy(); // Immediately remove food after touching bottom
                 console.log(`[EAT] ${sprite.texture.key} removed after hitting ground`);
             }
         });
