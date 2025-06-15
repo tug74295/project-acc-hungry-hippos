@@ -1,23 +1,48 @@
 import React from "react";
 import { AacFood, AAC_DATA } from "../Foods";
 
-// Callback function to handle food selection
+/**
+ * Defines the props for the AacInterface component.
+ */
 interface AacInterfaceProps {
+  /**
+   * Callback function to handle food selection.
+   * @param food - The selected food item.
+   * @returns {void}
+   */
   onFoodSelected: (food: AacFood) => void;
 }
 
+/**
+ * AacInterface component provides an interface for users to select foods and play associated audio clips.
+ * @param {AacInterfaceProps} props - The properties for the component.
+ * @returns {JSX.Element} The rendered component.
+ */
 const AacInterface: React.FC<AacInterfaceProps> = ({ onFoodSelected }) => {
-  // State to keep track of the selected foods
+  /**
+   * Tracks the most recently selected food item
+   */
   const [selectedFood, setSelectedFood] = React.useState<AacFood | null>(null);
+  /**
+   * Tracks the currently selected food category
+   */
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+  /**
+   * Tracks whether audio is currently playing
+   */
   const [isAudioPlaying, setIsAudioPlaying] = React.useState(false);
 
+  /**
+   * Handles the click event for a food item.
+   * @param {AacFood} food - The food item that was clicked.
+   * @precondition The food item must be part of the AAC_DATA.
+   * @postcondition The selected food is set, and the audio for the food is played if available.
+   * @returns {void}
+   */
   const handleFoodClick = (food: AacFood) => {
-    // Send the selected food to the parent component via the onFoodSelected callback
     setSelectedFood(food);
     onFoodSelected(food);
 
-    // Play the audio for the selected food
     if (food.audioPath) {
       const audio = new Audio(food.audioPath);
       setIsAudioPlaying(true);
@@ -25,6 +50,9 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFoodSelected }) => {
       audio.onended = () => {
         setIsAudioPlaying(false);
       };
+      /**
+       * @exception This function handles errors that may occur while playing the audio.
+       */
       audio.onerror = () => {
         console.error(`Error playing audio for ${food.name}`);
         setIsAudioPlaying(false);
@@ -33,7 +61,10 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFoodSelected }) => {
     }
   };
 
-  // Categorize AAC items by category
+  /**
+   * Renders the category view with buttons for each food category.
+   * @returns {JSX.Element} The rendered category view.
+   */
   const renderCategoryView = () => {
     return (
       <div className="aac-grid aac-grid-categories">
@@ -56,7 +87,10 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFoodSelected }) => {
     );
   };
 
-  // Get the categorized AAC foods based on the selected category
+  /**
+   * Renders the foods view for the selected category.
+   * @returns {JSX.Element | null} The rendered foods view or null if no category is selected.
+   */
   const renderFoodsView = () => {
     const category = AAC_DATA.categories.find(cat => cat.categoryName === selectedCategory);
     if (!category) return null;
@@ -96,6 +130,10 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ onFoodSelected }) => {
   };
         
 
+  /**
+   * Renders the main AAC interface, including the selected food and category views.
+   * @returns {JSX.Element} The rendered AAC interface.
+   */
   return (
     <div className="aac-container">
       <div className="aac-device">
