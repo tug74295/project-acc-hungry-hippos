@@ -149,3 +149,43 @@ Handles logic when the hippo collides with food. Destroys the food.
 ## `update()`
 
 Phaser's update loop. Destroys food that hits the ground.
+
+# PhaserGame.tsx
+
+## `PhaserGame: React.FC<IProps>`
+
+A React wrapper component that initializes the Phaser game engine and provides a reference to the game and active scene via `ref`.
+
+## `interface IRefPhaserGame`
+
+Reference structure passed back to parent via `ref`.
+
+- **game**: `Phaser.Game | null` — The Phaser game instance.
+- **scene**: `Phaser.Scene | null` — The active scene instance when ready.
+
+## `interface IProps`
+
+Props accepted by the component:
+
+- **currentActiveScene**: `(scene_instance: Phaser.Scene) => void` — Optional callback to notify parent of the active Phaser scene.
+
+---
+
+## `useLayoutEffect`
+
+Initializes the Phaser game on mount and ensures full cleanup on unmount.
+
+---
+
+## `useEffect`
+
+Listens for the `'current-scene-ready'` event. When triggered:
+
+- Injects AAC food keys into the scene using `setFoodKeys`.
+- Shares the scene instance via `ref` and `currentActiveScene`.
+
+---
+
+## `return`
+
+Renders a `<div id="game-container">` for mounting the Phaser canvas.
