@@ -3,4 +3,12 @@ sidebar_position: 2
 ---
 # Integration tests
 
-Tests to demonstrate each use-case based on the use-case descriptions and the sequence diagrams. External input should be provided via mock objects and results verified via mock objects. Integration tests should not require manual entry of data nor require manual interpretation of results.
+We will be using Vitest and React Testing Library
+
+
+## Use Case 4
+Description: AAC user chooses foods during gameplay to set the food drop queue  
+Assertion: 
+* Each tap adds the chosen food to the queue display.
+* When the queue is full, a new tap bumps the queue's first index
+* The food in the queue shows on every Hippo client
