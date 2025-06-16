@@ -87,7 +87,7 @@ export class Game extends Scene
         this.add.image(512, 384, 'background');
     
         this.hippo = new Hippo(this, 350, 425, 'character', new WalkStrategy());
-        this.hippo.setScale(0.5);
+        this.hippo.setScale(0.3);
     
         this.cursors = this.input!.keyboard!.createCursorKeys();
     

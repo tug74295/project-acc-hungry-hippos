@@ -1,8 +1,9 @@
 // WalkStrategy.ts – free 360° walking
-import { MoveStrategy } from './MoveStrategy';
+import { MoveStrategy } from "./moveStrategy";
+
 
 export class WalkStrategy implements MoveStrategy {
-  constructor(private speed = 250) {}
+  constructor(private speed = 300) {}
 
   update(
     sprite: Phaser.Physics.Arcade.Sprite,
