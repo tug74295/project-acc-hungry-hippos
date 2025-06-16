@@ -21,7 +21,8 @@ interface ButtonClickProps {
 function ButtonClick({ text, onClick }: ButtonClickProps) {
   return (
     <button className={styles.button} onClick={onClick}>
-      {text}
+      <span>{text}</span>
+      <span className={styles.arrow} aria-hidden="true">→</span>
     </button>
   );
 }

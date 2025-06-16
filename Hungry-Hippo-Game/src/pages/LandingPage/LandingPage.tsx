@@ -63,7 +63,7 @@ function LandingPage() {
       if (data.valid) {
         setIsValidCode(true);
         console.log('Valid game code:', gameCode);
-        navigate(`/GamePage/${gameCode}`);
+        navigate(`/roleselect/${gameCode}`);
       } else {
         setIsValidCode(false);
         setCode(['', '', '', '', '']); // Clear input on invalid code
