@@ -28,11 +28,7 @@
         "api": "node sessionAPI.js"
     },
     "dependencies": {
-<<<<<<< HEAD
-        "and": "^0.0.3",
-=======
->>>>>>> 426554ed86b33750441f879e5a56cf4a34b1a939
-        "cors": "^2.8.5",
+"cors": "^2.8.5",
         "express": "^5.1.0",
         "phaser": "^3.90.0",
         "react": "^19.1.0",
