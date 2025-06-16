@@ -5,6 +5,63 @@ description: Frontend API
 
 # Frontend API
 
+## Table of Contents
+
+- [AAC Interface](#aac-interface)
+  - [`interface AacInterfaceProps`](#interface-aacinterfaceprops)
+  - [`onFoodSelected`](#onfoodselected-food-aacfood--void)
+  - [`AacInterface` Component](#const-aacinterface-reactfcaacinterfaceprops--)
+  - [`selectedFood`](#const-selectedfood-setselectedfood--reactusestateaacfood--null)
+  - [`selectedCategory`](#const-selectedcategory-setselectedcategory--reactusestatestring--null)
+  - [`isAudioPlaying`](#const-isaudioplaying-setisaudioplaying--reactusestatefalse)
+  - [`handleFoodClick`](#const-handlefoodclick--food-aacfood--)
+  - [`audio.onerror`](#audioonerror--)
+  - [`renderCategoryView`](#const-rendercategoryview--)
+  - [`renderFoodsView`](#const-renderfoodsview--)
+  - [`AAC Interface JSX`](#return--div-classnameaac-container-div-classnameaac-device-h1-aac-device-)
+- [Foods.ts](#foodsts)
+  - [`AacFood`](#export-interface-aacfood)
+  - [`AacCategory`](#export-interface-aaccategory)
+  - [`AacData`](#export-interface-aacdata)
+  - [`AAC_DATA`](#export-const-aac_data-aacdata--aacdata-as-aacdata)
+- [Game.ts](#gamets)
+  - [`Game` class](#class-game-extends-phaserscene)
+  - [`hippo`](#private-hippo-phaserphysicsarcadesprite)
+  - [`foods`](#private-foods-phaserphysicsarcadegroup)
+  - [`foodKeys`](#private-foodkeys-string)
+  - [`lanePositions`](#private-lanepositions-number)
+  - [`foodSpawnTimer`](#private-foodspawntimer-phasertimetimerevent)
+  - [`constructor`](#constructor)
+  - [`preload`](#preload)
+  - [`create`](#create)
+  - [`setFoodKeys`](#setfoodkeyskeys-string)
+  - [`startSpawningFood`](#startspawningfood)
+  - [`spawnFood`](#spawnfood)
+  - [`addFoodManually`](#addfoodmanuallyfoodkey-string)
+  - [`handleFoodCollision`](#handlefoodcollisionhippo-food)
+  - [`update`](#update)
+- [PhaserGame.tsx](#phasergametsx)
+  - [`PhaserGame`](#phasergame-reactfciprops)
+  - [`IRefPhaserGame`](#interface-irefphasergame)
+  - [`IProps`](#interface-iprops)
+  - [`useLayoutEffect`](#uselayouteffect)
+  - [`useEffect`](#useeffect)
+  - [`PhaserGame JSX`](#return)
+- [LandingPage.tsx](#landingpagetsx)
+  - [`LandingPage`](#landingpage)
+  - [`code`](#const-code-setcode--usestate)
+  - [`inputsRef`](#const-inputsref--useref)
+  - [`isValidCode`](#const-isvalidcode-setisvalidcode--usestate)
+  - [`handleStart`](#const-handlestart--async--)
+  - [`handleCreateGame`](#const-handlecreategame--async--)
+  - [`handleChange`](#const-handlechange--)
+  - [`handleKeyDown`](#const-handlekeydown--)
+  - [`handlePaste`](#const-handlepaste--)
+- [ButtonClick.tsx](#buttonclicktsx)
+  - [`ButtonClick`](#buttonclick-component)
+  - [`ButtonClickProps`](#interface-buttonclickprops)
+
+
 # AAC Interface
 
 ## `interface AacInterfaceProps`
@@ -189,3 +246,118 @@ Listens for the `'current-scene-ready'` event. When triggered:
 ## `return`
 
 Renders a `<div id="game-container">` for mounting the Phaser canvas.
+
+
+---
+
+# LandingPage.tsx
+
+## `LandingPage`
+
+Landing page interface for users to **enter a 5-character session code** or **create a new game session**.
+
+### `const [code, setCode] = useState(['', '', '', '', ''])`
+
+Stores the user-entered game code across 5 input fields.
+
+### `const inputsRef = useRef<(HTMLInputElement | null)[]>([])`
+
+Holds references to individual input boxes for managing focus and input behavior.
+
+### `const [isValidCode, setIsValidCode] = useState(true)`
+
+Tracks whether the currently entered code is valid.
+
+---
+
+## `const handleStart = async () =>`
+
+Validates the user-entered session code by calling the backend.
+
+- **If valid:** navigates to `/GamePage`.
+- **If invalid:** clears the inputs and focuses the first input box.
+
+---
+
+## `const handleCreateGame = async () =>`
+
+Sends a request to create a new session.
+
+- **If successful:** navigates to `/GamePage`.
+- **If failed:** alerts user and logs error.
+
+---
+
+## `const handleChange = (value: string, index: number) =>`
+
+Handles single-character input changes in session code inputs.
+
+- Converts input to uppercase.
+- Automatically advances focus to the next box.
+
+---
+
+## `const handleKeyDown = (e, index) =>`
+
+Handles backspace key behavior in the code inputs.
+
+- Moves focus backward if current input is empty.
+
+---
+
+## `const handlePaste = (e) =>`
+
+Allows user to paste the entire 5-character code.
+
+- Splits characters and fills all inputs.
+- Automatically focuses the next available box.
+
+---
+
+## `return (...)`
+
+Renders the complete landing UI:
+
+- **Logo**
+- **Code input fields**
+- **Create Game link**
+- **Join Game button**
+
+---
+
+# ButtonClick.tsx
+
+## `ButtonClick` Component
+
+A **reusable styled button** component that executes a callback function when clicked.
+
+### Usage
+
+```tsx
+<ButtonClick text="Join Game" onClick={handleStart} />
+```
+
+---
+
+## `interface ButtonClickProps`
+
+Props for the `ButtonClick` component:
+
+- `text: string` — The label text to display inside the button.
+- `onClick: () => void` — Callback function triggered when the button is clicked.
+
+---
+
+## `function ButtonClick({ text, onClick }: ButtonClickProps): JSX.Element`
+
+Renders the button with styles and binds the click event.
+
+- **Parameters:**  
+  `text` — Button label  
+  `onClick` — Click handler
+
+- **Returns:**  
+  `JSX.Element` — A styled button element
+
+---
+
