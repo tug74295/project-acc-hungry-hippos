@@ -1,22 +1,3 @@
-// Generates a random 5-character session ID
-export function generateSessionId(length = 5): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let id = '';
-  for (let i = 0; i < length; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return id;
-}
-
-// Generates a unique session ID not in the existing sessions array
-export function generateUniqueSessionId(existingSessions: string[], length = 5): string {
-  let newId: string;
-  do {
-    newId = generateSessionId(length);
-  } while (existingSessions.includes(newId));
-  return newId;
-}
-
 // // Saves session ID to sessionStorage
 // export function saveSessionId(sessionId: string): void {
 //   sessionStorage.setItem('sessionId', sessionId);
