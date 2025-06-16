@@ -8,7 +8,7 @@ Frontend testing is done via Vitest and React Testing Library.
 | Student | Library | Why We Chose It | Key Features | Modules Covered |
 | --------| --------| ----------------| -------------| ----------------|
 | Kostandin Jorgji | Vitest & React Testing Library | Vite integration, fast TypeScript support, RTL mirrors how users interact with the app | userEvent & render | AacInterface.tsx, Foods.ts
-| Student |
+| Omais Khan | Vitest | Works out-of-the-box with Vite + TypeScript | vi.fn(), isolated test logic | Game.ts |
 | Student |
 | Student |
 | Student |
@@ -44,3 +44,52 @@ Frontend testing is done via Vitest and React Testing Library.
         * User taps a food
     * Expected Result
         * Indicator shows the selected food
+
+## Game.ts
+
+### Method: `setFoodKeys(keys: string[])`
+
+* **Purpose:** Defines which food keys are allowed to be spawned.
+* **Test Case:**
+    - **Input:** `['apple', 'pizza']`
+    - **Expected Result:** `foodKeys` field is updated with these values.
+
+---
+
+### Method: `addFoodManually(foodKey: string)`
+
+* **Purpose:** Manually adds a food item to the game (e.g. from AAC).
+* **Test Case:**
+    - **Input:** `'apple'`
+    - **Mocked:** `foods.create`, `setScale`, `setVelocityY`, `setBounce`, `setCollideWorldBounds`
+    - **Expected Result:**
+        - `foods.create()` called with a lane `x` and `'apple'`
+        - All config methods called with correct values
+
+---
+
+### Method: `spawnFood()`
+
+* **Purpose:** Automatically spawns food from a random key and lane.
+* **Test Case:**
+    - **Precondition:** `foodKeys = ['apple']`
+    - **Mocked:** `Phaser.Utils.Array.GetRandom`, `foods.create`
+    - **Expected Result:** `foods.create()` called with valid food key and lane
+
+---
+
+### Method: `handleFoodCollision(hippoObj, foodObj)`
+
+* **Purpose:** Removes food when it overlaps with the hippo.
+* **Test Case:**
+    - **Input:** a food object with `.destroy()` mocked
+    - **Expected Result:** `destroy()` called on food
+
+---
+
+### Method: `update()`
+
+* **Purpose:** Removes any food object that touches the ground.
+* **Test Case:**
+    - **Input:** a group of food objects, some with `body.blocked.down = true`
+    - **Expected Result:** Only those with `blocked.down = true` are destroyed
