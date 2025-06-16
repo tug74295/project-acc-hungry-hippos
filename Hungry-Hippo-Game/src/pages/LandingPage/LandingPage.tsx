@@ -51,12 +51,6 @@ function LandingPage() {
   const handleStart = async () => {
     const gameCode = code.join('');
 
-    if (gameCode.length !== 5) {
-      setIsValidCode(false);
-      setCode(['', '', '', '', '']); // Clear input
-      return;
-    }
-
     try {
       const response = await fetch('http://localhost:4000/validate-session', {
         method: 'POST',
@@ -69,7 +63,7 @@ function LandingPage() {
       if (data.valid) {
         setIsValidCode(true);
         console.log('Valid game code:', gameCode);
-        navigate('/GamePage');
+        navigate(`/roleselect/${gameCode}`);
       } else {
         setIsValidCode(false);
         setCode(['', '', '', '', '']); // Clear input on invalid code
@@ -115,7 +109,7 @@ const handleCreateGame = async () => {
     const newSessionId = data.sessionId;
 
     console.log('New session ID:', newSessionId);
-    navigate('/GamePage');
+    navigate(`/Presenter/${newSessionId}`);
   } catch (error) {
     console.error(error);
     alert('Error creating new game session. Please try again.');
