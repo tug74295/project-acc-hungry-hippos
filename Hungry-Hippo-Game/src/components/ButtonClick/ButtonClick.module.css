@@ -3,15 +3,35 @@
 .button {
   padding: 1rem 2rem;
   width: 15rem;
-  font-size: 1.25rem;
-  background-color: black;
-  color: white;
-  border:none;
+  font-size: 1.4rem;
+  background-color: black;     
+  color: white;             
+  border: none;
   border-radius: 50px;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  transition: background-color 0.2s ease-in-out, transform 0.15s ease;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4); 
+  user-select: none;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
 }
 
 .button:hover {
-  background-color: #797979;
+  /* background-color: #797979;  */
+  transform: scale(1.05);   
+}
+
+.text {
+  display: inline-block;
+}
+
+.arrow {
+  font-size: 1.8rem;
+  color: white;
+  line-height: 1;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
