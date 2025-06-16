@@ -118,7 +118,7 @@ export class Game extends Scene
      * Initializes game objects, such as the hippo, background, and food group.
      * Also sets up the physics collider between hippo and food.
     */
-    create ()
+    create()
     {
         
         this.add.image(512, 384, 'background');
@@ -154,6 +154,14 @@ export class Game extends Scene
         // Detects when a food overlaps with the hippo and trigger eating logic
         this.physics.add.overlap(this.hippo, this.foods, this.handleFoodCollision, undefined, this);
 
+        this.scoreText = this.add.text(32, 32, '', {
+            fontSize: '24px',
+            color: '#000',
+            fontFamily: 'Arial',
+            align: 'left',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            padding: { x: 10, y: 10 }
+        });
     }
 
     /**
@@ -250,22 +258,47 @@ export class Game extends Scene
             this.players[playerId] = playerSprite;
 
             this.physics.add.overlap(playerSprite, this.foods, (hippo, fruit) => {
-                this.handleFruitCollision(playerId, fruit);
-            }, undefined, this);
+                let fruitGO: Phaser.GameObjects.GameObject | null = null;
+
+                if(fruit instanceof Phaser.Tilemaps.Tile)
+                {
+                    return;
+                }
+                else if('gameObject' in fruit && fruit.gameObject instanceof Phaser.GameObjects.GameObject)
+                {
+                    fruitGO = fruit.gameObject;
+                }
+                else if(fruit instanceof Phaser.GameObjects.GameObject)
+                {
+                    fruitGO = fruit;
+                }
+                if(fruitGO)
+                {
+                    this.handleFruitCollision(playerId, fruitGO);
+                }
+            }, undefined, this)
         }
     }
 
     private handleFruitCollision = (
-        hippo: any,
-        fruit: any
+        playerId: string,
+        fruit: Phaser.GameObjects.GameObject
     ) => {
         fruit.destroy();
-        this.playerScores['player1'] += 1;
+        this.playerScores[playerId] += 1;
 
-        this.scoreText.setText(`Score: ${this.playerScores['player1']}`);
+        this.updateScoreText();
 
         EventBus.emit('scoreUpdate', {
-            scores: { ...this.playerScores }
+            scores: {...this.playerScores}
         });
     };
+
+    private updateScoreText() 
+    {
+        const lines = Object.entries(this.playerScores)
+            .map(([player, score]) => `${player}: ${score}`)
+            .join('\n');
+        this.scoreText.setText(lines);
+    }
 }
