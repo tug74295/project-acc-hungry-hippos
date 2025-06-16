@@ -1,4 +1,4 @@
-import { MoveStrategy } from "./moveStrategy/MoveStrategy";
+import { MoveStrategy } from "./moveStrategy/moveStrategy";
 
 export class Hippo extends Phaser.Physics.Arcade.Sprite {
     private moveStrategy: MoveStrategy;
