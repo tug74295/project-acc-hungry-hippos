@@ -5,6 +5,49 @@ description: Frontend API
 
 # Frontend API
 
+## Table of Contents
+
+- [AAC Interface](#aac-interface)
+  - [`interface AacInterfaceProps`](#interface-aacinterfaceprops)
+  - [`onFoodSelected`](#onfoodselected-food-aacfood--void)
+  - [`AacInterface` Component](#const-aacinterface-reactfcaacinterfaceprops--)
+  - [`selectedFood`](#const-selectedfood-setselectedfood--reactusestateaacfood--null)
+  - [`selectedCategory`](#const-selectedcategory-setselectedcategory--reactusestatestring--null)
+  - [`isAudioPlaying`](#const-isaudioplaying-setisaudioplaying--reactusestatefalse)
+  - [`handleFoodClick`](#const-handlefoodclick--food-aacfood--)
+  - [`audio.onerror`](#audioonerror--)
+  - [`renderCategoryView`](#const-rendercategoryview--)
+  - [`renderFoodsView`](#const-renderfoodsview--)
+  - [`AAC Interface JSX`](#return--div-classnameaac-container-div-classnameaac-device-h1-aac-device-)
+- [Foods.ts](#foodsts)
+  - [`AacFood`](#export-interface-aacfood)
+  - [`AacCategory`](#export-interface-aaccategory)
+  - [`AacData`](#export-interface-aacdata)
+  - [`AAC_DATA`](#export-const-aac_data-aacdata--aacdata-as-aacdata)
+- [Game.ts](#gamets)
+  - [`Game` class](#class-game-extends-phaserscene)
+  - [`hippo`](#private-hippo-phaserphysicsarcadesprite)
+  - [`foods`](#private-foods-phaserphysicsarcadegroup)
+  - [`foodKeys`](#private-foodkeys-string)
+  - [`lanePositions`](#private-lanepositions-number)
+  - [`foodSpawnTimer`](#private-foodspawntimer-phasertimetimerevent)
+  - [`constructor`](#constructor)
+  - [`preload`](#preload)
+  - [`create`](#create)
+  - [`setFoodKeys`](#setfoodkeyskeys-string)
+  - [`startSpawningFood`](#startspawningfood)
+  - [`spawnFood`](#spawnfood)
+  - [`addFoodManually`](#addfoodmanuallyfoodkey-string)
+  - [`handleFoodCollision`](#handlefoodcollisionhippo-food)
+  - [`update`](#update)
+- [PhaserGame.tsx](#phasergametsx)
+  - [`PhaserGame`](#phasergame-reactfciprops)
+  - [`IRefPhaserGame`](#interface-irefphasergame)
+  - [`IProps`](#interface-iprops)
+  - [`useLayoutEffect`](#uselayouteffect)
+  - [`useEffect`](#useeffect)
+  - [`PhaserGame JSX`](#return)
+
 # AAC Interface
 
 ## `interface AacInterfaceProps`
