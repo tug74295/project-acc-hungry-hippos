@@ -56,7 +56,7 @@ export class Game extends Scene
     */
     preload ()
     {
-        this.load.image('background', 'assets/squareTiles.png');
+        this.load.image('background', '/assets/squareTiles.png');
 
         // Dynamically load food images from AAC data
         AAC_DATA.categories.forEach(category => {
@@ -68,7 +68,7 @@ export class Game extends Scene
             });
         });
 
-        this.load.spritesheet('character', 'assets/spritesheet.png',{
+        this.load.spritesheet('character', '/assets/spritesheet.png',{
             frameWidth: 350,
             frameHeight: 425,
         });
