@@ -1,6 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import LandingPage from './pages/LandingPage/LandingPage';
-import GamePage from './pages/GamePage/GamePage';
+import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './router';
 
 
