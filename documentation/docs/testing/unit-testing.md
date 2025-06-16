@@ -3,7 +3,7 @@ sidebar_position: 1
 ---
 # Unit tests
 
-[View Full Test Coverage Report](coverage/index.html)
+[View Full Test Coverage Report](/coverage/index.html)
 
 Frontend testing is done via Vitest and React Testing Library. 
 
