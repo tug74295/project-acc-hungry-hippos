@@ -60,6 +60,13 @@ description: Frontend API
 - [ButtonClick.tsx](#buttonclicktsx)
   - [`ButtonClick`](#buttonclick-component)
   - [`ButtonClickProps`](#interface-buttonclickprops)
+- [GamePage.tsx](#gamepagetsx)
+  - [`GamePage` Component](#const-gamepage-reactfc--)
+  - [`phaserRef`](#const-phaserref--userefirefphasergame--null)
+  - [`foodStack`](#const-foodstack-setfoodstack--reactusestateaacfood)
+  - [`handleSelectedFood`](#const-handleselectedfood--selectedfood-aacfood--)
+  - [`JSX Return`](#return--div-idapp--aacinterface-onfoodselected)
+
 
 
 # AAC Interface
@@ -360,4 +367,30 @@ Renders the button with styles and binds the click event.
   `JSX.Element` — A styled button element
 
 ---
+
+
+
+## `const GamePage: React.FC = () =>`
+
+ * **Returns:** `JSX.Element` — The rendered game page.
+
+## `const phaserRef = useRef<IRefPhaserGame | null>(null)`
+
+* @description A React ref pointing to the PhaserGame component instance. Used to access its scene and methods like addFoodManually.
+
+## `const [foodStack, setFoodStack] = React.useState<AacFood[]>([])`
+
+
+## `const handleSelectedFood = (selectedFood: AacFood) =>`
+
+ * **Parameters:** `selectedFood` — `AacFood` — - The food object selected from the AAC interface.
+
+     <p>
+
+## `return ( <div id="app"> <AacInterface onFoodSelected=`
+
+ * **Returns:** `JSX.Element` — 
+
+
+ ---
 
