@@ -37,7 +37,13 @@ function LandingPage() {
   const [isValidCode, setIsValidCode] = useState(true);
 
   /**
-   * Validates the entered game code by checking with the backend.
+   * handleStart
+   *
+   * Attempts to join an existing game session using the 5-character code entered by the user.
+   *
+   * <p>Purpose:
+   * - Validates the provided session code with the backend.
+   * - If valid, generates a new username, joins the session, and navigates to the RoleSelect screen.
    *
    * Pre-condition:
    * - The code must be 5 characters long.
@@ -46,10 +52,31 @@ function LandingPage() {
    * - If valid, navigates to GamePage.
    * - If invalid or failed, resets input and shows error feedback.
    *
+   * <p>Data Fields:
+   * - code: string[] - The user-entered characters forming the game code.
+   * - userId: string - The randomly generated username for the player.
+   * - role: string - Default role assigned until updated by RoleSelect.
+   *
+   * <p>Error Handling:
+   * - Logs errors to the console for both validation and join failures.
+   * - If the game code is invalid, resets the input boxes and refocuses the first input.
+   * - Shows red border styling if `isValidCode` is false.
+   *
+   * @async
+   * @function handleStart
+   * @throws Displays console error logs for fetch/response failures.
    * @returns {Promise<void>}
    */
   const handleStart = async () => {
     const gameCode = code.join('');
+
+    const generateUsername = () => {
+      const num = Math.floor(Math.random() * 1000);
+      return `User${String(num).padStart(3, '0')}`;
+    };
+
+    const userId = generateUsername();
+    const role = 'null';
 
     try {
       const response = await fetch('http://localhost:4000/validate-session', {
@@ -63,7 +90,22 @@ function LandingPage() {
       if (data.valid) {
         setIsValidCode(true);
         console.log('Valid game code:', gameCode);
-        navigate(`/roleselect/${gameCode}`);
+
+        const joinRes = await fetch('http://localhost:4000/join-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gameCode, userId, role }),
+        });
+
+        const joinData = await joinRes.json();
+
+        if (joinRes.ok && joinData.joined) {
+          navigate(`/roleselect/${gameCode}`, {
+            state: { userId, role },
+          });
+        } else {
+          console.error('Failed to join session:', joinData.error);
+        }
       } else {
         setIsValidCode(false);
         setCode(['', '', '', '', '']); // Clear input on invalid code
@@ -78,43 +120,43 @@ function LandingPage() {
     }
   };
 
-/**
- * Handles creating a new game session by calling the backend API to generate a unique session ID.
- * 
- * Sends a POST request to the '/create-session' endpoint, which responds with a new unique session ID.
- * If successful, logs the new session ID, optionally stores it (e.g., in local storage or state),
- * and navigates the user to the game page.
- * 
- * If there is an error during the request or response, it logs the error and alerts the user.
- * 
- * Usage:
- * Call this function when the user initiates creating a new game session.
- * 
- * @async
- * @function handleCreateGame
- * @throws Will alert the user if the session creation fails.
- */
-const handleCreateGame = async () => {
-  try {
-    const response = await fetch('http://localhost:4000/create-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
+  /**
+   * Handles creating a new game session by calling the backend API to generate a unique session ID.
+   * 
+   * Sends a POST request to the '/create-session' endpoint, which responds with a new unique session ID.
+   * If successful, logs the new session ID, optionally stores it (e.g., in local storage or state),
+   * and navigates the user to the game page.
+   * 
+   * If there is an error during the request or response, it logs the error and alerts the user.
+   * 
+   * Usage:
+   * Call this function when the user initiates creating a new game session.
+   * 
+   * @async
+   * @function handleCreateGame
+   * @throws Will alert the user if the session creation fails.
+   */
+  const handleCreateGame = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/create-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to create session');
+      if (!response.ok) {
+        throw new Error('Failed to create session');
+      }
+
+      const data = await response.json();
+      const newSessionId = data.sessionId;
+
+      console.log('New session ID:', newSessionId);
+      navigate(`/Presenter/${newSessionId}`);
+    } catch (error) {
+      console.error(error);
+      alert('Error creating new game session. Please try again.');
     }
-
-    const data = await response.json();
-    const newSessionId = data.sessionId;
-
-    console.log('New session ID:', newSessionId);
-    navigate(`/Presenter/${newSessionId}`);
-  } catch (error) {
-    console.error(error);
-    alert('Error creating new game session. Please try again.');
-  }
-};
+  };
 
 
 
