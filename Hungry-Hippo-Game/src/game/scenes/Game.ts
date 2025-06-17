@@ -121,6 +121,13 @@ export class Game extends Scene
         if (foodGO instanceof Phaser.GameObjects.Sprite || foodGO instanceof Phaser.Physics.Arcade.Image) {
             console.log(`[EAT] ${foodGO.texture.key} eaten by hippo`);
             foodGO.destroy();
+
+            this.playerScores["host"] += 1
+            this.updateScoreText();
+
+            EventBus.emit('scoreUpdate', {
+                scores: { ...this.playerScores }
+            });
         }
     }
 
@@ -140,6 +147,8 @@ export class Game extends Scene
         EventBus.emit('current-scene-ready', this);
     
         this.foods = this.physics.add.group();
+
+        this.playerScores["host"] = 0;
     
         this.physics.add.overlap(this.hippo, this.foods, this.handleFoodCollision, undefined, this);
 
@@ -151,6 +160,8 @@ export class Game extends Scene
             backgroundColor: 'rgba(255, 255, 255, 0.8)',
             padding: { x: 10, y: 10 }
         });
+
+        this.updateScoreText();
     }
     
 
