@@ -129,9 +129,6 @@ export class Game extends Scene
      * Also sets up the physics collider between hippo and food.
     */
 
-    create()
-    {
-
     create() {
         this.add.image(512, 384, 'background');
     
