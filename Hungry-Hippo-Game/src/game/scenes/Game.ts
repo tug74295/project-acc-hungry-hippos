@@ -41,15 +41,24 @@ export class Game extends Scene
     private lanePositions = [256, 512, 768]; // tweak as needed
 
     /**
-     * Timer that controls the interval-based spawning of food.
+     * Constructor for the Game scene. Sets the scene key.
     */
     private foodSpawnTimer: Phaser.Time.TimerEvent; // store timer reference
+
+
+    private playerScores: Record<string, number> = {};
+
+    private scoreText: Phaser.GameObjects.Text;
+
+    private players: Record<string, Phaser.Physics.Arcade.Sprite> = {};
+
 
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
 
     /**
      * Constructor for the Game scene. Sets the scene key.
     */
+
     constructor ()
     {
         super('Game');
@@ -80,9 +89,49 @@ export class Game extends Scene
     }
 
     /**
+     * Callback that runs when food collides with the hippo.
+     * Removes the food from the scene.
+     * 
+     * @param hippoObj - The hippo game object.
+     * @param foodObj - The food game object that collided with the hippo.
+    */
+    private handleFoodCollision(
+        hippoObj: Phaser.GameObjects.GameObject | Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Tilemaps.Tile,
+        foodObj: Phaser.GameObjects.GameObject | Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Tilemaps.Tile
+    ) 
+    {
+        // Extract the actual GameObjects from bodies or tiles
+        const getGameObject = (obj: any): Phaser.GameObjects.GameObject | null => {
+            if (obj instanceof Phaser.Tilemaps.Tile) {
+                // Tiles don't have a gameObject, so just return null or handle accordingly
+                return null;
+            }
+            if ('gameObject' in obj) {
+                return obj.gameObject;
+            }
+            return obj;
+        };
+
+        const foodGO = getGameObject(foodObj);
+        if (!foodGO) {
+            // Could be a tile, skip collision
+            return;
+        }
+
+        if (foodGO instanceof Phaser.GameObjects.Sprite || foodGO instanceof Phaser.Physics.Arcade.Image) {
+            console.log(`[EAT] ${foodGO.texture.key} eaten by hippo`);
+            foodGO.destroy();
+        }
+    }
+
+    /**
      * Initializes game objects, such as the hippo, background, and food group.
      * Also sets up the physics collider between hippo and food.
     */
+
+    create()
+    {
+
     create() {
         this.add.image(512, 384, 'background');
     
@@ -96,6 +145,15 @@ export class Game extends Scene
         this.foods = this.physics.add.group();
     
         this.physics.add.overlap(this.hippo, this.foods, this.handleFoodCollision, undefined, this);
+
+        this.scoreText = this.add.text(32, 32, '', {
+            fontSize: '24px',
+            color: '#000',
+            fontFamily: 'Arial',
+            align: 'left',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            padding: { x: 10, y: 10 }
+        });
     }
     
 
@@ -163,19 +221,6 @@ export class Game extends Scene
         food.setBounce(0.2);
         food.setCollideWorldBounds(true);
     }
-
-    /**
-     * Callback that runs when food collides with the hippo.
-     * Removes the food from the scene.
-     * 
-     * @param hippoObj - The hippo game object.
-     * @param foodObj - The food game object that collided with the hippo.
-    */
-    private handleFoodCollision(hippoObj: Phaser.GameObjects.GameObject, foodObj: Phaser.GameObjects.GameObject) {
-        const food = foodObj as Phaser.Physics.Arcade.Image;
-        console.log(`[EAT] ${food.texture.key} eaten by hippo`);
-        food.destroy();
-    }
     
     /**
      * Phaser’s built-in update loop, called on every frame.
@@ -193,5 +238,64 @@ export class Game extends Scene
         if (this.hippo && this.cursors) {
             this.hippo.update(this.cursors);
         }
+    }
+
+    addPlayer(playerId: string, x: number, y: number)
+    {
+        if(!(playerId in this.playerScores))
+        {
+            this.playerScores[playerId] = 0;
+        }
+        if(!(playerId in this.players))
+        {
+            const playerSprite = this.physics.add.sprite(x, y, 'character', 0);
+            playerSprite.setCollideWorldBounds(true);
+            playerSprite.setImmovable(true);
+            playerSprite.play('walking');
+            this.players[playerId] = playerSprite;
+
+            this.physics.add.overlap(playerSprite, this.foods, (hippo, fruit) => {
+                let fruitGO: Phaser.GameObjects.GameObject | null = null;
+
+                if(fruit instanceof Phaser.Tilemaps.Tile)
+                {
+                    return;
+                }
+                else if('gameObject' in fruit && fruit.gameObject instanceof Phaser.GameObjects.GameObject)
+                {
+                    fruitGO = fruit.gameObject;
+                }
+                else if(fruit instanceof Phaser.GameObjects.GameObject)
+                {
+                    fruitGO = fruit;
+                }
+                if(fruitGO)
+                {
+                    this.handleFruitCollision(playerId, fruitGO);
+                }
+            }, undefined, this)
+        }
+    }
+
+    private handleFruitCollision = (
+        playerId: string,
+        fruit: Phaser.GameObjects.GameObject
+    ) => {
+        fruit.destroy();
+        this.playerScores[playerId] += 1;
+
+        this.updateScoreText();
+
+        EventBus.emit('scoreUpdate', {
+            scores: {...this.playerScores}
+        });
+    };
+
+    private updateScoreText() 
+    {
+        const lines = Object.entries(this.playerScores)
+            .map(([player, score]) => `${player}: ${score}`)
+            .join('\n');
+        this.scoreText.setText(lines);
     }
 }
