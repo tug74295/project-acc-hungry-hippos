@@ -171,7 +171,7 @@ export class Game extends Scene
      * @param hippoObj - The hippo game object.
      * @param foodObj - The food game object that collided with the hippo.
     */
-    private handleFoodCollision(hippoObj: Phaser.GameObjects.GameObject, foodObj: Phaser.GameObjects.GameObject) {
+    private whandleFoodCollision(hippoObj: Phaser.GameObjects.GameObject, foodObj: Phaser.GameObjects.GameObject) {
         const food = foodObj as Phaser.Physics.Arcade.Image;
         console.log(`[EAT] ${food.texture.key} eaten by hippo`);
         food.destroy();
