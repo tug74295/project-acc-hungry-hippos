@@ -1,6 +1,6 @@
 import styles from './Presenter.module.css';
-import { useNavigate } from 'react-router-dom';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 
 /**
  * Presenter - React component that displays the session ID to the host after creating a new game.
@@ -40,7 +40,47 @@ import { useParams } from 'react-router-dom';
  */
 function Presenter() {
   const navigate = useNavigate();
-  const { sessionId } = useParams();
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const ws = useRef<WebSocket | null>(null);
+  
+  // This useEffect hook runs once when the component mounts to establish the WebSocket connection.
+  useEffect(() => {
+    // Determine the correct WebSocket URL based on the environment.
+    const isProduction = import.meta.env.PROD;
+    const WS_URL = isProduction
+      ? `wss://${import.meta.env.VITE_WEBSOCKET_URL}` 
+      : 'ws://localhost:4000';
+
+    ws.current = new WebSocket(WS_URL);
+
+    ws.current.onopen = () => {
+      console.log('[WS] Host connected.');
+      // The host joins the session room.
+      const joinMessage = {
+        type: 'PLAYER_JOIN',
+        payload: {
+          sessionId,
+          userId: 'Host' // The host can have a fixed ID or a generated one.
+        }
+      };
+      ws.current?.send(JSON.stringify(joinMessage));
+    };
+
+    ws.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('WS Message from server:', data);
+      // TODO: Handle incoming messages, e.g., displaying newly joined players.
+    };
+
+    ws.current.onclose = () => {
+      console.log('WS Host disconnected.');
+    };
+
+    // Cleanup function: close the WebSocket connection when the component unmounts.
+    return () => {
+      ws.current?.close();
+    };
+  }, [sessionId]); // Re-run the effect if the sessionId changes.
 
   /**
    * Handler for clicking the close button.

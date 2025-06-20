@@ -3,6 +3,7 @@ import styles from './LandingPage.module.css';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
 import { useRef, useState } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 /**
  * LandingPage - User interface for joining or creating a game session.
  *
@@ -79,7 +80,7 @@ function LandingPage() {
     const role = 'null';
 
     try {
-      const response = await fetch('http://localhost:4000/validate-session', {
+      const response = await fetch(`${API_URL}/validate-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ gameCode }),
@@ -91,7 +92,7 @@ function LandingPage() {
         setIsValidCode(true);
         console.log('Valid game code:', gameCode);
 
-        const joinRes = await fetch('http://localhost:4000/join-session', {
+        const joinRes = await fetch(`${API_URL}/join-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ gameCode, userId, role }),
@@ -138,7 +139,7 @@ function LandingPage() {
    */
   const handleCreateGame = async () => {
     try {
-      const response = await fetch('http://localhost:4000/create-session', {
+      const response = await fetch(`${API_URL}/create-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
