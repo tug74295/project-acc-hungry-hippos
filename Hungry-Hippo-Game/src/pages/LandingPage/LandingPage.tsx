@@ -4,6 +4,7 @@ import ButtonClick from '../../components/ButtonClick/ButtonClick';
 import { useRef, useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+console.log('API URL:', API_URL);
 /**
  * LandingPage - User interface for joining or creating a game session.
  *
