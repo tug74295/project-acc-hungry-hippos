@@ -10,7 +10,11 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+const corsOptions = {
+  origin: 'https://www.draexico.com',
+  optionSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
