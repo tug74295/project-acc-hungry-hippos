@@ -10,7 +10,7 @@ import { useRef, useState, useEffect } from 'react';
  * session-related communication (create, validate) through WebSocket messages,
  * listening for server responses to navigate the user.
  */
-function LandingPage() {
+const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [code, setCode] = useState(['', '', '', '', '']);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
@@ -58,19 +58,13 @@ function LandingPage() {
       }
     };
 
-    ws.current.onclose = () => {
-      console.log('[WS] Connection closed.');
-    };
-    
-    ws.current.onerror = (error) => {
-      console.error('[WS] WebSocket Error:', error);
-    };
+    socket.onerror = err => console.error('WebSocket error:', err);
+    socket.onclose = () => console.log('WebSocket connection closed.');
 
-    // Cleanup function: close the connection when the component unmounts.
     return () => {
       ws.current?.close();
     };
-  }, [navigate]); // navigate is a stable dependency
+  }, []);
 
   // --- Send messages to the server ---
 

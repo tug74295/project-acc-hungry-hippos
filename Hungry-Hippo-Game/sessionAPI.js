@@ -8,78 +8,49 @@ const WebSocket = require('ws');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-const PORT = process.env.PORT || 4000;
-
-const allowedOrigins = [
-  'https://www.draexico.com',
-  'https://project-acc-hungry-hippos-9wsu.vercel.app'
-];
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  methods: ['GET', 'POST'], // Explicitly allow GET and POST requests
-  allowedHeaders: ['Content-Type'], // Explicitly allow the Content-Type header
-};
-app.use(cors(corsOptions));
-app.use(express.json());
 
 const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 const sessions = {};
 
 // Websocket Server
-wss.on('connection', async (ws, req) => {
-    console.log('WSS Client connected');
+wss.on('connection', (ws) => {
+  console.log('WSS Client connected');
 
-    ws.on('message', async (message) => {
-        try {
-            const data = JSON.parse(message);
-            console.log('WSS Received:', data);
+  ws.on('message', message => {
+    try {
+        const data = JSON.parse(message);
+        console.log('WSS Received:', data);
 
-            // When a player joins, store their WebSocket connection in the correct session "room"
-            if (data.type === 'PLAYER_JOIN') {
-                const { sessionId, userId } = data.payload;
-                ws.sessionId = sessionId;
-                ws.userId = userId;
+        // When a player joins, store their WebSocket connection in the correct session "room"
+        if (data.type === 'PLAYER_JOIN') {
+            const { sessionId, userId } = data.payload;
+            ws.sessionId = sessionId;
+            ws.userId = userId;
 
-                if (!sessions[sessionId]) {
-                    sessions[sessionId] = new Set(); // Use a Set for easy add/delete
-                }
-                sessions[sessionId].add(ws);
-                console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
-
-                // Broadcast to all clients in that session that a new player has joined
-                broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId } });
+            if (!sessions[sessionId]) {
+                sessions[sessionId] = new Set(); // Use a Set for easy add/delete
             }
+            sessions[sessionId].add(ws);
+            console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
 
-            // When an AAC user selects a food, broadcast it to everyone in that session
-            if (data.type === 'FOOD_SELECTED') {
-                const { sessionId, food } = data.payload;
-                broadcast(sessionId, { type: 'FOOD_SELECTED_BROADCAST', payload: { food } });
-            }
-
-        } catch (error) {
-            console.error('[WSS] Error processing message:', error);
+            // Broadcast to all clients in that session that a new player has joined
+            broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId } });
         }
-    });
 
-    ws.on('close', () => {
-        console.log(`[WSS] Client ${ws.userId} disconnected`);
-        // Remove the disconnected client from their session
-        if (ws.sessionId && sessions[ws.sessionId]) {
-            sessions[ws.sessionId].delete(ws);
-            console.log(`[WSS] User ${ws.userId} removed from session ${ws.sessionId}. Total clients in session: ${sessions[ws.sessionId] ? sessions[ws.sessionId].size : 0}`);
-
-            // Broadcast that the player has left
-            broadcast(ws.sessionId, { type: 'PLAYER_LEFT_BROADCAST', payload: { userId: ws.userId } });
+        // When an AAC user selects a food, broadcast it to everyone in that session
+        if (data.type === 'FOOD_SELECTED') {
+            const { sessionId, food } = data.payload;
+            broadcast(sessionId, { type: 'FOOD_SELECTED_BROADCAST', payload: { food } });
         }
-    });
+
+    } catch (error) {
+        console.error('[WSS] Error processing message:', error);
+    }
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
 });
 
 /**
@@ -434,6 +405,7 @@ app.post('/update-role', (req, res) => {
   }
 });
 
+const PORT = process.env.PORT || 4000;
 // Start the Express server
 server.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
