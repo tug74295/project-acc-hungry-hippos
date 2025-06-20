@@ -36,12 +36,16 @@ const LandingPage: React.FC = () => {
   /** Boolean flag to indicate if entered code is valid or not */
   const [isValidCode, setIsValidCode] = useState(true);
 
+  const WSS_URL = import.meta.env.PROD
+    ? 'wss://project-acc-hungry-hippos-production.up.railway.app'
+    : 'ws://localhost:4000'; 
   // This ref will hold the persistent WebSocket connection object.
   const ws = useRef<WebSocket | null>(null);
 
     // This useEffect hook runs once when the component mounts to establish the connection.
   useEffect(() => {
-    const socket = new WebSocket('wss://project-acc-hungry-hippos-production.up.railway.app');
+    console.log('Connecting to WebSocket server:', WSS_URL);
+    const socket = new WebSocket(WSS_URL);
     ws.current = socket;
     socket.onopen = () => console.log('WebSocket connection established.');
 
@@ -52,6 +56,7 @@ const LandingPage: React.FC = () => {
 
         // Handle the server's response after a session is created.
         if (data.type === 'SESSION_CREATED') {
+          console.log('[WS] Session created successfully:', data.payload);
           const { sessionId } = data.payload;
           navigate(`/Presenter/${sessionId}`);
         }
@@ -113,63 +118,19 @@ const LandingPage: React.FC = () => {
    * @throws Displays console error logs for fetch/response failures.
    * @returns {Promise<void>}
    */
-  const handleStart = async () => {
+  const handleStart = () => { // No async, no fetch
     const gameCode = code.join('');
+
     if (gameCode.length !== 5) {
       setIsValidCode(false);
-      console.error('Game code must be exactly 5 characters.');
       return;
     }
+
     if (ws.current?.readyState === WebSocket.OPEN) {
+      // This is the ONLY thing that should happen here
       ws.current.send(JSON.stringify({ type: 'VALIDATE_SESSION', payload: { gameCode } }));
-    }
-    const generateUsername = () => {
-      const num = Math.floor(Math.random() * 1000);
-      return `User${String(num).padStart(3, '0')}`;
-    };
-
-    const userId = generateUsername();
-    const role = 'null';
-
-    try {
-      const response = await fetch('http://localhost:4000/validate-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameCode }),
-      });
-
-      const data = await response.json();
-
-      if (data.valid) {
-        setIsValidCode(true);
-        console.log('Valid game code:', gameCode);
-
-        const joinRes = await fetch('http://localhost:4000/join-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gameCode, userId, role }),
-        });
-
-        const joinData = await joinRes.json();
-
-        if (joinRes.ok && joinData.joined) {
-          navigate(`/roleselect/${gameCode}`, {
-            state: { userId, role },
-          });
-        } else {
-          console.error('Failed to join session:', joinData.error);
-        }
-      } else {
-        setIsValidCode(false);
-        setCode(['', '', '', '', '']); // Clear input on invalid code
-        console.log('Invalid game code:', gameCode);
-        inputsRef.current[0]?.focus(); // Focus first input on invalid
-      }
-    } catch (error) {
-      setIsValidCode(false);
-      setCode(['', '', '', '', '']);
-      console.error('Error validating game code:', error);
-      inputsRef.current[0]?.focus();
+    } else {
+      alert('Connection to the server is not ready. Please try again.');
     }
   };
 

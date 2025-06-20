@@ -6,6 +6,8 @@ const http = require('http');
 const WebSocket = require('ws');
 
 const app = express();
+app.use(cors());
+app.use(express.json());
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
@@ -42,6 +44,27 @@ wss.on('connection', (ws) => {
             const { sessionId, food } = data.payload;
             broadcast(sessionId, { type: 'FOOD_SELECTED_BROADCAST', payload: { food } });
         }
+
+        // --- ADD THIS ENTIRE BLOCK ---
+        if (data.type === 'VALIDATE_SESSION') {
+          const { gameCode } = data.payload;
+          let sessionsData = { sessions: {} };
+          try {
+            if (fs.existsSync(sessionFilePath)) {
+              sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+            }
+          } catch (e) {
+            console.error('Error reading session file:', e);
+          }
+          const isValid = Object.hasOwn(sessionsData.sessions, gameCode);
+          
+          // Send the result back to the specific client that asked
+          ws.send(JSON.stringify({
+            type: 'SESSION_VALIDATED',
+            payload: { isValid, gameCode }
+          }));
+        }
+        // --- END OF NEW BLOCK ---
 
     } catch (error) {
         console.error('[WSS] Error processing message:', error);
