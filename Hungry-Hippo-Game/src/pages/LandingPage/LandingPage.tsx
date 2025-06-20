@@ -6,7 +6,7 @@ import { useRef, useState } from 'react';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 console.log('API URL:', API_URL);
 /**
- * LandingPage - User interface for joining or creating a game session.
+ * LandingPage - User interface for joining or creating a game session
  *
  * <p>This component allows the user to enter a 5-character session code to join a game,
  * or to create a new game session by generating and saving a new session ID.
