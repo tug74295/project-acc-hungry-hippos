@@ -23,8 +23,6 @@ function LandingPage() {
   useEffect(() => {
     // Determine the correct WebSocket URL based on the environment.
     const isProduction = import.meta.env.PROD;
-    // Ensure you have VITE_WEBSOCKET_URL set in your Vercel environment variables.
-    // e.g., project-acc-hungry-hippos-production.up.railway.app
     const WS_URL = isProduction
       ? `wss://${import.meta.env.VITE_WEBSOCKET_URL}`
       : 'ws://localhost:4000';
