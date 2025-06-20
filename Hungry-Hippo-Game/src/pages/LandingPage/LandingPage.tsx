@@ -21,18 +21,12 @@ function LandingPage() {
 
   // This useEffect hook runs once when the component mounts to establish the connection.
   useEffect(() => {
-    // Determine the correct WebSocket URL based on the environment.
-    const isProduction = import.meta.env.PROD;
-    const WS_URL = isProduction
-      ? `wss://${import.meta.env.VITE_WEBSOCKET_URL}`
-      : 'ws://localhost:4000';
+    const socket = new WebSocket('wss://project-acc-hungry-hippos-production.up.railway.app');
+    ws.current = socket;
     
-    console.log(`[WS] Connecting to ${WS_URL}...`);
-    ws.current = new WebSocket(WS_URL);
+    console.log(socket);
 
-    ws.current.onopen = () => {
-      console.log('[WS] Connection established.');
-    };
+    socket.onopen = () => console.log('WebSocket connection established.');
 
     // --- Listen for messages from the server ---
     ws.current.onmessage = (event) => {
