@@ -10,15 +10,9 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const PORT = process.env.PORT || 4000;
 
-const envOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : [];
-
 const allowedOrigins = [
   'https://www.draexico.com',
-  'https://project-acc-hungry-hippos-9wsu.vercel.app',
-  'https://project-acc-hungry-hippos.vercel.app',
-  ...envOrigins,
+  'https://project-acc-hungry-hippos-9wsu.vercel.app'
 ];
 const corsOptions = {
   origin: function (origin, callback) {

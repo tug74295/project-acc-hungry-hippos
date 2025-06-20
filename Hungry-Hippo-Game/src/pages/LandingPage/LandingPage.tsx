@@ -1,218 +1,136 @@
 import { useNavigate } from 'react-router-dom';
 import styles from './LandingPage.module.css';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-console.log('API URL:', API_URL);
 /**
- * LandingPage - User interface for joining or creating a game session
+ * LandingPage - User interface for joining or creating a game session using WebSockets.
  *
- * <p>This component allows the user to enter a 5-character session code to join a game,
- * or to create a new game session by generating and saving a new session ID.
- *
- * Data Fields:
- * - code: string[] - Stores user input for each character of the session code.
- * - inputsRef: useRef - References the individual input boxes for game code entry.
- * - isValidCode: boolean - Flag for visual feedback on input validation.
- *
- * Methods:
- * - handleStart(): Validates game code and navigates to GamePage if valid.
- * - handleCreateGame(): Generates and stores a new session ID, then navigates.
- * - handleChange(): Manages input changes and auto-focuses next field.
- * - handleKeyDown(): Enables backspace navigation between input boxes.
- * - handlePaste(): Allows pasting entire game code across inputs.
- *
- * Error Handling:
- * - If session validation or creation fails, the error is logged and a meaningful alert is shown.
- * - Focus returns to first input field to aid in user retry.
- *
- * @returns JSX.Element
+ * This component establishes a persistent WebSocket connection on mount and handles all
+ * session-related communication (create, validate) through WebSocket messages,
+ * listening for server responses to navigate the user.
  */
 function LandingPage() {
   const navigate = useNavigate();
-  /** Stores each character of the session code entered by the user */
   const [code, setCode] = useState(['', '', '', '', '']);
-  /** References to input elements for direct DOM control (focus, etc.) */
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
-  /** Boolean flag to indicate if entered code is valid or not */
   const [isValidCode, setIsValidCode] = useState(true);
+  
+  // This ref will hold the persistent WebSocket connection object.
+  const ws = useRef<WebSocket | null>(null);
 
-  /**
-   * handleStart
-   *
-   * Attempts to join an existing game session using the 5-character code entered by the user.
-   *
-   * <p>Purpose:
-   * - Validates the provided session code with the backend.
-   * - If valid, generates a new username, joins the session, and navigates to the RoleSelect screen.
-   *
-   * Pre-condition:
-   * - The code must be 5 characters long.
-   *
-   * Post-condition:
-   * - If valid, navigates to GamePage.
-   * - If invalid or failed, resets input and shows error feedback.
-   *
-   * <p>Data Fields:
-   * - code: string[] - The user-entered characters forming the game code.
-   * - userId: string - The randomly generated username for the player.
-   * - role: string - Default role assigned until updated by RoleSelect.
-   *
-   * <p>Error Handling:
-   * - Logs errors to the console for both validation and join failures.
-   * - If the game code is invalid, resets the input boxes and refocuses the first input.
-   * - Shows red border styling if `isValidCode` is false.
-   *
-   * @async
-   * @function handleStart
-   * @throws Displays console error logs for fetch/response failures.
-   * @returns {Promise<void>}
-   */
-  const handleStart = async () => {
-    const gameCode = code.join('');
+  // This useEffect hook runs once when the component mounts to establish the connection.
+  useEffect(() => {
+    // Determine the correct WebSocket URL based on the environment.
+    const isProduction = import.meta.env.PROD;
+    // Ensure you have VITE_WEBSOCKET_URL set in your Vercel environment variables.
+    // e.g., project-acc-hungry-hippos-production.up.railway.app
+    const WS_URL = isProduction
+      ? `wss://${import.meta.env.VITE_WEBSOCKET_URL}`
+      : 'ws://localhost:4000';
+    
+    console.log(`[WS] Connecting to ${WS_URL}...`);
+    ws.current = new WebSocket(WS_URL);
 
-    const generateUsername = () => {
-      const num = Math.floor(Math.random() * 1000);
-      return `User${String(num).padStart(3, '0')}`;
+    ws.current.onopen = () => {
+      console.log('[WS] Connection established.');
     };
 
-    const userId = generateUsername();
-    const role = 'null';
+    // --- Listen for messages from the server ---
+    ws.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('[WS] Message from server:', data);
 
-    try {
-      const response = await fetch(`${API_URL}/validate-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gameCode }),
-      });
-
-      const data = await response.json();
-
-      if (data.valid) {
-        setIsValidCode(true);
-        console.log('Valid game code:', gameCode);
-
-        const joinRes = await fetch(`${API_URL}/join-session`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gameCode, userId, role }),
-        });
-
-        const joinData = await joinRes.json();
-
-        if (joinRes.ok && joinData.joined) {
-          navigate(`/roleselect/${gameCode}`, {
-            state: { userId, role },
-          });
-        } else {
-          console.error('Failed to join session:', joinData.error);
+        // Handle the server's response after a session is created.
+        if (data.type === 'SESSION_CREATED') {
+          const { sessionId } = data.payload;
+          navigate(`/Presenter/${sessionId}`);
         }
-      } else {
-        setIsValidCode(false);
-        setCode(['', '', '', '', '']); // Clear input on invalid code
-        console.log('Invalid game code:', gameCode);
-        inputsRef.current[0]?.focus(); // Focus first input on invalid
+
+        // Handle the server's response after a session code is validated.
+        if (data.type === 'SESSION_VALIDATED') {
+          const { isValid, gameCode } = data.payload;
+          if (isValid) {
+             const username = `User${Math.floor(Math.random() * 1000)}`;
+             // Navigate to role select, passing the username in the route state.
+             navigate(`/roleselect/${gameCode}`, { state: { userId: username } });
+          } else {
+             setIsValidCode(false);
+             setCode(['', '', '', '', '']);
+             inputsRef.current[0]?.focus();
+          }
+        }
+      } catch (error) {
+        console.error("Error processing message from server", error);
       }
-    } catch (error) {
+    };
+
+    ws.current.onclose = () => {
+      console.log('[WS] Connection closed.');
+    };
+    
+    ws.current.onerror = (error) => {
+      console.error('[WS] WebSocket Error:', error);
+    };
+
+    // Cleanup function: close the connection when the component unmounts.
+    return () => {
+      ws.current?.close();
+    };
+  }, [navigate]); // navigate is a stable dependency
+
+  // --- Send messages to the server ---
+
+  /**
+   * Sends a 'CREATE_SESSION' message to the server via WebSocket.
+   */
+  const handleCreateGame = () => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: 'CREATE_SESSION' }));
+    }
+  };
+
+  /**
+   * Sends a 'VALIDATE_SESSION' message to the server with the entered game code.
+   */
+  const handleStart = () => {
+    const gameCode = code.join('');
+    if (gameCode.length !== 5) {
       setIsValidCode(false);
-      setCode(['', '', '', '', '']);
-      console.error('Error validating game code:', error);
-      inputsRef.current[0]?.focus();
+      return;
+    }
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: 'VALIDATE_SESSION', payload: { gameCode } }));
     }
   };
 
-  /**
-   * Handles creating a new game session by calling the backend API to generate a unique session ID.
-   * 
-   * Sends a POST request to the '/create-session' endpoint, which responds with a new unique session ID.
-   * If successful, logs the new session ID, optionally stores it (e.g., in local storage or state),
-   * and navigates the user to the game page.
-   * 
-   * If there is an error during the request or response, it logs the error and alerts the user.
-   * 
-   * Usage:
-   * Call this function when the user initiates creating a new game session.
-   * 
-   * @async
-   * @function handleCreateGame
-   * @throws Will alert the user if the session creation fails.
-   */
-  const handleCreateGame = async () => {
-    try {
-      const response = await fetch(`${API_URL}/create-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create session');
-      }
-
-      const data = await response.json();
-      const newSessionId = data.sessionId;
-
-      console.log('New session ID:', newSessionId);
-      navigate(`/Presenter/${newSessionId}`);
-    } catch (error) {
-      console.error(error);
-      alert('Error creating new game session. Please try again.');
-    }
-  };
-
-
-
-  /**
-   * Handles user input in the game code fields and advances focus.
-   *
-   * @param value {string} - The new character entered by the user
-   * @param index {number} - The index of the current input field
-   */
+  // --- Input handlers (no changes needed) ---
   const handleChange = (value: string, index: number) => {
     const newCode = [...code];
     newCode[index] = value.toUpperCase().slice(0, 1);
     setCode(newCode);
-
     if (value && index < 4) {
-      inputsRef.current[index + 1]?.focus();//move to next box
+      inputsRef.current[index + 1]?.focus();
     }
   };
 
-  /**
-   * Handles backspace key to move focus to the previous input box.
-   *
-   * @param e {React.KeyboardEvent<HTMLInputElement>} - Keyboard event
-   * @param index {number} - Current input index
-   */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === 'Backspace' && !code[index] && index > 0) {
       inputsRef.current[index - 1]?.focus();
     }
   };
-
-  /**
-   * Allows pasting a 5-character game code across the input boxes.
-   *
-   * @param e {React.ClipboardEvent<HTMLInputElement>} - Clipboard paste event
-   */
+  
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     const pasted = e.clipboardData.getData('Text').toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (!pasted) return;
-
     const chars = pasted.slice(0, 5).split('');
     const newCode = [...code];
-
-    chars.forEach((char, i) => {
-      newCode[i] = char;
-    });
-
+    chars.forEach((char, i) => { newCode[i] = char; });
     setCode(newCode);
-
-    // Focus next empty input or last
     const nextIndex = chars.length < 5 ? chars.length : 4;
     inputsRef.current[nextIndex]?.focus();
-
-    e.preventDefault(); // Prevent default paste behavior
+    e.preventDefault();
   };
 
 
