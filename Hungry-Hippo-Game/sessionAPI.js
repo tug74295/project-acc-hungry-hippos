@@ -10,9 +10,22 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const PORT = process.env.PORT || 4000;
 
+const allowedOrigins = [
+  'https://www.draexico.com',
+  'https://project-acc-hungry-hippos-9wsu.vercel.app'
+];
 const corsOptions = {
-  origin: 'https://www.draexico.com',
-  optionSuccessStatus: 200
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST'], // Explicitly allow GET and POST requests
+  allowedHeaders: ['Content-Type'], // Explicitly allow the Content-Type header
 };
 app.use(cors(corsOptions));
 app.use(express.json());
