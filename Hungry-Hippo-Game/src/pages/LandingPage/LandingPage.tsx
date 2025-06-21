@@ -27,7 +27,7 @@ import { useRef, useState, useEffect } from 'react';
  *
  * @returns JSX.Element
  */
-const LandingPage: React.FC = () => {
+function LandingPage() {
   const navigate = useNavigate();
   /** Stores each character of the session code entered by the user */
   const [code, setCode] = useState(['', '', '', '', '']);
