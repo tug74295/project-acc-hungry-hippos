@@ -37,7 +37,7 @@ function LandingPage() {
   /** Boolean flag to indicate if entered code is valid or not */
   const [isValidCode, setIsValidCode] = useState(true);
 
-  const { isConnected, lastMessage, sendMessage } = useWebSocket();
+  const { isConnected, lastMessage, sendMessage, clearLastMessage } = useWebSocket();
 
   useEffect(() => {
     if (lastMessage) {
@@ -52,7 +52,9 @@ function LandingPage() {
           };
           const userId = generateUsername();
           // Navigate to role select, passing the username in the route state.
+          console.log(`Joining game with code: ${gameCode} as user: ${userId}`);
           navigate(`/roleselect/${gameCode}`, { state: { userId: userId } });
+          if (clearLastMessage) clearLastMessage();
         } else {
           setIsValidCode(false);
           setCode(['', '', '', '', '']);

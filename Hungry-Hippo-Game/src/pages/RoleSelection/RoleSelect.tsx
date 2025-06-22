@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import styles from './RoleSelect.module.css';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
-import { useWebSocket } from '../../contexts/WebSocketContext';
 
 /**
  * RoleSelect - React component for selecting a player's role in the game.
@@ -58,30 +57,6 @@ function RoleSelect() {
   const [error, setError] = useState<boolean>(false);
   const [username] = useState(location.state?.userId || ''); 
 
-  const { lastMessage, sendMessage, clearLastMessage } = useWebSocket();
-
-  useEffect(() => {
-    console.log(`Session ID: ${sessionId}, Username: ${username}`);
-    if (sessionId && username) {
-      sendMessage({
-        type: 'PLAYER_JOIN',
-        payload: {
-          sessionId,
-          userId: username,
-        },
-      });
-    }
-  }, [sessionId, username, sendMessage]);
-
-  useEffect(() => {
-    console.log(`Checking last message for role confirmation: ${JSON.stringify(lastMessage)}`);
-    if (lastMessage?.type === 'ROLE_UPDATED_BROADCAST' && lastMessage.payload.userId === username) {
-      console.log(`Role confirmed, navigating to game page for session ${sessionId}`);
-      if (clearLastMessage) clearLastMessage();
-      navigate(`/gamepage/${sessionId}/${username}`);
-    }
-  }, [lastMessage, sessionId, username, navigate, clearLastMessage]);
-
 
 /**
  * Handles the logic for starting the game after a role is selected.
@@ -104,13 +79,13 @@ function RoleSelect() {
     }
     setError(false);
 
-    sendMessage({
-      type: 'UPDATE_ROLE',
-      payload: {
-        sessionId,
+    // Navigate to the next page (the game page for now)
+    // and pass ALL player info in the state for the next page to use.
+    navigate(`/gamepage/${sessionId}/${username}`, {
+      state: {
         userId: username,
-        role,
-      },
+        role: role
+      }
     });
   };
 
