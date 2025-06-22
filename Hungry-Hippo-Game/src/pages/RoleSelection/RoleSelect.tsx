@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './RoleSelect.module.css';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
-import { use } from 'matter';
+import { useWebSocket } from '../../contexts/WebSocketContext';
 
 /**
  * RoleSelect - React component for selecting a player's role in the game.
@@ -51,51 +51,36 @@ import { use } from 'matter';
  */
 function RoleSelect() {
   const navigate = useNavigate();
-  const [role, setRole] = useState<string>(''); 
-  const [error, setError] = useState<boolean>(false);
   const { sessionId } = useParams<{ sessionId: string }>();
   const location = useLocation();
-  const [username, setUsername] = useState(location.state?.userId || ''); // Initialize with userId from state or empty string
 
-  const ws = useRef<WebSocket | null>(null);
-  
-  // This useEffect hook establishes the WebSocket connection.
+  const [role, setRole] = useState<string>(''); 
+  const [error, setError] = useState<boolean>(false);
+  const [username] = useState(location.state?.userId || ''); 
+
+  const { lastMessage, sendMessage, clearLastMessage } = useWebSocket();
+
   useEffect(() => {
-    if (!username || !sessionId) return; // Don't connect without necessary info.
-
-    const isProduction = import.meta.env.PROD;
-    const WS_URL = isProduction
-      ? `wss://${import.meta.env.VITE_WEBSOCKET_URL}`
-      : 'ws://localhost:4000';
-
-    ws.current = new WebSocket(WS_URL);
-
-    ws.current.onopen = () => {
-      console.log('[WS] Player connected.');
-      const joinMessage = {
+    console.log(`Session ID: ${sessionId}, Username: ${username}`);
+    if (sessionId && username) {
+      sendMessage({
         type: 'PLAYER_JOIN',
         payload: {
           sessionId,
-          userId: username
-        }
-      };
-      ws.current?.send(JSON.stringify(joinMessage));
-    };
+          userId: username,
+        },
+      });
+    }
+  }, [sessionId, username, sendMessage]);
 
-    ws.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('[WS] Message from server:', data);
-      // TODO: Handle incoming messages, e.g., waiting for the host to start the game.
-    };
-
-    ws.current.onclose = () => {
-      console.log('[WS] Player disconnected.');
-    };
-
-    return () => {
-      ws.current?.close();
-    };
-  }, [sessionId, username]); // Dependency array ensures connection is made once info is ready.
+  useEffect(() => {
+    console.log(`Checking last message for role confirmation: ${JSON.stringify(lastMessage)}`);
+    if (lastMessage?.type === 'ROLE_UPDATED_BROADCAST' && lastMessage.payload.userId === username) {
+      console.log(`Role confirmed, navigating to game page for session ${sessionId}`);
+      if (clearLastMessage) clearLastMessage();
+      navigate(`/gamepage/${sessionId}/${username}`);
+    }
+  }, [lastMessage, sessionId, username, navigate, clearLastMessage]);
 
 
 /**
@@ -112,34 +97,21 @@ function RoleSelect() {
  * @function handleStart
  * @returns {Promise<void>} Resolves after role is updated and user is navigated to next page.
  */
-  const handleStart = async () => {
+  const handleStart = () => {
     if (!role) {
       setError(true);
       return;
     }
     setError(false);
-    console.log('1: Selected role', role);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-    try {
-      const response = await fetch(`${API_URL}/update-role`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, userId: username, role }),
-      });
-
-      if (response.ok) {
-        // Here you would navigate to the actual GamePage.
-        // For now, we'll just log it.
-        console.log(`Navigating to game page for session ${sessionId}`);
-        navigate(`/gamepage/${sessionId}/${username}`);
-      } else {
-        alert('Failed to update role. Please try again.');
-      }
-    } catch (err) {
-      console.error('Error updating role:', err);
-      alert('An error occurred. Please check the console.');
-    }
+    sendMessage({
+      type: 'UPDATE_ROLE',
+      payload: {
+        sessionId,
+        userId: username,
+        role,
+      },
+    });
   };
 
   /**
@@ -149,9 +121,12 @@ function RoleSelect() {
    * @param e - The change event triggered by selecting a dropdown option.
    */
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    console.log('Role selected:', e.target.value);
     setRole(e.target.value);
     if (error) setError(false);
+  };
+
+  const handleCancel = () => {
+    navigate('/');
   };
 
   return (
@@ -159,7 +134,7 @@ function RoleSelect() {
       <div className={styles.roleContainer}>
         <button
           className={styles.closeButton}
-          onClick={() => navigate('/')}
+          onClick={handleCancel}
           aria-label="Close"
         >
           ✖

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from './LandingPage.module.css';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
 import { useRef, useState, useEffect } from 'react';
+import { useWebSocket } from '../../contexts/WebSocketContext';
 
 /**
  * LandingPage - User interface for joining or creating a game session.
@@ -36,56 +37,37 @@ function LandingPage() {
   /** Boolean flag to indicate if entered code is valid or not */
   const [isValidCode, setIsValidCode] = useState(true);
 
-  const WSS_URL = import.meta.env.PROD
-    ? 'wss://project-acc-hungry-hippos-production.up.railway.app'
-    : 'ws://localhost:4000'; 
-  // This ref will hold the persistent WebSocket connection object.
-  const ws = useRef<WebSocket | null>(null);
+  const { isConnected, lastMessage, sendMessage } = useWebSocket();
 
-    // This useEffect hook runs once when the component mounts to establish the connection.
   useEffect(() => {
-    console.log('Connecting to WebSocket server:', WSS_URL);
-    const socket = new WebSocket(WSS_URL);
-    ws.current = socket;
-    socket.onopen = () => console.log('WebSocket connection established.');
+    if (lastMessage) {
 
-    ws.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('[WS] Message from server:', data);
-
-        // Handle the server's response after a session is created.
-        if (data.type === 'SESSION_CREATED') {
-          console.log('[WS] Session created successfully:', data.payload);
-          const { sessionId } = data.payload;
-          navigate(`/Presenter/${sessionId}`);
+      // Handle the server's response after a session code is validated.
+      if (lastMessage.type === 'SESSION_VALIDATED') {
+        const { isValid, gameCode } = lastMessage.payload;
+        if (isValid) {
+          const generateUsername = () => {
+            const num = Math.floor(Math.random() * 1000);
+            return `User${String(num).padStart(3, '0')}`;
+          };
+          const userId = generateUsername();
+          // Navigate to role select, passing the username in the route state.
+          navigate(`/roleselect/${gameCode}`, { state: { userId: userId } });
+        } else {
+          setIsValidCode(false);
+          setCode(['', '', '', '', '']);
+          inputsRef.current[0]?.focus();
         }
-
-        // Handle the server's response after a session code is validated.
-        if (data.type === 'SESSION_VALIDATED') {
-          const { isValid, gameCode } = data.payload;
-          if (isValid) {
-             const username = `User${Math.floor(Math.random() * 1000)}`;
-             // Navigate to role select, passing the username in the route state.
-             navigate(`/roleselect/${gameCode}`, { state: { userId: username } });
-          } else {
-             setIsValidCode(false);
-             setCode(['', '', '', '', '']);
-             inputsRef.current[0]?.focus();
-          }
-        }
-      } catch (error) {
-        console.error("Error processing message from server", error);
       }
-    };
 
-    socket.onerror = err => console.error('WebSocket error:', err);
-    socket.onclose = () => console.log('WebSocket connection closed.');
+      // Handle the server's response after a session is created
+      if (lastMessage.type === 'SESSION_CREATED') {
+        const { sessionId } = lastMessage.payload;
+        navigate(`/presenter/${sessionId}`);
+      }
+    }
+  }, [lastMessage, navigate]); 
 
-    return () => {
-      ws.current?.close();
-    };
-  }, []);
 
   /**
    * handleStart
@@ -118,7 +100,7 @@ function LandingPage() {
    * @throws Displays console error logs for fetch/response failures.
    * @returns {Promise<void>}
    */
-  const handleStart = () => { // No async, no fetch
+  const handleStart = () => {
     const gameCode = code.join('');
 
     if (gameCode.length !== 5) {
@@ -126,53 +108,23 @@ function LandingPage() {
       return;
     }
 
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      // This is the ONLY thing that should happen here
-      ws.current.send(JSON.stringify({ type: 'VALIDATE_SESSION', payload: { gameCode } }));
+    if (isConnected) {
+      sendMessage({ type: 'VALIDATE_SESSION', payload: { gameCode } });
     } else {
       alert('Connection to the server is not ready. Please try again.');
     }
   };
 
   /**
-   * Handles creating a new game session by calling the backend API to generate a unique session ID.
-   * 
-   * Sends a POST request to the '/create-session' endpoint, which responds with a new unique session ID.
-   * If successful, logs the new session ID, optionally stores it (e.g., in local storage or state),
-   * and navigates the user to the game page.
-   * 
-   * If there is an error during the request or response, it logs the error and alerts the user.
-   * 
-   * Usage:
-   * Call this function when the user initiates creating a new game session.
-   * 
-   * @async
-   * @function handleCreateGame
-   * @throws Will alert the user if the session creation fails.
+   * sends a request to the server to create a new game session.
    */
-  const handleCreateGame = async () => {
-    try {
-      const response = await fetch('http://localhost:4000/create-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create session');
-      }
-
-      const data = await response.json();
-      const newSessionId = data.sessionId;
-
-      console.log('New session ID:', newSessionId);
-      navigate(`/Presenter/${newSessionId}`);
-    } catch (error) {
-      console.error(error);
-      alert('Error creating new game session. Please try again.');
+  const handleCreateGame = () => {
+    if (isConnected) {
+      sendMessage({ type: 'CREATE_SESSION' });
+    } else {
+      alert('Connection to the server is not ready. Please try again.');
     }
   };
-
-
 
   /**
    * Handles user input in the game code fields and advances focus.

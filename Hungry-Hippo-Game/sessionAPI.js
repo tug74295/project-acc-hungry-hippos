@@ -20,54 +20,94 @@ wss.on('connection', (ws) => {
 
   ws.on('message', message => {
     try {
-        const data = JSON.parse(message);
-        console.log('WSS Received:', data);
+      const data = JSON.parse(message);
+      console.log('WSS Received:', data);
 
-        // When a player joins, store their WebSocket connection in the correct session "room"
-        if (data.type === 'PLAYER_JOIN') {
-            const { sessionId, userId } = data.payload;
-            ws.sessionId = sessionId;
-            ws.userId = userId;
-
-            if (!sessions[sessionId]) {
-                sessions[sessionId] = new Set(); // Use a Set for easy add/delete
-            }
-            sessions[sessionId].add(ws);
-            console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
-
-            // Broadcast to all clients in that session that a new player has joined
-            broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId } });
-        }
-
-        // When an AAC user selects a food, broadcast it to everyone in that session
-        if (data.type === 'FOOD_SELECTED') {
-            const { sessionId, food } = data.payload;
-            broadcast(sessionId, { type: 'FOOD_SELECTED_BROADCAST', payload: { food } });
-        }
-
-        // --- ADD THIS ENTIRE BLOCK ---
-        if (data.type === 'VALIDATE_SESSION') {
-          const { gameCode } = data.payload;
-          let sessionsData = { sessions: {} };
-          try {
-            if (fs.existsSync(sessionFilePath)) {
-              sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
-            }
-          } catch (e) {
-            console.error('Error reading session file:', e);
+      // Validate session request
+      if (data.type === 'VALIDATE_SESSION') {
+        const { gameCode } = data.payload;
+        let sessionsData = { sessions: {} };
+        try {
+          if (fs.existsSync(sessionFilePath)) {
+            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
           }
-          const isValid = Object.hasOwn(sessionsData.sessions, gameCode);
-          
-          // Send the result back to the specific client that asked
-          ws.send(JSON.stringify({
-            type: 'SESSION_VALIDATED',
-            payload: { isValid, gameCode }
-          }));
+        } catch (e) {
+          console.error('Error reading session file:', e);
         }
-        // --- END OF NEW BLOCK ---
+        const isValid = Object.hasOwn(sessionsData.sessions, gameCode);
+
+        ws.send(JSON.stringify({
+          type: 'SESSION_VALIDATED',
+          payload: { isValid, gameCode }
+        }));
+      }
+
+      // Handle session creation request
+      if (data.type === 'CREATE_SESSION') {
+        let sessionsData = { sessions: {} };
+        try {
+          if (fs.existsSync(sessionFilePath)) {
+            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+          }
+        } catch (e) {
+          console.error('Error reading session file:', e);
+        }
+
+        const sessionId = generateUniqueSessionId(Object.keys(sessionsData.sessions));
+        sessionsData.sessions[sessionId] = [];
+        fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+
+        ws.send(JSON.stringify({
+          type: 'SESSION_CREATED',
+          payload: { sessionId }
+        }));
+      }
+
+      // When a player selects a role, update their role in the session
+      if (data.type === 'UPDATE_ROLE') {
+        const { sessionId, userId, role } = data.payload;
+        try {
+          let sessionsData = { sessions: {} };
+          if (fs.existsSync(sessionFilePath)) {
+            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+          }
+
+          const session = sessionsData.sessions[sessionId];
+          if (session) {
+            const user = session.find(u => u.userId === userId);
+            if (user) {
+              user.role = role;
+              fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+
+              broadcast(sessionId, {
+                type: 'ROLE_UPDATED_BROADCAST',
+                payload: { userId, role }
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Error updating role:', err);
+        }
+      }
+        
+      // When a player joins, store their WebSocket connection in the correct session room
+      if (data.type === 'PLAYER_JOIN') {
+        const { sessionId, userId } = data.payload;
+        ws.sessionId = sessionId;
+        ws.userId = userId;
+
+        if (!sessions[sessionId]) {
+          sessions[sessionId] = new Set(); 
+        }
+        sessions[sessionId].add(ws);
+        console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
+
+        // Broadcast to all clients in that session that a new player has joined
+        broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId } });
+      }
 
     } catch (error) {
-        console.error('[WSS] Error processing message:', error);
+        console.error('WSS Error processing message:', error);
     }
   });
 
