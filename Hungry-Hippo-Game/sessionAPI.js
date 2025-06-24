@@ -347,6 +347,33 @@ app.post('/update-role', (req, res) => {
   }
 });
 
+app.post('/validate-user', (req, res) => {
+  const { sessionId, userId } = req.body;
+  console.log('Validating user:', { sessionId, userId });
+
+  try {
+    const sessionsRaw = fs.readFileSync(sessionFilePath, 'utf8');
+    const sessionsData = JSON.parse(sessionsRaw);
+    const usersArray = sessionsData.sessions[sessionId];
+
+    if (!usersArray || !Array.isArray(usersArray)) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    const user = usersArray.find(u => u.userId === userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.json({ role: user.role, username: user.userId });
+
+  } catch (error) {
+    console.error('Server error validating user:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Start the Express server
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);

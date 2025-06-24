@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from '../../PhaserGame';
 import { AacFood } from '../../Foods';
-
+import { useNavigate, useParams } from 'react-router-dom';
 
 /**
  * 
@@ -65,7 +65,46 @@ const PhaserPage: React.FC = () => {
     // Get the current selected food (top of stack)
     const currentFood = foodStack.length > 0 ? foodStack[0] : null;
 
-     /**
+    const [valid, setValid] = useState(false);
+      const { sessionId, userId } = useParams<{ sessionId: string; userId: string }>();
+  const navigate = useNavigate();
+  const [loading, setLoading] = React.useState(true);
+
+      useEffect(() => {
+    async function validateUser() {
+      try {
+        const res = await fetch('http://localhost:4000/validate-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, userId }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.role) {
+          setValid(true);
+        } else {
+          navigate('/'); // Redirect on invalid user/session
+        }
+      } catch (error) {
+        console.error('Validation failed:', error);
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (sessionId && userId) {
+      validateUser();
+    } else {
+      // Missing params, redirect or handle error
+      navigate('/');
+    }
+  }, [sessionId, userId, navigate]);
+
+  if (loading) return <div>Loading...</div>;
+  if (!valid) return null; // Or show error message
+
+         /**
      * @returns {JSX.Element}
      * @description Renders the AAC interface, Phaser game container, and food status display.
      */

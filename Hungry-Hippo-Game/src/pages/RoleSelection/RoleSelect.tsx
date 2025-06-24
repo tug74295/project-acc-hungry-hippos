@@ -99,7 +99,13 @@ function RoleSelect() {
     console.log('2: Update role response:', result);
 
     if (response.ok) {
-      navigate(`/gamepage/${sessionId}/${username}`);
+      if (role === 'AAC User') {
+        navigate(`/aac/${sessionId}/${username}`);
+      } else if (role === 'Hippo Player') {
+        navigate(`/hippo/${sessionId}/${username}`);
+      } else {
+        alert('Failed invalid role');
+      }
     } else {
       alert('Failed to update role');
     }

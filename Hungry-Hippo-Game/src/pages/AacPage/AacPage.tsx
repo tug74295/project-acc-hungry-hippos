@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import AacInterface from '../../aac/AacInterface';
 import { AacFood } from '../../Foods';
 
@@ -6,73 +7,125 @@ import { AacFood } from '../../Foods';
  * 
  * @component AacPage
  * @description
- * This is a react functional component that serves as the main game interface page. It inlcudes 
- * Augmented and Alternatice Communication) interface for selecting food.
- * A food stack tracker to show the currently selected food
- * 
- *  Data Fields:
- * - phaserRef: React.MutableRefObject<IRefPhaserGame | null>
- *      Reference to the PhaserGame component, used to access the Phaser scene.
+ * React functional component serving as the main AAC (Augmentative and Alternative Communication) interface page.
+ * Allows the user to select foods via the AAC interface and tracks the selected food stack.
+ *
+ * Data Fields:
  * - foodStack: AacFood[]
- *      Stack of foods selected by the user from the AAC interface.
+ *    Stack of foods selected by the user. The most recent selection is at the top of the stack.
+ * - loading: boolean
+ *    Tracks whether the user validation request is in progress.
+ * - valid: boolean
+ *    Indicates if the user and session are valid and authorized to access this page.
+ * - sessionId, userId: string | undefined
+ *    Extracted from URL parameters, used for validation.
  *
  * Purpose:
- * - To provide the main gameplay page, integrating the AAC interface and Phaser game.
- * - To handle food selection and trigger food spawning in the game scene.
+ * - Validate the user’s session and authorization before allowing access.
+ * - Display the AAC interface for selecting food.
+ * - Maintain a stack of selected foods.
  *
  * Methods:
- * - handleSelectedFood(selectedFood: AacFood): void
- *      Handles selection of a food from the AAC interface, adds it to the stack,
- *      and spawns it in the Phaser game scene.
- *
- * - currentFood: AacFood | null
- *      Gets the current selected food (top of the stack).
+ * - validateUser(): Async function that calls backend to validate session and user.
+ * - handleSelectedFood(selectedFood: AacFood): Adds selected food to the foodStack.
  *
  * Pre-conditions:
- * - PhaserGame and AacInterface components must be properly implemented and imported.
+ * - Valid `sessionId` and `userId` must be present in URL params.
+ * - Backend endpoint `/validate-user` must be available to validate user credentials.
  *
  * Post-conditions:
- * - The selected food is added to the stack and spawned in the Phaser game.
+ * - If validation passes, the AAC interface is shown and user can select foods.
+ * - If validation fails, redirects to home page.
  *
- * @returns {JSX.Element} The rendered game page.
-
+ * @returns {JSX.Element} The rendered AAC page with interface or loading state.
  */
 const AacPage: React.FC = () => {
+  /**
+   * Extract sessionId and userId from URL parameters.
+   */
+  const { sessionId, userId } = useParams<{ sessionId: string; userId: string }>();
 
-    /**
-     * 
-     * @field foodStack
-     * @type {AacFood[]}
-     * @description  Stack of selected foods. The top of the stack is the most recent selection
-     */
+  /**
+   * React Router navigation helper for redirects.
+   */
+  const navigate = useNavigate();
 
-    const [foodStack, setFoodStack] = React.useState<AacFood[]>([]);
+  /**
+   * State for stack of selected foods. Most recent is first.
+   */
+  const [foodStack, setFoodStack] = useState<AacFood[]>([]);
 
-    /**
-     * @function handleSelectedFood
-     * @description Handles food selection from the AAC interface:
-     * - Adds the selected food to the top of the stack.
-     * 
-     * @param {AacFood} selectedFood - The food object selected from the AAC interface.
-     * 
-     * @pre selectedFood must be a valid AacFood object.
-     * @post foodStack is updated; Phaser scene will visually spawn the food if available.
-     */
-    const handleSelectedFood = (selectedFood: AacFood) => {
-        setFoodStack(previousStack => [selectedFood, ...previousStack]);
+  /**
+   * Loading state during user validation.
+   */
+  const [loading, setLoading] = useState(true);
+
+  /**
+   * Flag indicating if user/session is valid.
+   */
+  const [valid, setValid] = useState(false);
+
+  /**
+   * useEffect to validate user/session when component mounts or sessionId/userId changes.
+   */
+  useEffect(() => {
+    console.log('sessionId:', sessionId, 'userId:', userId);
+
+    async function validateUser() {
+      try {
+        const res = await fetch('http://localhost:4000/validate-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, userId }),
+        });
+        const data = await res.json();
+        console.log('Validation response:', data);
+
+        if (res.ok && data.role === 'AAC User') {
+          setValid(true);
+        } else {
+          navigate('/'); // invalid user/session/role, redirect home
+        }
+      } catch (error) {
+        console.error('Validation failed:', error);
+        navigate('/'); // network or server error, redirect home
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    validateUser();
+  }, [sessionId, userId, navigate]);
+
+  /**
+   * Adds the selected food to the top of the food stack.
+   * @param {AacFood} selectedFood - The food selected from the AAC interface.
+   */
+  const handleSelectedFood = (selectedFood: AacFood) => {
+    setFoodStack(previousStack => [selectedFood, ...previousStack]);
         // Phaser spawning logic removed
-    };
+  };
 
-     /**
-     * @returns {JSX.Element}
-     * @description Renders the AAC interface, Phaser game container, and food status display.
-     */
+  /**
+   * Display loading while validating.
+   */
+  if (loading) return <div>Loading...</div>;
 
-    return (
-        <div id="app">
+  /**
+   * If not valid after loading, render nothing (or optionally redirect).
+   */
+  if (!valid) return null;
+
+  /**
+   * Renders the AAC interface allowing food selection.
+   * @returns {JSX.Element}
+   */
+
+  return (
+    <div id="app">
             <AacInterface onFoodSelected={handleSelectedFood}/>
-        </div>
-    )
-}
+    </div>
+  );
+};
 
 export default AacPage;
