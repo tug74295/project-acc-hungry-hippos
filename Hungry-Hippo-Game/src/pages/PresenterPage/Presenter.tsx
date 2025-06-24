@@ -1,6 +1,7 @@
 import styles from './Presenter.module.css';
-import { useNavigate } from 'react-router-dom';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useWebSocket } from '../../contexts/WebSocketContext';
 
 /**
  * Presenter - React component that displays the session ID to the host after creating a new game.
@@ -40,7 +41,18 @@ import { useParams } from 'react-router-dom';
  */
 function Presenter() {
   const navigate = useNavigate();
-  const { sessionId } = useParams();
+  const { sessionId } = useParams<{ sessionId: string }>();
+  
+  const { sendMessage } = useWebSocket();
+  useEffect(() => {
+    sendMessage({
+      type: 'PLAYER_JOIN',
+      payload: {
+        sessionId,
+        userId: 'host',
+      }
+    });
+  }, [sessionId, sendMessage]);
 
   /**
    * Handler for clicking the close button.
@@ -66,7 +78,7 @@ function Presenter() {
           onClick={handleCancel}
           aria-label="Cancel New Game"
         >
-          ×
+          ✖
         </button>
 
         <h1 className={styles.sessionText2}>Game Code: {sessionId}</h1>

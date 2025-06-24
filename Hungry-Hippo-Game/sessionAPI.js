@@ -1,15 +1,142 @@
-const express = require('express');
-const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const WebSocket = require('ws');
 
-const app = express();
-const PORT = 4000;
-
-app.use(cors());
-app.use(express.json());
+const server = http.createServer();
+const wss = new WebSocket.Server({ server });
 
 const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
+const sessions = {};
+
+// Websocket Server
+wss.on('connection', (ws) => {
+  console.log('WSS Client connected');
+
+  ws.on('message', message => {
+    try {
+      const data = JSON.parse(message);
+      console.log('WSS Received:', data);
+
+      // Validate session request
+      if (data.type === 'VALIDATE_SESSION') {
+        const { gameCode } = data.payload;
+        let sessionsData = { sessions: {} };
+        try {
+          if (fs.existsSync(sessionFilePath)) {
+            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+          }
+        } catch (e) {
+          console.error('Error reading session file:', e);
+        }
+        const isValid = Object.hasOwn(sessionsData.sessions, gameCode);
+
+        ws.send(JSON.stringify({
+          type: 'SESSION_VALIDATED',
+          payload: { isValid, gameCode }
+        }));
+      }
+
+      // Handle session creation request
+      if (data.type === 'CREATE_SESSION') {
+        let sessionsData = { sessions: {} };
+        try {
+          if (fs.existsSync(sessionFilePath)) {
+            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+          }
+        } catch (e) {
+          console.error('Error reading session file:', e);
+        }
+
+        const sessionId = generateUniqueSessionId(Object.keys(sessionsData.sessions));
+        sessionsData.sessions[sessionId] = [];
+        fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+
+        ws.send(JSON.stringify({
+          type: 'SESSION_CREATED',
+          payload: { sessionId }
+        }));
+      }
+
+      // When a player selects a role, update their role in the session
+      if (data.type === 'UPDATE_ROLE') {
+        const { sessionId, userId, role } = data.payload;
+        try {
+          let sessionsData = { sessions: {} };
+          if (fs.existsSync(sessionFilePath)) {
+            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+          }
+
+          const session = sessionsData.sessions[sessionId];
+          if (session) {
+            const user = session.find(u => u.userId === userId);
+            if (user) {
+              user.role = role;
+              fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+
+              broadcast(sessionId, {
+                type: 'ROLE_UPDATED_BROADCAST',
+                payload: { userId, role }
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Error updating role:', err);
+        }
+      }
+        
+      // When a player joins, store their WebSocket connection in the correct session room
+      if (data.type === 'PLAYER_JOIN') {
+        const { sessionId, userId } = data.payload;
+        ws.sessionId = sessionId;
+        ws.userId = userId;
+
+        if (!sessions[sessionId]) {
+          sessions[sessionId] = new Set(); 
+        }
+        sessions[sessionId].add(ws);
+        console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
+
+        // Broadcast to all clients in that session that a new player has joined
+        broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId } });
+      }
+
+      // When an AAC user selects a food, broadcast it to the session
+      if (data.type === 'AAC_FOOD_SELECTED') {
+        const { sessionId, food } = data.payload;
+        if (sessions[sessionId]) {
+          console.log(`WSS Food selected in session ${sessionId}:`, food);
+          broadcast(sessionId, {
+            type: 'FOOD_SELECTED_BROADCAST',
+            payload: { food }
+          });
+        }
+      }
+
+    } catch (error) {
+        console.error('WSS Error processing message:', error);
+    }
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected');
+  });
+});
+
+/**
+ * Helper function to broadcast a message to all clients in a specific session
+ * @param {string} sessionId The ID of the session room
+ * @param {object} data The data to send
+ */
+function broadcast(sessionId, data) {
+    if (sessions[sessionId]) {
+        sessions[sessionId].forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(data));
+            }
+        });
+    }
+}
 
 /**
  * Generates a random alphanumeric session ID consisting of uppercase letters and digits.
@@ -42,103 +169,8 @@ function generateUniqueSessionId(existingSessions, length = 5) {
   return newId;
 }
 
-/**
- * GET /sessions
- * 
- * Reads and returns the list of session IDs from the session file.
- * If the file does not exist or is unreadable, returns an empty array or a 500 error.
- *
- * Response:
- * - 200: JSON object `{ sessions: string[] }`
- * - 500: JSON error message if reading/parsing fails
- */
-app.get('/sessions', (req, res) => {
-  if (fs.existsSync(sessionFilePath)) {
-    try {
-      const data = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
-      res.json(data);
-    } catch (e) {
-      console.error('Error reading session file:', e);
-      res.status(500).send({ message: 'Failed to read session data' }); // error if reading/parsing fails
-    }
-  } else {
-    res.json({ sessions: [] });
-  }
-});
-
-/**
- * POST /create-session
- * 
- * Automatically generates a new unique session ID, saves it, and returns it with the updated list.
- *
- * Response:
- * - 200: { sessionId: string, sessions: string[] }
- * - 500: { error: 'Failed to save session ID' }
- */
-app.post('/create-session', (req, res) => {
-  let sessionsData = { sessions: [] };
-
-  try {
-    if (fs.existsSync(sessionFilePath)) {
-      const fileContent = fs.readFileSync(sessionFilePath, 'utf-8');
-      sessionsData = JSON.parse(fileContent);
-
-      if (!Array.isArray(sessionsData.sessions)) {
-        sessionsData.sessions = [];
-      }
-    }
-
-    // Generate a unique session ID that does not exist in sessionsData.sessions
-    const sessionId = generateUniqueSessionId(sessionsData.sessions);
-
-    // Add new session ID and write back to file
-    sessionsData.sessions.push(sessionId);
-    fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
-
-    // Respond with only the new session ID
-    res.status(200).json({ sessionId });
-  } catch (error) {
-    console.error('Error saving session ID:', error);
-    res.status(500).json({ error: 'Failed to save session ID' });
-  }
-});
-
-/**
- * POST /validate-session
- * 
- * Validates whether the given game code exists in the session file.
- *
- * Request Body:
- * - gameCode: string
- *
- * Response:
- * - 200: { valid: boolean }
- * - 400: { valid: false, error: string } for invalid input
- * - 500: { valid: false } for internal read errors
- */
-app.post('/validate-session', (req, res) => {
-  const { gameCode } = req.body;
-
-  if (!gameCode || typeof gameCode !== 'string') {
-    return res.status(400).json({ valid: false, error: 'Invalid game code format' });
-  }
-
-  let data = { sessions: [] };
-  if (fs.existsSync(sessionFilePath)) {
-    try {
-      data = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
-    } catch (e) {
-      console.error('Error reading session file:', e);
-      return res.status(500).json({ valid: false });
-    }
-  }
-
-  const isValid = data.sessions.includes(gameCode);
-  res.status(200).json({ valid: isValid });
-});
-
-
+const PORT = process.env.PORT || 4000;
 // Start the Express server
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server listening on ${PORT}`);
 });
