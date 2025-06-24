@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import styles from './RoleSelect.module.css';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
@@ -50,17 +50,13 @@ import ButtonClick from '../../components/ButtonClick/ButtonClick';
  */
 function RoleSelect() {
   const navigate = useNavigate();
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const location = useLocation();
+
   const [role, setRole] = useState<string>(''); 
   const [error, setError] = useState<boolean>(false);
-  const { sessionId } = useParams();
-  const location = useLocation();
-  const [username, setUsername] = useState('');
-  
-  useEffect(() => {
-    if (location.state?.userId) {
-      setUsername(location.state.userId);
-    }
-  }, [location.state]);
+  const [username] = useState(location.state?.userId || ''); 
+
 
 /**
  * Handles the logic for starting the game after a role is selected.
@@ -76,38 +72,22 @@ function RoleSelect() {
  * @function handleStart
  * @returns {Promise<void>} Resolves after role is updated and user is navigated to next page.
  */
-  const handleStart = async () => {
-  if (!role) {
-    setError(true);
-    return;
-  }
-  setError(false);
-  console.log('1: Selected role', role);
-
-  try {
-    const response = await fetch('http://localhost:4000/update-role', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId,
-        userId: username,
-        role,
-      }),
-    });
-
-    const result = await response.json();
-    console.log('2: Update role response:', result);
-
-    if (response.ok) {
-      navigate(`/gamepage/${sessionId}/${username}`);
-    } else {
-      alert('Failed to update role');
+  const handleStart = () => {
+    if (!role) {
+      setError(true);
+      return;
     }
-  } catch (err) {
-    console.error('Error updating role:', err);
-    alert('Error updating role. Check the server.');
-  }
-};
+    setError(false);
+
+    // Navigate to the next page (the game page for now)
+    // and pass ALL player info in the state for the next page to use.
+    navigate(`/gamepage/${sessionId}/${username}`, {
+      state: {
+        userId: username,
+        role: role
+      }
+    });
+  };
 
   /**
    * Updates the role state as the user selects an option from the dropdown.
@@ -116,9 +96,12 @@ function RoleSelect() {
    * @param e - The change event triggered by selecting a dropdown option.
    */
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    console.log('Role selected:', e.target.value);
     setRole(e.target.value);
     if (error) setError(false);
+  };
+
+  const handleCancel = () => {
+    navigate('/');
   };
 
   return (
@@ -126,7 +109,7 @@ function RoleSelect() {
       <div className={styles.roleContainer}>
         <button
           className={styles.closeButton}
-          onClick={() => navigate('/')}
+          onClick={handleCancel}
           aria-label="Close"
         >
           ✖
