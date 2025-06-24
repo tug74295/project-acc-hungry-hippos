@@ -69,7 +69,7 @@ export class Game extends Scene
     */
     preload ()
     {
-        this.load.image('background', '/assets/squareTiles.png');
+        this.load.image('background', '/assets/Underwater.png');
 
         // Dynamically load food images from AAC data
         AAC_DATA.categories.forEach(category => {
