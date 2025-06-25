@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report-hippo
-          path: coverage 
+          path: documentation/static/coverage/Hungry-Hippo-Game 
 
     
 
