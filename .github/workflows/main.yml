@@ -32,7 +32,7 @@ jobs:
       #  Upload coverage report
       - name: Upload coverage report
         if: success()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report-hippo
           path: coverage  # ✅ Replace with correct coverage folder (if using vitest --coverage)
