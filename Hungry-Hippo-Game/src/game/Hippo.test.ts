@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { MoveStrategy } from './moveStrategy/moveStrategy';
+import { MoveStrategy } from "./moveStrategy/MoveStrategy";
 
 // ✅ Must mock Phaser *before* loading any file that uses it
 (globalThis as any).Phaser = {

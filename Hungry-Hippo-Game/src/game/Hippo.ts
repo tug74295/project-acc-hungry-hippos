@@ -1,4 +1,4 @@
-import { MoveStrategy } from "./moveStrategy/moveStrategy";
+import { MoveStrategy } from "../moveStrategy/MoveStrategy";
 
 /**
  * Represents a Hippo character in the game, extending Phaser's Arcade Sprite for physics capabilities.
