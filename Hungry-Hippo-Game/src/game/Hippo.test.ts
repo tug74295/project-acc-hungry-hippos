@@ -43,4 +43,30 @@ describe('Hippo', () => {
     hippo.toggleMouth();
     expect(hippo.isMouthOpen()).toBe(false);
   });
+
+  test('update delegates to moveStrategy.update', () => {
+    hippo.update('cursors');
+    expect(strategy.update).toHaveBeenCalledWith(hippo, 'cursors');
+  });
+
+  test('setStrategy changes the moveStrategy', async () => {
+    const newStrategy = new MockMoveStrategy();
+    hippo.setStrategy(newStrategy);
+    hippo.update('cursors');
+    expect(newStrategy.update).toHaveBeenCalledWith(hippo, 'cursors');
+  });
+
+  test('toggleMouth calls setFrame with correct frame', () => {
+    hippo.setFrame = vi.fn();
+    hippo.toggleMouth(); // Should close mouth (frame 3)
+    expect(hippo.setFrame).toHaveBeenCalledWith(3);
+    hippo.toggleMouth(); // Should open mouth (frame 0)
+    expect(hippo.setFrame).toHaveBeenCalledWith(0);
+  });
+
+  test('constructor sets up physics and animation', () => {
+    expect(hippo.setCollideWorldBounds).toHaveBeenCalledWith(true);
+    expect(hippo.play).toHaveBeenCalledWith('walking');
+  });
+  
 });
