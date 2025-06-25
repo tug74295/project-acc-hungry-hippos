@@ -1,70 +1,155 @@
 import React from "react";
-import { Fruit, AAC_ITEMS } from "../Fruits";
+import { AacFood, AAC_DATA } from "../Foods";
+import { useWebSocket } from "../contexts/WebSocketContext";
 
-// Callback function to handle fruit selection
+/**
+ * Defines the props for the AacInterface component.
+ */
 interface AacInterfaceProps {
-  onFruitSelected: (fruit: Fruit) => void;
+  sessionId: string;
 }
 
-const AacInterface: React.FC<AacInterfaceProps> = ({ onFruitSelected }) => {
-  // State to keep track of the selected fruit
-  const [selectedFruit, setSelectedFruit] = React.useState<Fruit | null>(null);
-  const currentAudioRef = React.useRef<HTMLAudioElement | null>(null);
+/**
+ * AacInterface component provides an interface for users to select foods and play associated audio clips.
+ * @param {AacInterfaceProps} props - The properties for the component.
+ * @returns {JSX.Element} The rendered component.
+ */
+const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId }) => {
+  const [selectedFood, setSelectedFood] = React.useState<AacFood | null>(null);
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = React.useState(false);
+  
+  const { sendMessage } = useWebSocket();
 
-  const handleFruitClick = (fruit: Fruit) => {
-    // Update the selected fruit when an AAC item is clicked
-    // Send the selected fruit to the parent component via the onFruitSelected callback
-    setSelectedFruit(fruit);
-    onFruitSelected(fruit);
+  /**
+   * Handles the click event for a food item.
+   * @param {AacFood} food - The food item that was clicked.
+   * @precondition The food item must be part of the AAC_DATA.
+   * @postcondition The selected food is set, and the audio for the food is played if available.
+   * @returns {void}
+   */
+  const handleFoodClick = (food: AacFood) => {
+    setSelectedFood(food);
 
-    // Play the audio for the selected fruit
-    if (fruit.audioPath) {
-      const audio = new Audio(fruit.audioPath);
+    console.log('Session ID:', sessionId);
+    if (sessionId) {
+      console.log(`Sending food selection for session ${sessionId}:`, food);
+      sendMessage({
+        type: "AAC_FOOD_SELECTED",
+        payload: {
+          sessionId, food
+        }
+      });
+    }
+    if (food.audioPath) {
+      const audio = new Audio(food.audioPath);
+      setIsAudioPlaying(true);
+      audio.onended = () => setIsAudioPlaying(false);
+      audio.onerror = () => {
+        console.error(`Error playing audio for ${food.name}`);
+        setIsAudioPlaying(false);
+      };
       audio.play()
-      currentAudioRef.current = audio;
     }
   };
 
+  /**
+   * Renders the category view with buttons for each food category.
+   * @returns {JSX.Element} The rendered category view.
+   */
+  const renderCategoryView = () => {
+    return (
+      <div className="aac-grid aac-grid-categories">
+        {AAC_DATA.categories.map((category) => (
+          <button
+            key={category.categoryName}
+            onClick={() => setSelectedCategory(category.categoryName)}
+            disabled={isAudioPlaying}
+            className={"aac-food-button aac-category-button"}
+          >
+            <img
+              src={category.categoryIcon}
+              alt={category.categoryName}
+              className="aac-food-image aac-category-icon"
+            />
+            {category.categoryName}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  /**
+   * Renders the foods view for the selected category.
+   * @returns {JSX.Element | null} The rendered foods view or null if no category is selected.
+   */
+  const renderFoodsView = () => {
+    const category = AAC_DATA.categories.find(cat => cat.categoryName === selectedCategory);
+    if (!category) return null;
+    return (
+      <div className="aac-grid aac-grid-foods">
+        {/* Back Button */}
+        <button
+          onClick={() => setSelectedCategory(null)}
+          disabled={isAudioPlaying}
+          className="aac-food-button aac-back-button"
+        >
+          <img
+            src="/assets/categories/back.png"
+            alt="Back"
+            className="aac-food-image aac-back-icon"
+          />
+          Back
+        </button>
+        
+        {/* Food items for the selected category */}
+        {category.foods.map((food) => (
+          <button
+            key={food.id}
+            onClick={() => handleFoodClick(food)}
+            disabled={isAudioPlaying}
+            className={`aac-food-button ${selectedFood && selectedFood.id === food.id ? 'aac-food-selected' : ''}`}
+          >
+            <img
+              src={food.imagePath}
+              alt={food.name}
+              className="aac-food-image" />
+            {food.name}
+          </button>
+        ))}
+      </div>
+    );
+  };
+        
+
+  /**
+   * Renders the main AAC interface, including the selected food and category views.
+   * @returns {JSX.Element} The rendered AAC interface.
+   */
   return (
     <div className="aac-container">
       <div className="aac-device">
         <h1> AAC Device </h1>
 
         {/* Display the selected fruit */}
-        <div className="aac-fruits">
-          {selectedFruit ? (
-            <p className="aac-selected-fruit"> You selected: {selectedFruit.name} {selectedFruit.imagePath && (
+        <div className="aac-foods">
+          {selectedFood ? (
+            <p className="aac-selected-food"> You selected: {selectedFood.name} {selectedFood.imagePath && (
                 <img
-                  src={selectedFruit.imagePath}
-                  alt={selectedFruit.name}
-                  className="aac-selected-fruit-image-display"
+                  src={selectedFood.imagePath}
+                  alt={selectedFood.name}
+                  className="aac-selected-food-image-display"
                 />
               )}
             </p>
           ) : (
-            <p className="aac-instruction">Click on a fruit to select it</p>
+            <p className="aac-instruction">Click a food to select it</p>
           )}
         </div>
-
-        {/* Display the AAC items in a grid */}
-        <div className="aac-grid">
-          {AAC_ITEMS.map((fruit) => (
-            <button
-              key={fruit.id}
-              onClick={() => handleFruitClick(fruit)}
-              className={`aac-button ${selectedFruit && selectedFruit.id === fruit.id ? 'aac-selected' : ''}`}
-            >
-              <img
-                src={fruit.imagePath}
-                alt={fruit.name}
-                className="aac-fruit-image" />
-              {fruit.name}
-            </button>
-          ))}
-        </div>
+        {selectedCategory === null ? renderCategoryView() : renderFoodsView()}
       </div>
     </div>
   );
-}
+};
 
 export default AacInterface;
