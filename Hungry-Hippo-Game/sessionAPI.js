@@ -8,7 +8,7 @@ const server = http.createServer();
 const wss = new WebSocket.Server({ server });
 
 const sessions = {};
-const sessionFilePath = path.join(__dirname, './src/data/sessionID.json');
+const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 let pool;
@@ -39,7 +39,7 @@ const setupDatabase = async () => {
         id SERIAL PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL,
         session_id VARCHAR(5) NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
-        role VARCHAR(50),
+        role VARCHAR(25),
         UNIQUE(session_id, user_id)
       );
     `);
@@ -81,14 +81,9 @@ wss.on('connection', (ws) => {
 
       // Handle session creation request
       if (data.type === 'CREATE_SESSION') {
-        const sessionId = generateUniqueSessionId(Object.keys(sessionsData.sessions));
-        if (IS_PROD) {
-          try {
-            await pool.query('INSERT INTO sessions (session_id) VALUES ($1)', [sessionId]);
-          } catch (err) {
-            console.error('Error inserting session into database:', err);
-          }
-        } else {
+        // If local development, skip database operations
+        let sessionId;
+        if (!IS_PROD) {
           let sessionsData = { sessions: {} };
           try {
             if (fs.existsSync(sessionFilePath)) {
@@ -97,11 +92,21 @@ wss.on('connection', (ws) => {
           } catch (e) {
             console.error('Error reading session file:', e);
           }
-
+          sessionId = generateUniqueSessionId(Object.keys(sessionsData.sessions));
           sessionsData.sessions[sessionId] = [];
           fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
-        }
-
+        } else {
+          // If in production, insert into the database
+          while (true) {
+            sessionId = generateSessionId();
+            try {
+              await pool.query('INSERT INTO sessions (session_id) VALUES ($1)', [sessionId]);
+              break;
+            } catch (err) {
+              console.error('Error creating session:', err);
+            }
+          }
+        } 
         ws.send(JSON.stringify({
           type: 'SESSION_CREATED',
           payload: { sessionId }
