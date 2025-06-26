@@ -125,6 +125,7 @@ wss.on('connection', (ws) => {
         }));
       }
 
+      /*
       // When a player selects a role, update their role in the session
       if (data.type === 'UPDATE_ROLE') {
         const { sessionId, userId, role } = data.payload;
@@ -151,10 +152,11 @@ wss.on('connection', (ws) => {
           console.error('Error updating role:', err);
         }
       }
+      */
         
       // When a player joins, store their WebSocket connection in the correct session room
       if (data.type === 'PLAYER_JOIN') {
-        const { sessionId, userId } = data.payload;
+        const { sessionId, userId, role } = data.payload;
         ws.sessionId = sessionId;
         ws.userId = userId;
 
@@ -164,20 +166,23 @@ wss.on('connection', (ws) => {
         sessions[sessionId].add(ws);
         console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
 
-        // Broadcast to all clients in that session that a new player has joined
-        broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId } });
-      }
-
-      // When an AAC user selects a food, broadcast it to the session
-      if (data.type === 'AAC_FOOD_SELECTED') {
-        const { sessionId, food } = data.payload;
-        if (sessions[sessionId]) {
-          console.log(`WSS Food selected in session ${sessionId}:`, food);
-          broadcast(sessionId, {
-            type: 'FOOD_SELECTED_BROADCAST',
-            payload: { food }
-          });
+        if (IS_PROD) {
+          // If in production, insert the player into the database
+          try {
+            await pool.query(`
+              INSERT INTO players (session_id, user_id, role) VALUES ($1, $2, $3)
+              ON CONFLICT (session_id, user_id) DO UPDATE SET role = EXCLUDED.role`, [sessionId, userId, role]);
+          } catch (err) {
+            console.error('Error adding player to database:', err);
+          }
         }
+        // Broadcast to all clients in that session that a new player has joined
+        broadcast(sessionId, { 
+          type: 'PLAYER_JOINED_BROADCAST', 
+          payload: { 
+            userId, role 
+          } 
+        });
       }
 
     } catch (error) {
