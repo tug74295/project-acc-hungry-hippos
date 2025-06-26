@@ -184,6 +184,18 @@ wss.on('connection', (ws) => {
           } 
         });
       }
+      
+      // When an AAC user selects a food, broadcast it to the session
+      if (data.type === 'AAC_FOOD_SELECTED') {
+        const { sessionId, food } = data.payload;
+        if (sessions[sessionId]) {
+          console.log(`WSS Food selected in session ${sessionId}:`, food);
+          broadcast(sessionId, {
+            type: 'FOOD_SELECTED_BROADCAST',
+            payload: { food }
+          });
+        }
+      }
 
     } catch (error) {
         console.error('WSS Error processing message:', error);
