@@ -2,12 +2,54 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const WebSocket = require('ws');
+const { Pool } = require('pg');
 
 const server = http.createServer();
 const wss = new WebSocket.Server({ server });
 
-const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 const sessions = {};
+const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
+
+const IS_PROD = process.env.NODE_ENV === 'production';
+let pool;
+if (IS_PROD) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+}
+
+// Runs once to set up the database and tables
+const setupDatabase = async () => {
+  if (!IS_PROD) return;
+  const client = await pool.connect();
+  try {
+    // Check if the tables exist, if not create them
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        session_id VARCHAR(5) PRIMARY KEY,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    // Create a players table to store users in each session
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS players (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        session_id VARCHAR(5) NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+        role VARCHAR(25),
+        UNIQUE(session_id, user_id)
+      );
+    `);
+    console.log('Database setup complete');
+  } catch (err) {
+    console.error('Error setting up database:', err);
+  } finally {
+    client.release();
+  }
+}
 
 // Websocket Server
 wss.on('connection', (ws) => {
