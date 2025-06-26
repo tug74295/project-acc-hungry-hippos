@@ -55,7 +55,7 @@ const setupDatabase = async () => {
 wss.on('connection', (ws) => {
   console.log('WSS Client connected');
 
-  ws.on('message', message => {
+  ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message);
       console.log('WSS Received:', data);
@@ -63,15 +63,27 @@ wss.on('connection', (ws) => {
       // Validate session request
       if (data.type === 'VALIDATE_SESSION') {
         const { gameCode } = data.payload;
+        let isValid = false;
         let sessionsData = { sessions: {} };
-        try {
-          if (fs.existsSync(sessionFilePath)) {
-            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+        if (!IS_PROD) {
+          // If local development, read from the session file
+          try {
+            if (fs.existsSync(sessionFilePath)) {
+              sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+            }
+          } catch (e) {
+            console.error('Error reading session file:', e);
           }
-        } catch (e) {
-          console.error('Error reading session file:', e);
+          isValid = Object.hasOwn(sessionsData.sessions, gameCode);
+        } else {
+          // If in production, check the database
+          try {
+            const result = await pool.query('SELECT EXISTS (SELECT 1 FROM sessions WHERE session_id = $1)', [gameCode]);
+            isValid = result.rows[0].exists;
+          } catch (err) {
+            console.error('Error validating session:', err);
+          }
         }
-        const isValid = Object.hasOwn(sessionsData.sessions, gameCode);
 
         ws.send(JSON.stringify({
           type: 'SESSION_VALIDATED',
@@ -81,19 +93,32 @@ wss.on('connection', (ws) => {
 
       // Handle session creation request
       if (data.type === 'CREATE_SESSION') {
-        let sessionsData = { sessions: {} };
-        try {
-          if (fs.existsSync(sessionFilePath)) {
-            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+        // If local development, skip database operations
+        let sessionId;
+        if (!IS_PROD) {
+          let sessionsData = { sessions: {} };
+          try {
+            if (fs.existsSync(sessionFilePath)) {
+              sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+            }
+          } catch (e) {
+            console.error('Error reading session file:', e);
           }
-        } catch (e) {
-          console.error('Error reading session file:', e);
-        }
-
-        const sessionId = generateUniqueSessionId(Object.keys(sessionsData.sessions));
-        sessionsData.sessions[sessionId] = [];
-        fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
-
+          sessionId = generateUniqueSessionId(Object.keys(sessionsData.sessions));
+          sessionsData.sessions[sessionId] = [];
+          fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+        } else {
+          // If in production, insert into the database
+          while (true) {
+            sessionId = generateSessionId();
+            try {
+              await pool.query('INSERT INTO sessions (session_id) VALUES ($1)', [sessionId]);
+              break;
+            } catch (err) {
+              console.error('Error creating session:', err);
+            }
+          }
+        } 
         ws.send(JSON.stringify({
           type: 'SESSION_CREATED',
           payload: { sessionId }
