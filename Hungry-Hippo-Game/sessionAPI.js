@@ -125,6 +125,7 @@ wss.on('connection', (ws) => {
         }));
       }
 
+      /*
       // When a player selects a role, update their role in the session
       if (data.type === 'UPDATE_ROLE') {
         const { sessionId, userId, role } = data.payload;
@@ -162,12 +163,12 @@ wss.on('connection', (ws) => {
           type: 'ROLE_UPDATED_BROADCAST',
           payload: { userId, role }
         });
-          
       }
+      */
         
       // When a player joins, store their WebSocket connection in the correct session room
       if (data.type === 'PLAYER_JOIN') {
-        const { sessionId, userId } = data.payload;
+        const { sessionId, userId, role } = data.payload;
         ws.sessionId = sessionId;
         ws.userId = userId;
 
@@ -177,8 +178,18 @@ wss.on('connection', (ws) => {
         sessions[sessionId].add(ws);
         console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
 
+        if (IS_PROD) {
+          // If in production, insert the player into the database
+          try {
+            await pool.query(`
+              INSERT INTO players (session_id, user_id, role) VALUES ($1, $2, $3)
+              ON CONFLICT (session_id, user_id) DO UPDATE SET role = EXCLUDED.role`, [session_id, userId, role || 'null']);
+          } catch (err) {
+            console.error('Error adding player to database:', err);
+          }
+        }
         // Broadcast to all clients in that session that a new player has joined
-        broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId } });
+        broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId, role } });
       }
 
       // When an AAC user selects a food, broadcast it to the session
