@@ -150,6 +150,7 @@ wss.on('connection', (ws) => {
         } else {
           // If in production, update the database
           try {
+            console.log(`WSS Updating role for user ${userId} in session ${sessionId} to ${role}`);
             await pool.query(`
               UPDATE players SET role = $1 WHERE session_id = $2 AND user_id = $3`), [role, sessionId, userId]
           } catch (err) {
