@@ -63,15 +63,27 @@ wss.on('connection', (ws) => {
       // Validate session request
       if (data.type === 'VALIDATE_SESSION') {
         const { gameCode } = data.payload;
+        let isValid = false;
         let sessionsData = { sessions: {} };
-        try {
-          if (fs.existsSync(sessionFilePath)) {
-            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+        if (!IS_PROD) {
+          // If local development, read from the session file
+          try {
+            if (fs.existsSync(sessionFilePath)) {
+              sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+            }
+          } catch (e) {
+            console.error('Error reading session file:', e);
           }
-        } catch (e) {
-          console.error('Error reading session file:', e);
+          isValid = Object.hasOwn(sessionsData.sessions, gameCode);
+        } else {
+          // If in production, check the database
+          try {
+            const result = await pool.query('SELECT EXISTS (SELECT 1 FROM sessions WHERE session_id = $1)', [gameCode]);
+            isValid = result.rows[0].exists;
+          } catch (err) {
+            console.error('Error validating session:', err);
+          }
         }
-        const isValid = Object.hasOwn(sessionsData.sessions, gameCode);
 
         ws.send(JSON.stringify({
           type: 'SESSION_VALIDATED',
