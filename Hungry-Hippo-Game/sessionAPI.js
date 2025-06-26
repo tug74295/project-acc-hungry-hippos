@@ -290,6 +290,8 @@ function generateUniqueSessionId(existingSessions, length = 5) {
 
 const PORT = process.env.PORT || 4000;
 // Start the Express server
-server.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
+setupDatabase().then(() => {
+  server.listen(PORT, () => {
+    console.log(`Server listening on ${PORT}`);
+  });
 });
