@@ -183,13 +183,18 @@ wss.on('connection', (ws) => {
           try {
             await pool.query(`
               INSERT INTO players (session_id, user_id, role) VALUES ($1, $2, $3)
-              ON CONFLICT (session_id, user_id) DO UPDATE SET role = EXCLUDED.role`, [session_id, userId, role || 'null']);
+              ON CONFLICT (session_id, user_id) DO UPDATE SET role = EXCLUDED.role`, [sessionId, userId, role]);
           } catch (err) {
             console.error('Error adding player to database:', err);
           }
         }
         // Broadcast to all clients in that session that a new player has joined
-        broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId, role } });
+        broadcast(sessionId, { 
+          type: 'PLAYER_JOINED_BROADCAST', 
+          payload: { 
+            userId, role 
+          } 
+        });
       }
 
       // When an AAC user selects a food, broadcast it to the session
