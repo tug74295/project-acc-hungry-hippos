@@ -11,17 +11,19 @@ const sessions = {};
 const sessionFilePath = path.join(__dirname, './src/data/sessionID.json');
 
 const IS_PROD = process.env.NODE_ENV === 'production';
-console.log('IS_PROD:', IS_PROD);
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+let pool;
+if (IS_PROD) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+}
 
 // Runs once to set up the database and tables
 const setupDatabase = async () => {
+  if (!IS_PROD) return;
   const client = await pool.connect();
   try {
     // Check if the tables exist, if not create them
@@ -79,18 +81,26 @@ wss.on('connection', (ws) => {
 
       // Handle session creation request
       if (data.type === 'CREATE_SESSION') {
-        let sessionsData = { sessions: {} };
-        try {
-          if (fs.existsSync(sessionFilePath)) {
-            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
-          }
-        } catch (e) {
-          console.error('Error reading session file:', e);
-        }
-
         const sessionId = generateUniqueSessionId(Object.keys(sessionsData.sessions));
-        sessionsData.sessions[sessionId] = [];
-        fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+        if (IS_PROD) {
+          try {
+            await pool.query('INSERT INTO sessions (session_id) VALUES ($1)', [sessionId]);
+          } catch (err) {
+            console.error('Error inserting session into database:', err);
+          }
+        } else {
+          let sessionsData = { sessions: {} };
+          try {
+            if (fs.existsSync(sessionFilePath)) {
+              sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+            }
+          } catch (e) {
+            console.error('Error reading session file:', e);
+          }
+
+          sessionsData.sessions[sessionId] = [];
+          fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+        }
 
         ws.send(JSON.stringify({
           type: 'SESSION_CREATED',
