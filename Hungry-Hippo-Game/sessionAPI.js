@@ -222,9 +222,14 @@ wss.on('connection', (ws) => {
     }
     console.log(`WSS Client ${userId} disconnected from session ${sessionId}`);
 
-    // Remove the client from the connection pool
+    // Remove the client from the ws
     if (sessions[sessionId]) {
       sessions[sessionId].delete(ws);
+    }
+
+    // Remove the session from the sessions object if it is empty
+    if (sessions[sessionId].size === 0) {
+      delete sessions[sessionId];
     }
 
     // Remove the client from the database
