@@ -214,8 +214,38 @@ wss.on('connection', (ws) => {
     }
   });
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
+  ws.on('close', async () => {
+    const { sessionId, userId } = ws;
+    if (!sessionId || !userId) {
+      console.log('WSS Client disconnected without session or user ID');
+      return;
+    }
+    console.log(`WSS Client ${userId} disconnected from session ${sessionId}`);
+
+    // Remove the client from the connection pool
+    if (sessions[sessionId]) {
+      sessions[sessionId].delete(ws);
+    }
+
+    // Remove the client from the database
+    let remainingPlayers = 0;
+    if (IS_PROD) {
+      try {
+        await pool.query('DELETE FROM players WHERE session_id = $1 AND user_id = $2', [sessionId, userId]);
+        const result = await pool.query('SELECT COUNT(*) FROM players WHERE session_id = $1', [sessionId]);
+        remainingPlayers = parseInt(result.rows[0].count, 10);
+
+        // If no players remain, remove the session from the database
+        if (remainingPlayers === 0) {
+          await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
+          console.log(`WSS Session ${sessionId} was empty and has been removed from the database.`);
+        } else {
+          console.log(`WSS Player ${userId} removed from session ${sessionId}. Remaining players: ${remainingPlayers}`);
+        }
+      } catch (err) {
+        console.error('Error removing player from database:', err);
+      }
+    }
   });
 });
 
