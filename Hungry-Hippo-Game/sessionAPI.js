@@ -2,18 +2,58 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const WebSocket = require('ws');
+const { Pool } = require('pg');
 
 const server = http.createServer();
 const wss = new WebSocket.Server({ server });
 
-const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 const sessions = {};
+const sessionFilePath = path.join(__dirname, './src/data/sessionID.json');
+
+const IS_PROD = process.env.NODE_ENV === 'production';
+console.log('IS_PROD:', IS_PROD);
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// Runs once to set up the database and tables
+const setupDatabase = async () => {
+  const client = await pool.connect();
+  try {
+    // Check if the tables exist, if not create them
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        session_id VARCHAR(5) PRIMARY KEY,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    // Create a players table to store users in each session
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS players (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        session_id VARCHAR(5) NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+        role VARCHAR(50),
+        UNIQUE(session_id, user_id)
+      );
+    `);
+    console.log('Database setup complete');
+  } catch (err) {
+    console.error('Error setting up database:', err);
+  } finally {
+    client.release();
+  }
+}
 
 // Websocket Server
 wss.on('connection', (ws) => {
   console.log('WSS Client connected');
 
-  ws.on('message', message => {
+  ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message);
       console.log('WSS Received:', data);
@@ -170,7 +210,9 @@ function generateUniqueSessionId(existingSessions, length = 5) {
 }
 
 const PORT = process.env.PORT || 4000;
-// Start the Express server
-server.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
+// Run the database setup once, then start the server
+setupDatabase().then(() => {
+  server.listen(PORT, () => {
+    console.log(`Server listening on ${PORT}`);
+  });
 });
