@@ -66,6 +66,7 @@ function LandingPage() {
       if (lastMessage.type === 'SESSION_CREATED') {
         const { sessionId } = lastMessage.payload;
         navigate(`/presenter/${sessionId}`);
+        if (clearLastMessage) clearLastMessage();
       }
     }
   }, [lastMessage, navigate]); 
@@ -113,7 +114,7 @@ function LandingPage() {
     if (isConnected) {
       sendMessage({ type: 'VALIDATE_SESSION', payload: { gameCode } });
     } else {
-      alert('Connection to the server is not ready. Please try again.');
+      alert('Connection to the server is not ready. Please refresh the page and try again.');
     }
   };
 
@@ -124,7 +125,7 @@ function LandingPage() {
     if (isConnected) {
       sendMessage({ type: 'CREATE_SESSION' });
     } else {
-      alert('Connection to the server is not ready. Please try again.');
+      alert('Connection to the server is not ready. Please refresh the page and try again.');
     }
   };
 
