@@ -128,28 +128,40 @@ wss.on('connection', (ws) => {
       // When a player selects a role, update their role in the session
       if (data.type === 'UPDATE_ROLE') {
         const { sessionId, userId, role } = data.payload;
-        try {
-          let sessionsData = { sessions: {} };
-          if (fs.existsSync(sessionFilePath)) {
-            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+        
+        // If local development, read from the session file
+        if (!IS_PROD) {
+          try {
+              let sessionsData = { sessions: {} };
+              if (fs.existsSync(sessionFilePath)) {
+                sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+              }
+              const session = sessionsData.sessions[sessionId];
+              if (session) {
+                const user = session.find(u => u.userId === userId);
+                if (user) {
+                  user.role = role;
+                  fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+                }
+              }
+          } catch (err) {
+              console.error('Error updating role in session file:', err);
           }
-
-          const session = sessionsData.sessions[sessionId];
-          if (session) {
-            const user = session.find(u => u.userId === userId);
-            if (user) {
-              user.role = role;
-              fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
-
-              broadcast(sessionId, {
-                type: 'ROLE_UPDATED_BROADCAST',
-                payload: { userId, role }
-              });
-            }
+        } else {
+          // If in production, update the database
+          try {
+            await pool.query(`
+              UPDATE players SET role = $1 WHERE session_id = $2 AND user_id = $3`), [role, sessionId, userId]
+          } catch (err) {
+            console.error('Error updating role in database:', err);
           }
-        } catch (err) {
-          console.error('Error updating role:', err);
         }
+
+        broadcast(sessionId, {
+          type: 'ROLE_UPDATED_BROADCAST',
+          payload: { userId, role }
+        });
+          
       }
         
       // When a player joins, store their WebSocket connection in the correct session room
