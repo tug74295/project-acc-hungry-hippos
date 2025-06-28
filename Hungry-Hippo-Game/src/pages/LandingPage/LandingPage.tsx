@@ -66,6 +66,7 @@ function LandingPage() {
       if (lastMessage.type === 'SESSION_CREATED') {
         const { sessionId } = lastMessage.payload;
         navigate(`/presenter/${sessionId}`);
+        if (clearLastMessage) clearLastMessage();
       }
     }
   }, [lastMessage, navigate]); 

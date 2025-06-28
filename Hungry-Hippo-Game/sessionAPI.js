@@ -2,18 +2,60 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const WebSocket = require('ws');
+const { Pool } = require('pg');
 
 const server = http.createServer();
 const wss = new WebSocket.Server({ server });
 
-const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 const sessions = {};
+const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
+
+const IS_PROD = process.env.NODE_ENV === 'production';
+let pool;
+if (IS_PROD) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
+}
+
+// Runs once to set up the database and tables
+const setupDatabase = async () => {
+  if (!IS_PROD) return;
+  const client = await pool.connect();
+  try {
+    // Check if the tables exist, if not create them
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        session_id VARCHAR(5) PRIMARY KEY,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    // Create a players table to store users in each session
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS players (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        session_id VARCHAR(5) NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+        role VARCHAR(25),
+        UNIQUE(session_id, user_id)
+      );
+    `);
+    console.log('Database setup complete');
+  } catch (err) {
+    console.error('Error setting up database:', err);
+  } finally {
+    client.release();
+  }
+}
 
 // Websocket Server
 wss.on('connection', (ws) => {
   console.log('WSS Client connected');
 
-  ws.on('message', message => {
+  ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message);
       console.log('WSS Received:', data);
@@ -21,15 +63,27 @@ wss.on('connection', (ws) => {
       // Validate session request
       if (data.type === 'VALIDATE_SESSION') {
         const { gameCode } = data.payload;
+        let isValid = false;
         let sessionsData = { sessions: {} };
-        try {
-          if (fs.existsSync(sessionFilePath)) {
-            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+        if (!IS_PROD) {
+          // If local development, read from the session file
+          try {
+            if (fs.existsSync(sessionFilePath)) {
+              sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+            }
+          } catch (e) {
+            console.error('Error reading session file:', e);
           }
-        } catch (e) {
-          console.error('Error reading session file:', e);
+          isValid = Object.hasOwn(sessionsData.sessions, gameCode);
+        } else {
+          // If in production, check the database
+          try {
+            const result = await pool.query('SELECT EXISTS (SELECT 1 FROM sessions WHERE session_id = $1)', [gameCode]);
+            isValid = result.rows[0].exists;
+          } catch (err) {
+            console.error('Error validating session:', err);
+          }
         }
-        const isValid = Object.hasOwn(sessionsData.sessions, gameCode);
 
         ws.send(JSON.stringify({
           type: 'SESSION_VALIDATED',
@@ -39,25 +93,39 @@ wss.on('connection', (ws) => {
 
       // Handle session creation request
       if (data.type === 'CREATE_SESSION') {
-        let sessionsData = { sessions: {} };
-        try {
-          if (fs.existsSync(sessionFilePath)) {
-            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+        // If local development, skip database operations
+        let sessionId;
+        if (!IS_PROD) {
+          let sessionsData = { sessions: {} };
+          try {
+            if (fs.existsSync(sessionFilePath)) {
+              sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
+            }
+          } catch (e) {
+            console.error('Error reading session file:', e);
           }
-        } catch (e) {
-          console.error('Error reading session file:', e);
-        }
-
-        const sessionId = generateUniqueSessionId(Object.keys(sessionsData.sessions));
-        sessionsData.sessions[sessionId] = [];
-        fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
-
+          sessionId = generateUniqueSessionId(Object.keys(sessionsData.sessions));
+          sessionsData.sessions[sessionId] = [];
+          fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
+        } else {
+          // If in production, insert into the database
+          while (true) {
+            sessionId = generateSessionId();
+            try {
+              await pool.query('INSERT INTO sessions (session_id) VALUES ($1)', [sessionId]);
+              break;
+            } catch (err) {
+              console.error('Error creating session:', err);
+            }
+          }
+        } 
         ws.send(JSON.stringify({
           type: 'SESSION_CREATED',
           payload: { sessionId }
         }));
       }
 
+      /*
       // When a player selects a role, update their role in the session
       if (data.type === 'UPDATE_ROLE') {
         const { sessionId, userId, role } = data.payload;
@@ -84,10 +152,11 @@ wss.on('connection', (ws) => {
           console.error('Error updating role:', err);
         }
       }
+      */
         
       // When a player joins, store their WebSocket connection in the correct session room
       if (data.type === 'PLAYER_JOIN') {
-        const { sessionId, userId } = data.payload;
+        const { sessionId, userId, role } = data.payload;
         ws.sessionId = sessionId;
         ws.userId = userId;
 
@@ -97,8 +166,23 @@ wss.on('connection', (ws) => {
         sessions[sessionId].add(ws);
         console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
 
+        if (IS_PROD) {
+          // If in production, insert the player into the database
+          try {
+            await pool.query(`
+              INSERT INTO players (session_id, user_id, role) VALUES ($1, $2, $3)
+              ON CONFLICT (session_id, user_id) DO UPDATE SET role = EXCLUDED.role`, [sessionId, userId, role]);
+          } catch (err) {
+            console.error('Error adding player to database:', err);
+          }
+        }
         // Broadcast to all clients in that session that a new player has joined
-        broadcast(sessionId, { type: 'PLAYER_JOINED_BROADCAST', payload: { userId } });
+        broadcast(sessionId, { 
+          type: 'PLAYER_JOINED_BROADCAST', 
+          payload: { 
+            userId, role 
+          } 
+        });
       }
 
       // When an AAC user selects a food, broadcast it to the session
@@ -119,8 +203,43 @@ wss.on('connection', (ws) => {
     }
   });
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
+  ws.on('close', async () => {
+    const { sessionId, userId } = ws;
+    if (!sessionId || !userId) {
+      console.log('WSS Client disconnected without session or user ID');
+      return;
+    }
+    console.log(`WSS Client ${userId} disconnected from session ${sessionId}`);
+
+    // Remove the client from the ws
+    if (sessions[sessionId]) {
+      sessions[sessionId].delete(ws);
+    }
+
+    // Remove the session from the sessions object if it is empty
+    if (sessions[sessionId].size === 0) {
+      delete sessions[sessionId];
+    }
+
+    // Remove the client from the database
+    let remainingPlayers = 0;
+    if (IS_PROD) {
+      try {
+        await pool.query('DELETE FROM players WHERE session_id = $1 AND user_id = $2', [sessionId, userId]);
+        const result = await pool.query('SELECT COUNT(*) FROM players WHERE session_id = $1', [sessionId]);
+        remainingPlayers = parseInt(result.rows[0].count, 10);
+
+        // If no players remain, remove the session from the database
+        if (remainingPlayers === 0) {
+          await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
+          console.log(`WSS Session ${sessionId} was empty and has been removed from the database.`);
+        } else {
+          console.log(`WSS Player ${userId} removed from session ${sessionId}. Remaining players: ${remainingPlayers}`);
+        }
+      } catch (err) {
+        console.error('Error removing player from database:', err);
+      }
+    }
   });
 });
 
@@ -172,6 +291,8 @@ function generateUniqueSessionId(existingSessions, length = 5) {
 
 const PORT = process.env.PORT || 4000;
 // Start the Express server
-server.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
+setupDatabase().then(() => {
+  server.listen(PORT, () => {
+    console.log(`Server listening on ${PORT}`);
+  });
 });
