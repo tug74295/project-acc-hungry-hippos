@@ -192,12 +192,18 @@ export class Game extends Scene
      * @param foodKey - The identifier of the food (e.g. 'apple', 'fries') to spawn.
     */
     public addFoodManually(foodKey: string) {
-        const x = Phaser.Math.Between(64, this.scale.width - 64);
-        const food = this.foods.create(x, 0, foodKey) as Phaser.Physics.Arcade.Image;
-        console.log(`[SPAWN-MANUAL] ${foodKey} at X=${x}`);
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
+        const food = this.foods.create(centerX, centerY, foodKey) as Phaser.Physics.Arcade.Image;
 
         food.setScale(0.25);
-        food.setVelocityY(600);
+
+        const speed = 300;
+        const angle = Phaser.Math.FloatBetween(0, 2 * Math.PI);
+        const velocityX = Math.cos(angle) * speed;
+        const velocityY = Math.sin(angle) * speed;
+
+        food.setVelocity(velocityX, velocityY);
         food.setBounce(0.2);
         food.setCollideWorldBounds(true);
     }
