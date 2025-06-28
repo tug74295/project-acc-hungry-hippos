@@ -74,6 +74,9 @@ const GamePage: React.FC = () => {
             if (scene && typeof scene.addFoodManually === 'function') {
                 scene.addFoodManually(food.id);
             }
+            if (scene && typeof scene.setTargetFood === 'function') {
+                scene.setTargetFood(food.id);
+            }
             if (clearLastMessage) clearLastMessage();
         }
     }, [lastMessage, clearLastMessage]);
