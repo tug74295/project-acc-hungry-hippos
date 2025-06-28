@@ -106,9 +106,10 @@ wss.on('connection', (ws) => {
         const { sessionId, food } = data.payload;
         if (sessions[sessionId]) {
           console.log(`WSS Food selected in session ${sessionId}:`, food);
+          const angle = Math.random() * Math.PI * 2;
           broadcast(sessionId, {
             type: 'FOOD_SELECTED_BROADCAST',
-            payload: { food }
+            payload: { food, angle }
           });
         }
       }

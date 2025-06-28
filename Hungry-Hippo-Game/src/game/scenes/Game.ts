@@ -191,13 +191,27 @@ export class Game extends Scene
      * 
      * @param foodKey - The identifier of the food (e.g. 'apple', 'fries') to spawn.
     */
-    public addFoodManually(foodKey: string) {
-        const x = Phaser.Math.Between(64, this.scale.width - 64);
-        const food = this.foods.create(x, 0, foodKey) as Phaser.Physics.Arcade.Image;
-        console.log(`[SPAWN-MANUAL] ${foodKey} at X=${x}`);
+    public addFoodManually(foodKey: string, angle: number) {
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
+        const food = this.foods.create(centerX, centerY, foodKey) as Phaser.Physics.Arcade.Image;
 
-        food.setScale(0.25);
-        food.setVelocityY(600);
+        food.setScale(0.15);
+
+        const speed = 300;
+        const velocityX = Math.cos(angle) * speed;
+        const velocityY = Math.sin(angle) * speed;
+
+        const degrees = Phaser.Math.RadToDeg(angle);
+        
+        let direction = '';
+        if (degrees >= 45 && degrees < 135) direction = 'down';
+        else if (degrees >= 135 && degrees < 225) direction = 'left';
+        else if (degrees >= 225 && degrees < 315) direction = 'up';
+        else direction = 'right';
+        console.log(`[SPAWN] ${foodKey} launched ${direction} (${degrees.toFixed(0)}°)`); // Logs direction food is launched
+
+        food.setVelocity(velocityX, velocityY);
         food.setBounce(0.2);
         food.setCollideWorldBounds(true);
     }
@@ -212,13 +226,6 @@ export class Game extends Scene
      * Handles per-frame logic, such as checking food positions to remove offscreen items.
     */
     update() {
-        this.foods.getChildren().forEach((food) => {
-            const sprite = food as Phaser.Physics.Arcade.Image;
-            if (sprite.body && sprite.body.blocked.down) {
-                sprite.destroy(); // Immediately remove food after touching bottom
-                console.log(`[EAT] ${sprite.texture.key} removed after hitting ground`);
-            }
-        });
 
         if (this.hippo && this.cursors) {
             this.hippo.update(this.cursors);
