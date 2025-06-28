@@ -72,7 +72,7 @@ const GamePage: React.FC = () => {
             setCurrentFood(food);
             const scene = phaserRef.current?.scene as any;
             if (scene && typeof scene.addFoodManually === 'function') {
-                scene.addFoodManually(food.id);
+                scene.addFoodManually(food.id, lastMessage.payload.angle);
             }
             if (scene && typeof scene.setTargetFood === 'function') {
                 scene.setTargetFood(food.id);

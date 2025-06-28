@@ -191,7 +191,7 @@ export class Game extends Scene
      * 
      * @param foodKey - The identifier of the food (e.g. 'apple', 'fries') to spawn.
     */
-    public addFoodManually(foodKey: string) {
+    public addFoodManually(foodKey: string, angle: number) {
         const centerX = this.scale.width / 2;
         const centerY = this.scale.height / 2;
         const food = this.foods.create(centerX, centerY, foodKey) as Phaser.Physics.Arcade.Image;
@@ -199,7 +199,6 @@ export class Game extends Scene
         food.setScale(0.15);
 
         const speed = 300;
-        const angle = Phaser.Math.FloatBetween(0, 2 * Math.PI);
         const velocityX = Math.cos(angle) * speed;
         const velocityY = Math.sin(angle) * speed;
 
