@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { AacFood, AAC_DATA } from "../Foods";
 import { useWebSocket } from "../contexts/WebSocketContext";
 
@@ -20,8 +20,17 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
   const [selectedFood, setSelectedFood] = React.useState<AacFood | null>(null);
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = React.useState(false);
-  
   const { sendMessage } = useWebSocket();
+
+  useEffect(() => {
+    if (sessionId && userId && role && sendMessage) {
+      console.log('AAC Client sending PLAYER_JOIN');
+      sendMessage({
+        type: 'PLAYER_JOIN',
+        payload: { sessionId, userId, role }
+      });
+    }
+  }, [sessionId, userId, role, sendMessage]);
 
   /**
    * Handles the click event for a food item.
