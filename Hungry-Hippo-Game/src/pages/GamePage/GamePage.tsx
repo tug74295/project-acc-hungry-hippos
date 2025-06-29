@@ -4,6 +4,7 @@ import { IRefPhaserGame, PhaserGame } from '../../PhaserGame';
 import AacInterface from '../../aac/AacInterface';
 import { AacFood } from '../../Foods';
 import { useWebSocket } from '../../contexts/WebSocketContext';
+import { EventBus } from '../../game/EventBus';
 
 /**
  * 
@@ -85,7 +86,38 @@ const GamePage: React.FC = () => {
             }
             if (clearLastMessage) clearLastMessage();
         }
+
+        if (lastMessage?.type === 'FRUIT_EATEN_BROADCAST') {
+            const { foodId, x, y } = lastMessage.payload;
+            const scene = phaserRef.current?.scene as any;
+
+            if (scene && typeof scene.removeFruitAt === 'function') {
+                scene.removeFruitAt(foodId, x, y);
+            }
+        }
     }, [lastMessage, clearLastMessage]);
+
+    /**
+     * Listens for fruit-eaten events emitted from the Phaser scene,
+     * and sends a WebSocket message to the server with fruit info.
+    */
+    useEffect(() => {
+        const handleFruitEaten = ({ foodId, x, y }: { foodId: string; x: number; y: number }) => {
+            if (sessionId) {
+                sendMessage({
+                    type: 'FRUIT_EATEN',
+                    payload: { sessionId, foodId, x, y }
+                });
+            }
+        };
+
+        EventBus.on('fruit-eaten', handleFruitEaten);
+
+        return () => {
+            EventBus.off('fruit-eaten', handleFruitEaten);
+        };
+    }, [sendMessage, sessionId]);
+
 
      /**
      * @returns {JSX.Element}

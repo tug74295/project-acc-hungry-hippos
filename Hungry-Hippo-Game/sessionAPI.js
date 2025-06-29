@@ -205,6 +205,14 @@ wss.on('connection', (ws) => {
           });
         }
       }
+      // Notify all players in the session to remove the fruit
+      if (data.type === 'FRUIT_EATEN') {
+        const { sessionId, foodId, x, y } = data.payload;
+        broadcast(sessionId, {
+          type: 'FRUIT_EATEN_BROADCAST',
+          payload: { foodId, x, y }
+        });
+      }
 
     } catch (error) {
         console.error('WSS Error processing message:', error);
