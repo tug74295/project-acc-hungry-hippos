@@ -68,14 +68,20 @@ const GamePage: React.FC = () => {
     // Listens for broadcasts from the server about food selection
     useEffect(() => {
         if (lastMessage?.type === 'FOOD_SELECTED_BROADCAST') {
-            const { food } = lastMessage.payload;
-            setCurrentFood(food);
+            const { foods } = lastMessage.payload;
             const scene = phaserRef.current?.scene as any;
-            if (scene && typeof scene.addFoodManually === 'function') {
-                scene.addFoodManually(food.id, lastMessage.payload.angle);
-            }
-            if (scene && typeof scene.setTargetFood === 'function') {
-                scene.setTargetFood(food.id);
+
+            if (Array.isArray(foods)) {
+                foods.forEach(({ food, angle }: { food: AacFood, angle: number }) => {
+                    if (scene && typeof scene.addFoodManually === 'function') {
+                        scene.addFoodManually(food.id, angle);
+                    }
+                });
+                
+                if (foods.length > 0 && typeof scene.setTargetFood === 'function') {
+                    scene.setTargetFood(foods[0].food.id);
+                    setCurrentFood(foods[0].food);
+                }
             }
             if (clearLastMessage) clearLastMessage();
         }

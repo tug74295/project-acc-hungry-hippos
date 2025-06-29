@@ -190,10 +190,18 @@ wss.on('connection', (ws) => {
         const { sessionId, food } = data.payload;
         if (sessions[sessionId]) {
           console.log(`WSS Food selected in session ${sessionId}:`, food);
-          const angle = Math.random() * Math.PI * 2;
+          const hippoClients = [...sessions[sessionId]].filter(client => client.userId && client.readyState === WebSocket.OPEN);
+
+          const responses = hippoClients.map(() => ({
+            food,
+            angle: Math.random() * Math.PI * 2 // launch in random direction
+          }));
+          console.log(`WSS Launching ${responses.length} ${food.id}(s) in session ${sessionId}`);
+
+          // Sends all as an array in one broadcast
           broadcast(sessionId, {
             type: 'FOOD_SELECTED_BROADCAST',
-            payload: { food, angle }
+            payload: { foods: responses }
           });
         }
       }
