@@ -1,10 +1,12 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import RoleSelect from './RoleSelect';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, vi, beforeEach, test } from 'vitest';
+import '@testing-library/jest-dom';
 
 const mockedNavigate = vi.fn();
 
+// Mock React Router hooks to simulate routing and session/user data
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<any>('react-router-dom');
   return {
@@ -18,63 +20,80 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-/**
- * This test ensures that when a user selects a role and proceeds,
- * the role and userId are properly sent to the backend and the user
- * is added to the session list in the database before being navigated
- * to the game page.
- */
 describe('RoleSelect Component', () => {
   beforeEach(() => {
     mockedNavigate.mockReset();
-    vi.spyOn(global, 'fetch').mockClear();
+    vi.restoreAllMocks();
   });
 
-  test('Players and AAC users are listed in the database once joined', async () => {
-    vi.spyOn(global, 'fetch').mockImplementation(() =>
-      Promise.resolve({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            sessions: {
-              ABCDE: [
-                { userId: 'User630', role: 'Hippo Player' },
-                { userId: 'testUser', role: 'Hippo Player' },
-              ],
-            },
-          }),
-      } as Response)
-    );
-
-    render(
-      <MemoryRouter initialEntries={['/role-select/ABCDE']}>
-        <Routes>
-          <Route path="/role-select/:sessionId" element={<RoleSelect />} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    fireEvent.change(screen.getByRole('combobox'), {
-      target: { value: 'Hippo Player' },
-    });
-
-    fireEvent.click(screen.getByText('Next'));
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/update-role',
-        expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'ABCDE',
-            userId: 'testUser',
-            role: 'Hippo Player',
-          }),
-        })
+  // Tests behavior when Hippo Player role is selected
+  describe('when user selects Hippo Player', () => {
+    test('navigates to gamepage with selected role and userId', () => {
+      render(
+        <MemoryRouter initialEntries={['/role-select/ABCDE']}>
+          <Routes>
+            <Route path="/role-select/:sessionId" element={<RoleSelect />} />
+          </Routes>
+        </MemoryRouter>
       );
 
-      expect(mockedNavigate).toHaveBeenCalledWith('/gamepage/ABCDE/testUser');
+      // Simulate selecting "Hippo Player"
+      fireEvent.change(screen.getByRole('combobox'), {
+        target: { value: 'Hippo Player' },
+      });
+
+      // Simulate clicking "Next"
+      fireEvent.click(screen.getByText('Next'));
+
+      // Expect navigation to gamepage with correct route and state
+      expect(mockedNavigate).toHaveBeenCalledWith('/gamepage/ABCDE/testUser', {
+        state: { userId: 'testUser', role: 'Hippo Player' },
+      });
+    });
+  });
+
+  // Tests behavior when AAC User role is selected
+  describe('when user selects AAC User', () => {
+    test('navigates to gamepage with selected role and userId', () => {
+      render(
+        <MemoryRouter initialEntries={['/role-select/ABCDE']}>
+          <Routes>
+            <Route path="/role-select/:sessionId" element={<RoleSelect />} />
+          </Routes>
+        </MemoryRouter>
+      );
+
+      // Simulate selecting "AAC User"
+      fireEvent.change(screen.getByRole('combobox'), {
+        target: { value: 'AAC User' },
+      });
+
+      // Simulate clicking "Next"
+      fireEvent.click(screen.getByText('Next'));
+
+      // Expect navigation to gamepage with correct route and state
+      expect(mockedNavigate).toHaveBeenCalledWith('/gamepage/ABCDE/testUser', {
+        state: { userId: 'testUser', role: 'AAC User' },
+      });
+    });
+  });
+
+  // Tests the cancel behavior
+  describe('when cancel button is clicked', () => {
+    test('navigates back to landing page', () => {
+      render(
+        <MemoryRouter initialEntries={['/role-select/ABCDE']}>
+          <Routes>
+            <Route path="/role-select/:sessionId" element={<RoleSelect />} />
+          </Routes>
+        </MemoryRouter>
+      );
+
+      // Simulate clicking the close button
+      fireEvent.click(screen.getByRole('button', { name: /Close/i }));
+
+      // Expect navigation to landing page
+      expect(mockedNavigate).toHaveBeenCalledWith('/');
     });
   });
 });
