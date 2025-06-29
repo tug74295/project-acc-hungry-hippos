@@ -212,8 +212,10 @@ export class Game extends Scene
         console.log(`[SPAWN] ${foodKey} launched ${direction} (${degrees.toFixed(0)}°)`); // Logs direction food is launched
 
         food.setVelocity(velocityX, velocityY);
-        food.setBounce(0.2);
+        food.setBounce(1, 1);
         food.setCollideWorldBounds(true);
+        food.setDamping(false);
+        food.setDrag(0);
     }
 
     public setTargetFood(foodId: string) {
