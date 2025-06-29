@@ -232,6 +232,10 @@ wss.on('connection', (ws) => {
 
     } catch (error) {
         console.error('WSS Error processing message:', error);
+        ws.send(JSON.stringify({
+          type: 'ERROR',
+          payload: { message: 'Error processing message' }
+        }));
     }
   });
 
