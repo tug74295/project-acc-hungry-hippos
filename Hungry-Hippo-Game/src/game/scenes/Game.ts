@@ -45,6 +45,7 @@ export class Game extends Scene
     */
     private foodSpawnTimer: Phaser.Time.TimerEvent; // store timer reference
 
+    private currentTargetFoodId: string | null = null;
 
     private playerScores: Record<string, number> = {};
 
@@ -69,7 +70,7 @@ export class Game extends Scene
     */
     preload ()
     {
-        this.load.image('background', '/assets/squareTiles.png');
+        this.load.image('background', '/assets/Underwater.png');
 
         // Dynamically load food images from AAC data
         AAC_DATA.categories.forEach(category => {
@@ -86,49 +87,6 @@ export class Game extends Scene
             frameHeight: 425,
         });
 
-    }
-
-    /**
-     * Callback that runs when food collides with the hippo.
-     * Removes the food from the scene.
-     * 
-     * @param hippoObj - The hippo game object.
-     * @param foodObj - The food game object that collided with the hippo.
-    */
-    private handleFoodCollision(
-        hippoObj: Phaser.GameObjects.GameObject | Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Tilemaps.Tile,
-        foodObj: Phaser.GameObjects.GameObject | Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody | Phaser.Tilemaps.Tile
-    ) 
-    {
-        // Extract the actual GameObjects from bodies or tiles
-        const getGameObject = (obj: any): Phaser.GameObjects.GameObject | null => {
-            if (obj instanceof Phaser.Tilemaps.Tile) {
-                // Tiles don't have a gameObject, so just return null or handle accordingly
-                return null;
-            }
-            if ('gameObject' in obj) {
-                return obj.gameObject;
-            }
-            return obj;
-        };
-
-        const foodGO = getGameObject(foodObj);
-        if (!foodGO) {
-            // Could be a tile, skip collision
-            return;
-        }
-
-        if (foodGO instanceof Phaser.GameObjects.Sprite || foodGO instanceof Phaser.Physics.Arcade.Image) {
-            console.log(`[EAT] ${foodGO.texture.key} eaten by hippo`);
-            foodGO.destroy();
-
-            this.playerScores["host"] += 1
-            this.updateScoreText();
-
-            EventBus.emit('scoreUpdate', {
-                scores: { ...this.playerScores }
-            });
-        }
     }
 
     /**
@@ -150,7 +108,21 @@ export class Game extends Scene
 
         this.playerScores["host"] = 0;
     
-        this.physics.add.overlap(this.hippo, this.foods, this.handleFoodCollision, undefined, this);
+        this.physics.add.overlap(this.hippo, this.foods, (_hippo, fruit) => {
+            let fruitGO: Phaser.GameObjects.GameObject | null = null;
+
+            if (fruit instanceof Phaser.Tilemaps.Tile) return;
+
+            if ('gameObject' in fruit && fruit.gameObject instanceof Phaser.GameObjects.GameObject) {
+                fruitGO = fruit.gameObject;
+            } else if (fruit instanceof Phaser.GameObjects.GameObject) {
+                fruitGO = fruit;
+            }
+
+            if (fruitGO) {
+                this.handleFruitCollision("host", fruitGO);
+            }
+        });
 
         this.scoreText = this.add.text(32, 32, '', {
             fontSize: '24px',
@@ -219,15 +191,34 @@ export class Game extends Scene
      * 
      * @param foodKey - The identifier of the food (e.g. 'apple', 'fries') to spawn.
     */
-    public addFoodManually(foodKey: string) {
-        const x = Phaser.Math.Between(64, this.scale.width - 64);
-        const food = this.foods.create(x, 0, foodKey) as Phaser.Physics.Arcade.Image;
-        console.log(`[SPAWN-MANUAL] ${foodKey} at X=${x}`);
+    public addFoodManually(foodKey: string, angle: number) {
+        const centerX = this.scale.width / 2;
+        const centerY = this.scale.height / 2;
+        const food = this.foods.create(centerX, centerY, foodKey) as Phaser.Physics.Arcade.Image;
 
-        food.setScale(0.25);
-        food.setVelocityY(600);
+        food.setScale(0.15);
+
+        const speed = 300;
+        const velocityX = Math.cos(angle) * speed;
+        const velocityY = Math.sin(angle) * speed;
+
+        const degrees = Phaser.Math.RadToDeg(angle);
+        
+        let direction = '';
+        if (degrees >= 45 && degrees < 135) direction = 'down';
+        else if (degrees >= 135 && degrees < 225) direction = 'left';
+        else if (degrees >= 225 && degrees < 315) direction = 'up';
+        else direction = 'right';
+        console.log(`[SPAWN] ${foodKey} launched ${direction} (${degrees.toFixed(0)}°)`); // Logs direction food is launched
+
+        food.setVelocity(velocityX, velocityY);
         food.setBounce(0.2);
         food.setCollideWorldBounds(true);
+    }
+
+    public setTargetFood(foodId: string) {
+        this.currentTargetFoodId = foodId;
+        console.log(`[TARGET] Current target food set to: ${foodId}`);
     }
     
     /**
@@ -235,13 +226,6 @@ export class Game extends Scene
      * Handles per-frame logic, such as checking food positions to remove offscreen items.
     */
     update() {
-        this.foods.getChildren().forEach((food) => {
-            const sprite = food as Phaser.Physics.Arcade.Image;
-            if (sprite.body && sprite.body.blocked.down) {
-                sprite.destroy(); // Immediately remove food after touching bottom
-                console.log(`[EAT] ${sprite.texture.key} removed after hitting ground`);
-            }
-        });
 
         if (this.hippo && this.cursors) {
             this.hippo.update(this.cursors);
@@ -290,13 +274,24 @@ export class Game extends Scene
         fruit: Phaser.GameObjects.GameObject
     ) => {
         fruit.destroy();
-        this.playerScores[playerId] += 1;
+        if ('texture' in fruit && fruit instanceof Phaser.GameObjects.Sprite) {
+            const foodId = fruit.texture.key;
+            const isCorrect = foodId === this.currentTargetFoodId;
 
-        this.updateScoreText();
+            if (isCorrect) {
+                this.playerScores[playerId] += 1;
+                console.log(`[POINT] ${playerId} ate correct food: ${foodId}`);
+            } else {
+                this.playerScores[playerId] = Math.max(0, this.playerScores[playerId] - 1); // prevent negative
+                console.log(`[PENALTY] ${playerId} ate wrong food: ${foodId}`);
+            }
 
-        EventBus.emit('scoreUpdate', {
-            scores: {...this.playerScores}
-        });
+            this.updateScoreText();
+
+            EventBus.emit('scoreUpdate', {
+                scores: {...this.playerScores}
+            });
+        }
     };
 
     private updateScoreText() 
