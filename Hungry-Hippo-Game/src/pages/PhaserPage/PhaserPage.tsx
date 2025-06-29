@@ -1,137 +1,108 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { IRefPhaserGame, PhaserGame } from '../../PhaserGame';
+import { useParams, useLocation } from 'react-router-dom';
+import { PhaserGame, IRefPhaserGame } from '../../PhaserGame';
+import { useWebSocket } from '../../contexts/WebSocketContext';
 import { AacFood } from '../../Foods';
-import { useNavigate, useParams } from 'react-router-dom';
 
 /**
- * 
- * @component PhaserPage
- * @description
- * This is a react functional component that serves as the main game interface page. It inlcudes 
- * Augmented and Alternatice Communication) interface for selecting food.
- * Phaser game canvas where the selected food is spawned and animated .
- * A food stack tracker to show the currently selected food
- * 
- *  Data Fields:
- * - phaserRef: React.MutableRefObject<IRefPhaserGame | null>
- *      Reference to the PhaserGame component, used to access the Phaser scene.
- * - foodStack: AacFood[]
- *      Stack of foods selected by the user from the AAC interface.
+ * PhaserPage component.
  *
- * Purpose:
- * - To provide the main gameplay page, integrating the AAC interface and Phaser game.
- * - To handle food selection and trigger food spawning in the game scene.
+ * Displays the Phaser game canvas and shows the currently selected food visually.
+ * Listens to WebSocket messages to update the game scene with the latest selected food.
  *
- * Methods:
- * - handleSelectedFood(selectedFood: AacFood): void
- *      Handles selection of a food from the AAC interface, adds it to the stack,
- *      and spawns it in the Phaser game scene.
- *
- * - currentFood: AacFood | null
- *      Gets the current selected food (top of the stack).
- *
- * Pre-conditions:
- * - PhaserGame and AacInterface components must be properly implemented and imported.
- *
- * Post-conditions:
- * - The selected food is added to the stack and spawned in the Phaser game.
- *
- * @returns {JSX.Element} The rendered game page.
-
+ * @component
+ * @returns {JSX.Element} The rendered Phaser game interface with current food indicator.
  */
 const PhaserPage: React.FC = () => {
-    //  References to the PhaserGame component (game and scene are exposed)
-    /**
-     * * @description A React ref pointing to the PhaserGame component instance. 
-     * Used to access its scene and methods like addFoodManually.
-     */
-    const phaserRef = useRef<IRefPhaserGame | null>(null);
+  /**
+   * Extract sessionId and userId from the URL parameters.
+   */
+  const { sessionId, userId } = useParams<{ sessionId: string, userId: string }>();
 
-    /**
-     * 
-     * @field foodStack
-     * @type {AacFood[]}
-     * @description  Stack of selected foods. The top of the stack is the most recent selection
-     */
+  /**
+   * Access the React Router location object to get passed state (including user role).
+   */
+  const location = useLocation();
 
-    const [foodStack] = React.useState<AacFood[]>([]);
+  /**
+   * Ref to the PhaserGame component instance, to call Phaser scene methods.
+   */
+  const phaserRef = useRef<IRefPhaserGame | null>(null);
 
-     /**
-     * @field currentFood
-     * @type {AacFood | null}
-     * @description The food currently at the top of the stack, representing the next food to eat.
-     */
+  /**
+   * Holds the currently selected food object to display.
+   */
+  const [currentFood, setCurrentFood] = useState<AacFood | null>(null);
 
-    // Get the current selected food (top of stack)
-    const currentFood = foodStack.length > 0 ? foodStack[0] : null;
+  /**
+   * WebSocket context values: lastMessage received, sendMessage function, and a function to clear last message.
+   */
+  const { lastMessage, sendMessage, clearLastMessage } = useWebSocket();
 
-    const [valid, setValid] = useState(false);
-      const { sessionId, userId } = useParams<{ sessionId: string; userId: string }>();
-  const navigate = useNavigate();
-  const [loading, setLoading] = React.useState(true);
-
-      useEffect(() => {
-    async function validateUser() {
-      try {
-        const res = await fetch('http://localhost:4000/validate-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, userId }),
-        });
-        const data = await res.json();
-
-        if (res.ok && data.role) {
-          setValid(true);
-        } else {
-          navigate('/'); // Redirect on invalid user/session
-        }
-      } catch (error) {
-        console.error('Validation failed:', error);
-        navigate('/');
-      } finally {
-        setLoading(false);
-      }
+  /**
+   * Effect hook to send a "PLAYER_JOIN" message over WebSocket when component mounts,
+   * informing the server about the player's session, userId, and role.
+   *
+   * Dependencies:
+   * - sessionId, userId: URL parameters identifying player/session.
+   * - location.state?.role: User role passed in navigation state.
+   * - sendMessage: WebSocket send function.
+   */
+  useEffect(() => {
+    const role = location.state?.role;
+    if (sessionId && userId && role) {
+      sendMessage({
+        type: 'PLAYER_JOIN',
+        payload: { sessionId, userId, role }
+      });
     }
+  }, [sessionId, userId, location.state?.role, sendMessage]);
 
-    if (sessionId && userId) {
-      validateUser();
-    } else {
-      // Missing params, redirect or handle error
-      navigate('/');
+  /**
+   * Effect hook that listens for WebSocket messages of type 'FOOD_SELECTED_BROADCAST'.
+   * When a food is selected by any player, update the local state and notify the Phaser scene to spawn and highlight the food.
+   *
+   * Dependencies:
+   * - lastMessage: Incoming WebSocket message.
+   * - clearLastMessage: Function to reset the lastMessage after processing.
+   */
+  useEffect(() => {
+    if (lastMessage?.type === 'FOOD_SELECTED_BROADCAST') {
+      const { food, angle } = lastMessage.payload;
+      setCurrentFood(food);
+      const scene = phaserRef.current?.scene as any;
+
+      if (scene?.addFoodManually) scene.addFoodManually(food.id, angle);
+      if (scene?.setTargetFood) scene.setTargetFood(food.id);
+
+      clearLastMessage?.();
     }
-  }, [sessionId, userId, navigate]);
+  }, [lastMessage, clearLastMessage]);
 
-  if (loading) return <div>Loading...</div>;
-  if (!valid) return null; // Or show error message
+  /**
+   * Render the PhaserGame component and the current food indicator UI.
+   */
+  return (
+    <div className="game-container">
+      <PhaserGame ref={phaserRef} />
 
-         /**
-     * @returns {JSX.Element}
-     * @description Renders the AAC interface, Phaser game container, and food status display.
-     */
-
-    return (
-        <div id="app">
-            <div className="game-container">
-                <PhaserGame ref={phaserRef} />
-                
-                <div className="current-food-indicator">
-                    <h3>Current Food to Eat:</h3>
-                    {currentFood ? (
-                        <>
-                            <img
-                                src={currentFood.imagePath}
-                                alt={currentFood.name}
-                                className="current-food-image"
-                            />
-                            <p className="current-food-name">{currentFood.name}</p>
-                        </>
-                    ) : (
-                        <p className="current-food-placeholder">No Food Selected</p>
-                    )}
-                </div>
-            </div>
-        </div>
-    )
-}
+      <div className="current-food-indicator">
+        <h3>Current Food to Eat:</h3>
+        {currentFood ? (
+          <>
+            <img
+              src={currentFood.imagePath}
+              alt={currentFood.name}
+              className="current-food-image"
+            />
+            <p className="current-food-name">{currentFood.name}</p>
+          </>
+        ) : (
+          <p className="current-food-placeholder">No Food Selected</p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default PhaserPage;
