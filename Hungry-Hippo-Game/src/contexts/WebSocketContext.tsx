@@ -15,9 +15,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const WSS_URL = import.meta.env.PROD
-      ? 'wss://project-acc-hungry-hippos-production-45dd.up.railway.app'
-      : 'ws://localhost:4000';
+    const WSS_URL = import.meta.env.VITE_WSS_URL || 'ws://localhost:4000';
 
     const socket = new WebSocket(WSS_URL);
     ws.current = socket;
