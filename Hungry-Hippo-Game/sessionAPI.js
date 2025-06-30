@@ -243,7 +243,11 @@ wss.on('connection', (ws) => {
         const { sessionId, food } = data.payload;
         if (sessions[sessionId]) {
           console.log(`WSS Food selected in session ${sessionId}:`, food);
-          const hippoClients = [...sessions[sessionId]].filter(client => client.userId && client.readyState === WebSocket.OPEN);
+          const hippoClients = [...sessions[sessionId]].filter(
+            client =>
+              client.readyState === WebSocket.OPEN &&
+              client.role === 'Hippo Player'
+          );
 
           const responses = hippoClients.map(() => ({
             food,
