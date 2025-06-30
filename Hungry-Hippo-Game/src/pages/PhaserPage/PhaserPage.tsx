@@ -3,7 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { PhaserGame, IRefPhaserGame } from '../../PhaserGame';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import { AacFood } from '../../Foods';
-
+import { EventBus } from '../../game/EventBus';
 /**
  * PhaserPage component.
  *
@@ -58,26 +58,81 @@ const PhaserPage: React.FC = () => {
     }
   }, [sessionId, userId, location.state?.role, sendMessage]);
 
-  /**
-   * Effect hook that listens for WebSocket messages of type 'FOOD_SELECTED_BROADCAST'.
-   * When a food is selected by any player, update the local state and notify the Phaser scene to spawn and highlight the food.
-   *
-   * Dependencies:
-   * - lastMessage: Incoming WebSocket message.
-   * - clearLastMessage: Function to reset the lastMessage after processing.
-   */
-  useEffect(() => {
-    if (lastMessage?.type === 'FOOD_SELECTED_BROADCAST') {
-      const { food, angle } = lastMessage.payload;
-      setCurrentFood(food);
-      const scene = phaserRef.current?.scene as any;
+    // Listens for broadcasts from the server about food selection
+    useEffect(() => {
+        if (lastMessage?.type === 'FOOD_SELECTED_BROADCAST') {
 
-      if (scene?.addFoodManually) scene.addFoodManually(food.id, angle);
-      if (scene?.setTargetFood) scene.setTargetFood(food.id);
+            const { foods } = lastMessage.payload;
+            const scene = phaserRef.current?.scene as any;
 
-      clearLastMessage?.();
-    }
-  }, [lastMessage, clearLastMessage]);
+            if (Array.isArray(foods)) {
+                foods.forEach(({ food, angle }: { food: AacFood, angle: number }) => {
+                    if (scene && typeof scene.addFoodManually === 'function') {
+                        scene.addFoodManually(food.id, angle);
+                    }
+                });
+
+                if (foods.length > 0 && typeof scene.setTargetFood === 'function') {
+                    scene.setTargetFood(foods[0].food.id);
+                    setCurrentFood(foods[0].food);
+                }
+            }
+            if (clearLastMessage) clearLastMessage();
+        }
+
+        if (lastMessage?.type === 'FRUIT_EATEN_BROADCAST') {
+            const { foodId, x, y } = lastMessage.payload;
+            const scene = phaserRef.current?.scene as any;
+
+            if (scene && typeof scene.removeFruitAt === 'function') {
+                scene.removeFruitAt(foodId, x, y);
+            }
+        }
+    }, [lastMessage, clearLastMessage]);
+
+    /**
+     * Listens for fruit-eaten events emitted from the Phaser scene,
+     * and sends a WebSocket message to the server with fruit info.
+    */
+    useEffect(() => {
+        const handleFruitEaten = ({ foodId, x, y }: { foodId: string; x: number; y: number }) => {
+            if (sessionId) {
+                sendMessage({
+                    type: 'FRUIT_EATEN',
+                    payload: { sessionId, foodId, x, y }
+                });
+            }
+        };
+
+        EventBus.on('fruit-eaten', handleFruitEaten);
+
+        return () => {
+            EventBus.off('fruit-eaten', handleFruitEaten);
+        };
+    }, [sendMessage, sessionId]);
+
+
+    /**
+     * Listens for fruit-eaten events emitted from the Phaser scene,
+     * and sends a WebSocket message to the server with fruit info.
+    */
+    useEffect(() => {
+        const handleFruitEaten = ({ foodId, x, y }: { foodId: string; x: number; y: number }) => {
+            if (sessionId) {
+                sendMessage({
+                    type: 'FRUIT_EATEN',
+                    payload: { sessionId, foodId, x, y }
+                });
+            }
+        };
+
+        EventBus.on('fruit-eaten', handleFruitEaten);
+
+        return () => {
+            EventBus.off('fruit-eaten', handleFruitEaten);
+        };
+    }, [sendMessage, sessionId]);
+
 
   /**
    * Render the PhaserGame component and the current food indicator UI.
