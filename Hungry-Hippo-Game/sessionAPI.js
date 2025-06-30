@@ -204,6 +204,19 @@ wss.on('connection', (ws) => {
 
       }
 
+      // When the presenter clicks "Start Game", broadcast to all clients in the session
+      // to signal that the game has begun. Clients will navigate to the game screen.
+      if (data.type === 'START_GAME') {
+        const { sessionId } = data.payload;
+        console.log(`[WSS] Start game received for session ${sessionId}`);
+
+        broadcast(sessionId, {
+          type: 'START_GAME_BROADCAST',
+          payload: { sessionId }
+        });
+      }
+
+
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
         const { sessionId, food } = data.payload;

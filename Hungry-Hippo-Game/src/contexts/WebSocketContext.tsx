@@ -6,6 +6,7 @@ interface IWebSocketContext {
   sendMessage: (message: object) => void;
   clearLastMessage?: () => void;
   connectedUsers: { userId: string; role: string }[];
+  gameStarted: boolean;
 }
 
 const WebSocketContext = createContext<IWebSocketContext | null>(null);
@@ -15,7 +16,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [lastMessage, setLastMessage] = useState<any>(null);
   const [connectedUsers, setConnectedUsers] = useState<{ userId: string; role: string }[]>([]);
   const ws = useRef<WebSocket | null>(null);
-  
+  const [gameStarted, setGameStarted] = useState(false);
 
   useEffect(() => {
     const WSS_URL = import.meta.env.PROD
@@ -42,8 +43,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (data.type === 'USERS_LIST_UPDATE') {
         setConnectedUsers(data.payload.users);
         return; 
-      }
+      }  
 
+      if (data.type === 'START_GAME_BROADCAST') {
+        console.log('[WS_CONTEXT] Game started!');
+        setGameStarted(true);
+        return;
+      }
       setLastMessage(data);
     };
 
@@ -62,10 +68,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const sendMessage = useCallback((message: object) => {
     if (ws.current?.readyState === WebSocket.OPEN) {
+      console.log('[WS_CONTEXT] Sending message:', message);
       ws.current.send(JSON.stringify(message));
     } else {
       console.error('[WS_CONTEXT] Cannot send message, WebSocket is not open.');
     }
+    
   }, []);
 
   const value = {
@@ -74,6 +82,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     sendMessage,
     clearLastMessage,
     connectedUsers,
+    gameStarted,
   };
 
   return (
@@ -91,4 +100,5 @@ export const useWebSocket = () => {
   }
   return context;
 };
+
 
