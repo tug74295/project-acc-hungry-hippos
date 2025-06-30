@@ -181,10 +181,8 @@ export class Game extends Scene
 
         // Gravity
         food.setVelocityY(750); // Will move 750 pixels/sec down
-        food.setBounce(1, 1);; // Slight bounce at bottom but used to trigger falling
+        food.setBounce(0.2); // Slight bounce at bottom but used to trigger falling
         food.setCollideWorldBounds(true);
-        food.setDamping(false);
-        food.setDrag(0);
     }
 
     /**
@@ -214,8 +212,10 @@ export class Game extends Scene
         console.log(`[SPAWN] ${foodKey} launched ${direction} (${degrees.toFixed(0)}°)`); // Logs direction food is launched
 
         food.setVelocity(velocityX, velocityY);
-        food.setBounce(0.2);
+        food.setBounce(1, 1);
         food.setCollideWorldBounds(true);
+        food.setDamping(false);
+        food.setDrag(0);
     }
 
     public setTargetFood(foodId: string) {
@@ -309,7 +309,6 @@ export class Game extends Scene
             .join('\n');
         this.scoreText.setText(lines);
     }
-
 
     /**
      * Removes a fruit from the scene if it's close enough to the given position.
