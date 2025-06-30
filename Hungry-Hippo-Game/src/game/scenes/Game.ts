@@ -325,3 +325,4 @@ export class Game extends Scene
         });
     }
 }
+

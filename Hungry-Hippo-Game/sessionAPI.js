@@ -5,7 +5,28 @@ const WebSocket = require('ws');
 const { Pool } = require('pg');
 
 const server = http.createServer();
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ noServer: true });
+
+// Reject connections from unauthorized origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://project-acc-hungry-hippos.vercel.app'
+];
+
+server.on('upgrade', (request, socket, head) => {
+  const origin = request.headers.origin;
+  if (!allowedOrigins.includes(origin)) {
+    console.log(`[WSS] Connection from unauthorized origin ${origin} rejected.`);
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    console.log(`[WSS] Connection from ${origin} accepted.`);
+    wss.emit('connection', ws, request);
+  });
+});
 
 const sessions = {};
 const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
@@ -236,6 +257,14 @@ wss.on('connection', (ws) => {
             payload: { foods: responses }
           });
         }
+      }
+      // Notify all players in the session to remove the fruit
+      if (data.type === 'FRUIT_EATEN') {
+        const { sessionId, foodId, x, y } = data.payload;
+        broadcast(sessionId, {
+          type: 'FRUIT_EATEN_BROADCAST',
+          payload: { foodId, x, y }
+        });
       }
 
             // Notify all players in the session to remove the fruit
