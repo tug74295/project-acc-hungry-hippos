@@ -54,6 +54,7 @@ function Presenter() {
       type: 'START_GAME',
       payload: { sessionId },
     });
+    navigate(`/presenter-game/${sessionId}`);
   };
 
   return (

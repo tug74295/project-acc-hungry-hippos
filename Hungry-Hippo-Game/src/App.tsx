@@ -4,6 +4,7 @@ import Presenter from './pages/PresenterPage/Presenter';
 import RoleSelect from './pages/RoleSelection/RoleSelect';
 import PhaserPage from './pages/PhaserPage/PhaserPage';
 import AacPage from './pages/AacPage/AacPage';
+import PresenterGamePage from './pages/PresenterGamePage/PresenterGame';
 
 import { Navigate } from 'react-router-dom';
 
@@ -16,6 +17,7 @@ function App() {
         <Route path="/roleselect/:sessionId" element={<RoleSelect />} />
         <Route path="/hippo/:sessionId/:userId/:role" element={<PhaserPage />} />
         <Route path="/aac/:sessionId/:userId/:role" element={<AacPage />} />
+        <Route path="/presenter-game/:sessionId" element={<PresenterGamePage />} />
 
         {/* Redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
