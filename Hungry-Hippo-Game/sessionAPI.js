@@ -11,7 +11,8 @@ const wss = new WebSocket.Server({ noServer: true });
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'https://project-acc-hungry-hippos.vercel.app'
+  'http://localhost:3002',
+  'https://draexico.com'
 ];
 
 server.on('upgrade', (request, socket, head) => {
