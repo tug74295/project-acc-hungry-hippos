@@ -5,6 +5,8 @@ interface IWebSocketContext {
   lastMessage: any;
   sendMessage: (message: object) => void;
   clearLastMessage?: () => void;
+  connectedUsers: { userId: string; role: string }[];
+  gameStarted: boolean;
 }
 
 const WebSocketContext = createContext<IWebSocketContext | null>(null);
@@ -12,12 +14,12 @@ const WebSocketContext = createContext<IWebSocketContext | null>(null);
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
+  const [connectedUsers, setConnectedUsers] = useState<{ userId: string; role: string }[]>([]);
   const ws = useRef<WebSocket | null>(null);
+  const [gameStarted, setGameStarted] = useState(false);
 
   useEffect(() => {
-    const WSS_URL = import.meta.env.PROD
-      ? 'wss://project-acc-hungry-hippos-production-45dd.up.railway.app'
-      : 'ws://localhost:4000';
+    const WSS_URL = import.meta.env.VITE_WSS_URL || 'ws://localhost:4000';
 
     const socket = new WebSocket(WSS_URL);
     ws.current = socket;
@@ -34,7 +36,18 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log('[WS_CONTEXT] Message from server:', data);
+      // console.log('[WS_CONTEXT] Message from server:', data);
+
+      if (data.type === 'USERS_LIST_UPDATE') {
+        setConnectedUsers(data.payload.users);
+        return; 
+      }  
+
+      if (data.type === 'START_GAME_BROADCAST') {
+        console.log('[WS_CONTEXT] Game started!');
+        setGameStarted(true);
+        return;
+      }
       setLastMessage(data);
     };
 
@@ -64,6 +77,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     lastMessage,
     sendMessage,
     clearLastMessage,
+    connectedUsers,
+    gameStarted,
   };
 
   return (
@@ -81,3 +96,4 @@ export const useWebSocket = () => {
   }
   return context;
 };
+

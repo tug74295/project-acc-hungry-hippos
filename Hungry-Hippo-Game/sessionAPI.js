@@ -5,7 +5,28 @@ const WebSocket = require('ws');
 const { Pool } = require('pg');
 
 const server = http.createServer();
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ noServer: true });
+
+// Reject connections from unauthorized origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://project-acc-hungry-hippos.vercel.app'
+];
+
+server.on('upgrade', (request, socket, head) => {
+  const origin = request.headers.origin;
+  if (!allowedOrigins.includes(origin)) {
+    console.log(`[WSS] Connection from unauthorized origin ${origin} rejected.`);
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    console.log(`[WSS] Connection from ${origin} accepted.`);
+    wss.emit('connection', ws, request);
+  });
+});
 
 const sessions = {};
 const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
@@ -159,6 +180,7 @@ wss.on('connection', (ws) => {
         const { sessionId, userId, role } = data.payload;
         ws.sessionId = sessionId;
         ws.userId = userId;
+        ws.role = role;
 
         if (!sessions[sessionId]) {
           sessions[sessionId] = new Set(); 
@@ -183,19 +205,79 @@ wss.on('connection', (ws) => {
             userId, role 
           } 
         });
+        // Collect all users in the session
+        const usersInSession = Array.from(sessions[sessionId])
+          .filter(client => client.readyState === WebSocket.OPEN)
+          .map(client => ({
+            userId: client.userId,
+            role: client.role
+          }));
+
+        // Send full user list
+        broadcast(sessionId, {
+          type: 'USERS_LIST_UPDATE',
+          payload: {
+            users: usersInSession
+          }
+        });
+        console.log(`[WSS] Broadcasting USERS_LIST_UPDATE to ${sessionId}:`, usersInSession);
+
+
       }
+
+      // When the presenter clicks "Start Game", broadcast to all clients in the session
+      // to signal that the game has begun. Clients will navigate to the game screen.
+      if (data.type === 'START_GAME') {
+        const { sessionId } = data.payload;
+        console.log(`[WSS] Start game received for session ${sessionId}`);
+
+        broadcast(sessionId, {
+          type: 'START_GAME_BROADCAST',
+          payload: { sessionId }
+        });
+      }
+
 
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
         const { sessionId, food } = data.payload;
         if (sessions[sessionId]) {
           console.log(`WSS Food selected in session ${sessionId}:`, food);
-          const angle = Math.random() * Math.PI * 2;
+          const hippoClients = [...sessions[sessionId]].filter(
+            client =>
+              client.readyState === WebSocket.OPEN &&
+              client.role === 'Hippo Player'
+          );
+
+          const responses = hippoClients.map(() => ({
+            food,
+            angle: Math.random() * Math.PI * 2 // launch in random direction
+          }));
+          console.log(`WSS Launching ${responses.length} ${food.id}(s) in session ${sessionId}`);
+
+          // Sends all as an array in one broadcast
           broadcast(sessionId, {
             type: 'FOOD_SELECTED_BROADCAST',
-            payload: { food, angle }
+            payload: { foods: responses }
           });
         }
+      }
+      // Notify all players in the session to remove the fruit
+      if (data.type === 'FRUIT_EATEN') {
+        const { sessionId, foodId, x, y } = data.payload;
+        broadcast(sessionId, {
+          type: 'FRUIT_EATEN_BROADCAST',
+          payload: { foodId, x, y }
+        });
+      }
+
+            // Notify all players in the session to remove the fruit
+      if (data.type === 'FRUIT_EATEN') {
+        const { sessionId, foodId, x, y } = data.payload;
+        broadcast(sessionId, {
+          type: 'FRUIT_EATEN_BROADCAST',
+          payload: { foodId, x, y }
+        });
       }
 
     } catch (error) {
