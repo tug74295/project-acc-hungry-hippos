@@ -1,7 +1,7 @@
-import React from 'react';
+import '@testing-library/jest-dom';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Presenter from './Presenter';
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 const mockedNavigate = vi.fn();
 
@@ -15,6 +15,17 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+vi.mock('../../contexts/WebSocketContext', () => ({
+  useWebSocket: () => ({
+    isConnected: true,
+    sendMessage: vi.fn(),
+    connectedUsers: [
+      { userId: 'user1', role: 'Hippo Player' },
+      { userId: 'user2', role: 'AAC User' },
+    ],
+  }),
+}));
+
 describe('Presenter Component', () => {
   beforeEach(() => {
     mockedNavigate.mockReset();
@@ -23,7 +34,7 @@ describe('Presenter Component', () => {
   it('displays the room code clearly on the host device', () => {
     render(<Presenter />);
     const codeText = screen.getByText(/Game Code: ABCDE/i);
-    expect(codeText).toBeDefined();
+    expect(codeText).toBeInTheDocument();
   });
 
   it('navigates back to landing page when cancel button is clicked', () => {
