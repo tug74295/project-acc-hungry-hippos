@@ -86,24 +86,24 @@ The original *Hungry Hungry Hippos* was a turn-based, tactile game, but moderniz
 ## :tools: How to Run Locally
 
 ### 1. Clone the repo
-```
+```bash
 git clone https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos
 cd project-acc-hungry-hippos/Hungry-hippo-game
 cd Hungry-hippo-game
 ```
 
 ### 2. Install dependencies
-```
+```bash
 npm install
 ```
 
 ### 3. Start the backend API server (WebSocket)
-```
+```bash
 npm run api
 ```
 
 ### 4. Run the frontend (open three terminals and run this in each)
-```
+```bash
 npm run dev
 ```
 
