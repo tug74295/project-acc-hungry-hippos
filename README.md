@@ -99,10 +99,6 @@ The original *Hungry Hungry Hippos* was a turn-based, tactile game, but moderniz
 ### 4. Run the frontend (open three terminals and run this in each)
 ```npm run dev```
 
-
-How come it wont let me copy it from the github readme. Does it need 
-```npm run api```
-
 ## Required Resources
 
 To successfully develop this project, the following technical competencies and background knowledge are required:
