@@ -1,46 +1,87 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import LandingPage from './LandingPage';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('react-router-dom', () => {
-  const actual = vi.importActual('react-router-dom') as object;
+const mockedNavigate = vi.fn();
+
+/**
+ * Mock react-router-dom's useNavigate hook
+ */
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockedNavigate,
   };
 });
 
-const mockedNavigate = vi.fn();
+const mockSendMessage = vi.fn();
 
 /**
- * This test verifies that when the user clicks the "No code? Create new game!" button
- * on the LandingPage component, a session creation request is sent to the backend
- * and the user is navigated to the Presenter view using the returned session ID.
+ * Mock WebSocket context for connection, message, and sendMessage
  */
-describe('The host device sends a session creation request ', () => {
-  beforeEach(() => {
-    mockedNavigate.mockReset();
+vi.mock('../../contexts/WebSocketContext', () => {
+  return {
+    useWebSocket: () => ({
+      isConnected: true,
+      lastMessage: null,
+      sendMessage: mockSendMessage,
+      clearLastMessage: vi.fn(),
+    }),
+    WebSocketProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
 
+describe('Session creation & validation', () => {
+  beforeEach(() => {
+    mockSendMessage.mockReset();
   });
 
-  it('sends a session creation request when "No code? Create new game!" is clicked', async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ sessionId: 'ABCDE' }),
-      })
-    ) as any;
-
+  /**
+   * Clicking "No code? Create new game!" sends CREATE_SESSION message
+   */
+  it('sends CREATE_SESSION when create game is clicked', () => {
     render(<LandingPage />);
-
-    const createGameButton = screen.getByText(/No code\? Create new game!/i);
+    const createGameButton = screen.getByRole('button', { name: /No code\? Create new game!?/i });
     fireEvent.click(createGameButton);
+    expect(mockSendMessage).toHaveBeenCalledWith({ type: 'CREATE_SESSION' });
+  });
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:4000/create-session', expect.any(Object));
-      expect(mockedNavigate).toHaveBeenCalledWith('/Presenter/ABCDE');
+  /**
+   * Entering 5-char code and clicking Join sends VALIDATE_SESSION message
+   */
+  it('sends VALIDATE_SESSION with 5-char code on Join Game', () => {
+    render(<LandingPage />);
+    const inputs = screen.getAllByRole('textbox');
+
+    ['A', 'B', 'C', 'D', 'E'].forEach((char, i) => {
+      fireEvent.change(inputs[i], { target: { value: char } });
     });
 
-    (global.fetch as any).mockRestore?.();
+    const joinButton = screen.getByRole('button', { name: /Join Game/i });
+    fireEvent.click(joinButton);
+
+    expect(mockSendMessage).toHaveBeenCalledWith({
+      type: 'VALIDATE_SESSION',
+      payload: { gameCode: 'ABCDE' }
+    });
+  });
+
+  /**
+   * Code less than 5 chars does not send VALIDATE_SESSION message
+   */
+  it('does NOT send VALIDATE_SESSION if code is less than 5 chars', () => {
+    render(<LandingPage />);
+    const inputs = screen.getAllByRole('textbox');
+
+    ['A', 'B', 'C', '', ''].forEach((char, i) => {
+      fireEvent.change(inputs[i], { target: { value: char } });
+    });
+
+    const joinButton = screen.getByRole('button', { name: /Join Game/i });
+    fireEvent.click(joinButton);
+
+    expect(mockSendMessage).not.toHaveBeenCalled();
   });
 });

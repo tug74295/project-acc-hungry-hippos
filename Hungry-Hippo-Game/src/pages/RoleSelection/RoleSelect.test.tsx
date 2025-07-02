@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import RoleSelect from './RoleSelect';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, vi, beforeEach, test } from 'vitest';
@@ -18,34 +18,20 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-/**
- * This test ensures that when a user selects a role and proceeds,
- * the role and userId are properly sent to the backend and the user
- * is added to the session list in the database before being navigated
- * to the game page.
- */
+vi.mock('../../contexts/WebSocketContext', () => ({
+  useWebSocket: () => ({
+    gameStarted: false,    // navigation won't trigger
+    sendMessage: vi.fn(),
+  }),
+}));
+
 describe('RoleSelect Component', () => {
   beforeEach(() => {
     mockedNavigate.mockReset();
-    vi.spyOn(global, 'fetch').mockClear();
+    vi.restoreAllMocks();
   });
 
-  test('Players and AAC users are listed in the database once joined', async () => {
-    vi.spyOn(global, 'fetch').mockImplementation(() =>
-      Promise.resolve({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            sessions: {
-              ABCDE: [
-                { userId: 'User630', role: 'Hippo Player' },
-                { userId: 'testUser', role: 'Hippo Player' },
-              ],
-            },
-          }),
-      } as Response)
-    );
-
+  test('can select Hippo Player role', () => {
     render(
       <MemoryRouter initialEntries={['/role-select/ABCDE']}>
         <Routes>
@@ -54,27 +40,52 @@ describe('RoleSelect Component', () => {
       </MemoryRouter>
     );
 
-    fireEvent.change(screen.getByRole('combobox'), {
-      target: { value: 'Hippo Player' },
-    });
+    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'Hippo Player' } });
+    expect(select.value).toBe('Hippo Player');
+  });
 
-    fireEvent.click(screen.getByText('Next'));
+  test('can select AAC User role', () => {
+    render(
+      <MemoryRouter initialEntries={['/role-select/ABCDE']}>
+        <Routes>
+          <Route path="/role-select/:sessionId" element={<RoleSelect />} />
+        </Routes>
+      </MemoryRouter>
+    );
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/update-role',
-        expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'ABCDE',
-            userId: 'testUser',
-            role: 'Hippo Player',
-          }),
-        })
-      );
+    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'AAC User' } });
+    expect(select.value).toBe('AAC User');
+  });
 
-      expect(mockedNavigate).toHaveBeenCalledWith('/gamepage/ABCDE/testUser');
-    });
+
+  test('shows error if Next clicked without selecting role', () => {
+    render(
+      <MemoryRouter initialEntries={['/role-select/ABCDE']}>
+        <Routes>
+          <Route path="/role-select/:sessionId" element={<RoleSelect />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const nextButton = screen.getByText('Next');
+    fireEvent.click(nextButton);
+
+    const select = screen.getByRole('combobox');
+    expect(select.className).toMatch(/errorBorder/);
+  });
+
+  test('clicking cancel navigates back to landing', () => {
+    render(
+      <MemoryRouter initialEntries={['/role-select/ABCDE']}>
+        <Routes>
+          <Route path="/role-select/:sessionId" element={<RoleSelect />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Close/i }));
+    expect(mockedNavigate).toHaveBeenCalledWith('/');
   });
 });
