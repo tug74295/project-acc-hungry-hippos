@@ -92,17 +92,24 @@ git clone https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hi
 ```
 cd project-acc-hungry-hippos/Hungry-hippo-game
 ```
-
-```cd Hungry-hippo-game```
+```
+cd Hungry-hippo-game
+```
 
 ### 2. Install dependencies
-```npm install```
+```
+npm install
+```
 
 ### 3. Start the backend API server (WebSocket)
-```npm run api```
+```
+npm run api
+```
 
 ### 4. Run the frontend (open three terminals and run this in each)
-```npm run dev```
+```
+npm run dev
+```
 
 ## Required Resources
 
