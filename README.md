@@ -83,18 +83,21 @@ Many existing web games are designed primarily for able-bodied users, leaving ou
 The original *Hungry Hungry Hippos* was a turn-based, tactile game, but modernizing it with bouncing physics, interactive traps, and digital control unlocks a new level of engagement. Integrating accessible design principles and playful interaction can foster **joyful shared experiences**, especially in educational or therapeutic settings.
 
 ---
-## 🛠️ How to Run Locally
+## :tools: How to Run Locally
 
-bash
-# Clone the repo
-git clone the repo
-cd Hungry-hippo-game
+### 1. Clone the repo
+`git clone https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos`  
+`cd project-acc-hungry-hippos/Hungry-hippo-game`  
+`cd Hungry-hippo-game`
 
-# Install dependencies
-npm install
+### 2. Install dependencies
+`npm install`
 
-# Run the development server
-npm run dev
+### 3. Start the backend API server (WebSocket)
+`npm run api`
+
+### 4. Run the frontend (open three terminals and run this in each)
+`npm run dev`
 
 ## Required Resources
 
