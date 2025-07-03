@@ -20,6 +20,7 @@ function Presenter() {
   const { sessionId } = useParams<{ sessionId: string }>();
 
   if (!sessionId || sessionId.length < 5) {
+    console.error('Invalid sessionId:', sessionId);
     return <Navigate to="/" replace />;
   }  
   const presenterId = 'presenter'; 
