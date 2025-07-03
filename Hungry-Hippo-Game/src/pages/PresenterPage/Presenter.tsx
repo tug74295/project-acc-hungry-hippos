@@ -37,11 +37,11 @@ function Presenter() {
    */
   const handleCancel = () => {
     navigate('/');
+  };
 
   if (!sessionId || sessionId.length < 5) {
     return <Navigate to="/" replace />;
   }  
-  };
 
   // Count roles connected excluding presenter
   const hippoCount = connectedUsers.filter(u => u.role === 'Hippo Player').length;
