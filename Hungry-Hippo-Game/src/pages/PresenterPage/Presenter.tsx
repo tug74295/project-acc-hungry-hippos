@@ -1,5 +1,5 @@
 import styles from './Presenter.module.css';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import UserList from '../../components/UserList/UserList';
 import { useEffect } from 'react';
@@ -37,6 +37,10 @@ function Presenter() {
    */
   const handleCancel = () => {
     navigate('/');
+
+  if (!sessionId || sessionId.length < 5) {
+    return <Navigate to="/" replace />;
+  }  
   };
 
   // Count roles connected excluding presenter
