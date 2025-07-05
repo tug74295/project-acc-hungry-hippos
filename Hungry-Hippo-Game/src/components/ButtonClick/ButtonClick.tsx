@@ -9,6 +9,7 @@ import styles from './ButtonClick.module.css';
 interface ButtonClickProps {
   text: string; // Text to display inside the button
   onClick: () => void;
+  disabled?: boolean;
 }
 
 /**
@@ -18,9 +19,9 @@ interface ButtonClickProps {
  * @param {ButtonClickProps} props - The props for the button.
  * @returns {JSX.Element} A styled button with a click handler.
  */
-function ButtonClick({ text, onClick }: ButtonClickProps) {
+function ButtonClick({ text, onClick, disabled }: ButtonClickProps) {
   return (
-    <button className={styles.button} onClick={onClick}>
+    <button className={styles.button} onClick={onClick} disabled={disabled}>
       <span>{text}</span>
       <span className={styles.arrow} aria-hidden="true">→</span>
     </button>

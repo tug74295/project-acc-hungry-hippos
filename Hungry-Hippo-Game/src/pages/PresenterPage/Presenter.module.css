@@ -13,25 +13,8 @@
   box-sizing: border-box;
 }
 
-/* ---------------- Banner ---------------- */
-.bannerWrapper {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  margin-bottom: -1rem;
-  z-index: 1;
-}
-
-.bannerImage {
-  width: 100%;
-  max-width: 600px;
-  height: auto;
-  object-fit: contain;
-
-}
-
 /* ---------------- Role Container ---------------- */
-.roleContainer {
+.roleWrapper {
   position: relative;
   background-color: #FFA726;
   border-radius: 2rem;
@@ -40,13 +23,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0rem;
-  max-width: 600px;
+  gap: 1rem;
+  max-width: 900px;
   width: 100%;
   margin: 0 auto 2rem auto;
   border: 4px solid #FB8C00;
   animation: bounceIn 0.5s ease;
   box-sizing: border-box;
+}
+
+.contentRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 /* Animation for entrance */
@@ -61,7 +53,91 @@
   }
 }
 
-/* ---------------- Close Button (Red X) ---------------- */
+/* ---------------- Left Column ---------------- */
+
+.leftColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  gap: 0.5rem;
+  border-right: 3px solid black;
+  padding-right: 2rem;
+}
+
+.scanQrCodeText {
+  font-size: 1.80rem;
+  font-weight: 600;
+  color: #000000;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.gameCodeText {
+  font-size: 1.80rem;
+  font-weight: 600;
+  color: #000000;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  margin: 0;
+}
+
+.QrCode {
+  display: block;
+  margin: 0 auto;
+}
+
+.joinRoomDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0.5rem 0;
+  color: black;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.joinRoomDivider::before,
+.joinRoomDivider::after {
+  content: '';
+  flex: 1;
+  height: 3px;
+  background-color: black;
+  margin: 0 1rem;
+  border-radius: 4px;
+}
+
+.gameCodeLink {
+  color: #1565C0;
+  text-decoration: underline;
+  font-weight: 700;
+  margin-left: 0.25rem;
+}
+.gameCodeLink:hover {
+  text-decoration: none;
+  opacity: 0.8;
+}
+
+
+
+/* ---------------- Right Column ---------------- */
+
+.rightColumn {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  position: relative;
+  padding: 0.5rem 1rem;
+}
+
 .closeButton {
   position: absolute;
   top: -12px;
@@ -82,13 +158,119 @@
   transform: scale(1.1);
 }
 
-.sessionText {
-  color: black;
-  margin-bottom: 1rem;
-}
-
 .sessionText2 {
   color: black;
   margin-bottom: 1rem;
   text-align: center;
+}
+
+.hippoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  width: 100%;
+}
+.hippoSlot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hippoImage {
+  width: 100px;
+  transition: filter 0.5s ease;
+}
+.silhouette {
+  filter: grayscale(100%) brightness(55%) contrast(120%);
+}
+.username {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #eee;
+}
+
+
+/* New pond and layering setup */
+.pondArea {
+  position: relative;
+  width: 100%;
+  padding-top: 100%; /* 1:1 aspect ratio */
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.pondImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.hippoGrid {
+  position: absolute;
+  top: -5%;
+  left: -3%;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  place-items: center;
+  padding: 1rem;
+  z-index: 2;
+}
+
+.aacCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+}
+
+.aacImage {
+  width: 90px;
+}
+
+.startButtonWrapper {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.mapWrapper {
+  width: 400px;
+  height: 400px;
+  position: relative;
+  border-radius: 100%;
+  overflow: hidden;
+}
+
+.startButtonWrapper {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+button[disabled],
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.aacSilhouette {
+  filter: brightness(55%) grayscale(100%) contrast(120%);
+  transition: filter 0.5s ease;
+}
+
+.usernameSilhouette {
+  opacity: 0.5;
+  transition: opacity 0.5s ease;
 }

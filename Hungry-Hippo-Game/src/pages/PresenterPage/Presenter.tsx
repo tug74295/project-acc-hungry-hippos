@@ -1,9 +1,9 @@
 import styles from './Presenter.module.css';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useWebSocket } from '../../contexts/WebSocketContext';
-import UserList from '../../components/UserList/UserList';
 import { useEffect } from 'react';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
+import { QRCodeSVG } from 'qrcode.react';
 
 /**
  * Presenter - React component that displays the session ID to the host after creating a new game.
@@ -15,6 +15,16 @@ import ButtonClick from '../../components/ButtonClick/ButtonClick';
  * - Shows a waiting lobby with connected users and their roles.
  *
  */
+const hippoSlots = [
+  { color: 'brown', imgSrc: '/assets/hippos/brownHippo.png' },
+  { color: 'red',   imgSrc: '/assets/hippos/redHippo.png'   },
+  { color: 'purple',imgSrc: '/assets/hippos/purpleHippo.png'},
+  { color: 'green', imgSrc: '/assets/hippos/greenHippo.png' },
+];
+
+const presenterBg = '/assets/presenterBg.png';
+
+
 function Presenter() {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -44,10 +54,8 @@ function Presenter() {
     navigate('/');
   };
 
-  // Count roles connected excluding presenter
-  const hippoCount = connectedUsers.filter(u => u.role === 'Hippo Player').length;
   const aacCount = connectedUsers.filter(u => u.role === 'AAC User').length;
-
+  const hippoPlayers = connectedUsers.filter(u => u.role === 'Hippo Player');
   // Function to handle start game 
   const handleStartGame = () => {
     console.log('Start Game button clicked, sending START_GAME message');
@@ -64,38 +72,86 @@ function Presenter() {
 
   return (
     <div className={styles.containerImg}>
-      {/* <div className={styles.bannerWrapper}>
-        <img
-          src="/assets/banner.png"
-          alt="Game Banner"
-          className={styles.bannerImage}
-        />
-      </div> */}
+      <div className={styles.roleWrapper}>
+        <div className={styles.contentRow}>
+          <div className={styles.leftColumn}>
+            <h1 className={styles.scanQrCodeText}>Scan the QR code to play</h1>
+            <QRCodeSVG className={styles.QrCode} value={`${window.location.origin}/roleselect/${sessionId}`} size={128} />
+            <div className={styles.joinRoomDivider}> 
+              <span>
+                or
+              </span>
+            </div>
+            <h1 className={styles.gameCodeText}>
+              Game Code:{' '}
+              <a
+                href={`${window.location.origin}/roleselect/${sessionId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.gameCodeLink}
+              >
+                {sessionId}
+              </a>
+            </h1>
+          </div>
 
-      <div className={styles.roleContainer}>
-        <button
-          className={styles.closeButton}
-          onClick={handleCancel}
-          aria-label="Cancel New Game"
-        >
-          ✖
-        </button>
 
-        <h1 className={styles.sessionText2}>Game Code: {sessionId}</h1>
-        <h3 className={styles.sessionText2}>
-          At least one Hippo & AAC device 
-          <br />
-          must join to start the game.
-        </h3>
-        <h2 className={styles.sessionText2}>Players Joined:</h2>
-        <UserList users={connectedUsers.filter(u => u.role !== 'Presenter')} />
-        <br />
+          <div className={styles.rightColumn}>
+          <button
+            className={styles.closeButton}
+            onClick={handleCancel}
+            aria-label="Cancel New Game"
+          >
+            ✖
+          </button>
 
-        {hippoCount >= 1 && aacCount >= 1 && (
-          <ButtonClick text="Start Game" onClick={handleStartGame} />
-        )}
+          <div className={styles.mapWrapper}>
+            <div className={styles.pondArea}>
+              <img src={presenterBg} alt="Pond background" className={styles.pondImage} />
+
+              <div className={styles.hippoGrid}>
+                {hippoSlots.map((slot, idx) => {
+                  const player = hippoPlayers[idx];
+                  return (
+                    <div key={slot.color} className={styles.hippoSlot}>
+                      <img
+                        src={slot.imgSrc}
+                        alt={`${slot.color} hippo`}
+                        className={`${styles.hippoImage} ${!player ? styles.silhouette : ''}`}
+                      />
+                      <span className={styles.username}>
+                        {player ? player.userId : ''}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className={styles.aacCenter}>
+                <img
+                  src="/assets/aacDevice.png"
+                  alt="AAC User"
+                  className={`${styles.aacImage} ${aacCount < 1 ? styles.aacSilhouette : ''}`}
+                />
+                <span className={styles.username}>AAC User</span>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.startButtonWrapper}>
+            <ButtonClick
+              text="Start Game"
+              onClick={handleStartGame}
+              disabled={hippoPlayers.length < 1 || aacCount < 1}
+            />
+          </div>
+        </div>
+
+
+
       </div>
     </div>
+  </div>
   );
 }
 

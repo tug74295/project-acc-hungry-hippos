@@ -25,6 +25,15 @@
   transform: scale(1.05);   
 }
 
+.button:disabled {
+  background-color: #888;
+  color: #ddd;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+  transform: none;
+}
+
 .text {
   display: inline-block;
 }
