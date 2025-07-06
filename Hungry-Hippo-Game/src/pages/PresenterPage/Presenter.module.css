@@ -69,12 +69,13 @@
 
 .scanQrCodeText {
   font-size: 1.80rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #000000;
   text-align: center;
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
   padding: 0.5rem 1rem;
+  font-family: 'Fredoka', sans-serif;
 }
 
 .gameCodeText {
@@ -84,6 +85,7 @@
   text-align: center;
   padding: 0.5rem 1rem;
   margin: 0;
+  font-family: 'Fredoka', sans-serif;
 }
 
 .QrCode {
@@ -100,6 +102,7 @@
   color: black;
   font-weight: 600;
   font-size: 1.25rem;
+  font-family: 'Fredoka', sans-serif;
 }
 
 .joinRoomDivider::before,
@@ -117,16 +120,24 @@
   text-decoration: underline;
   font-weight: 700;
   margin-left: 0.25rem;
+  font-family: 'Fredoka', sans-serif;
 }
 .gameCodeLink:hover {
   text-decoration: none;
   opacity: 0.8;
 }
 
+.limitNote {
+  font-size: 0.9rem;
+  color: #000000;
+  text-align: center;
+  margin-top: 0.25rem;
+  font-family: 'Fredoka', sans-serif;
+}
+
 
 
 /* ---------------- Right Column ---------------- */
-
 .rightColumn {
   flex: 2;
   display: flex;
@@ -142,7 +153,7 @@
   position: absolute;
   top: -12px;
   right: -12px;
-  background-color: #f44336; /* red */
+  background-color: #f44336;
   color: white;
   font-size: 1.5rem;
   font-weight: bold;
@@ -154,6 +165,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease;
 }
+
 .closeButton:hover {
   transform: scale(1.1);
 }
@@ -164,36 +176,19 @@
   text-align: center;
 }
 
-.hippoGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  width: 100%;
-}
-.hippoSlot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.hippoImage {
-  width: 100px;
-  transition: filter 0.5s ease;
-}
-.silhouette {
-  filter: grayscale(100%) brightness(55%) contrast(120%);
-}
-.username {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  color: #eee;
+/* ---------- MAP & POND ---------- */
+.mapWrapper {
+  width: 400px;
+  height: 400px;
+  position: relative;
+  border-radius: 100%;
+  overflow: hidden;
 }
 
-
-/* New pond and layering setup */
 .pondArea {
   position: relative;
   width: 100%;
-  padding-top: 100%; /* 1:1 aspect ratio */
+  padding-top: 100%;
   border-radius: 100px;
   overflow: hidden;
 }
@@ -208,6 +203,7 @@
   z-index: 1;
 }
 
+/* ---------- HIPPOS ---------- */
 .hippoGrid {
   position: absolute;
   top: -5%;
@@ -221,6 +217,41 @@
   z-index: 2;
 }
 
+.hippoSlot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 140px;
+}
+
+.hippoImageWrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hippoImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: opacity 0.5s ease;
+}
+
+.coloredHippo {
+  opacity: 0;
+  z-index: 2;
+}
+
+.fadeIn {
+  opacity: 1;
+}
+
+/* ---------- AAC ---------- */
 .aacCenter {
   position: absolute;
   top: 50%;
@@ -236,41 +267,74 @@
   width: 90px;
 }
 
-.startButtonWrapper {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.mapWrapper {
-  width: 400px;
-  height: 400px;
-  position: relative;
-  border-radius: 100%;
-  overflow: hidden;
-}
-
-.startButtonWrapper {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-button[disabled],
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
 .aacSilhouette {
   filter: brightness(55%) grayscale(100%) contrast(120%);
   transition: filter 0.5s ease;
 }
 
-.usernameSilhouette {
-  opacity: 0.5;
-  transition: opacity 0.5s ease;
+/* ---------- TEXT ---------- */
+.username {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #eee;
 }
+
+/* ---------- BUTTON ---------- */
+.startButtonWrapper {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 220px;
+}
+
+button[disabled],
+button:disabled {
+  background-color: #d3b97c;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(30%) brightness(90%);
+}
+
+.buttonContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.iconRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.requirementIcon {
+  width: 44px;
+  height: 44px;
+  filter: grayscale(100%) brightness(50%);
+  opacity: 0.4;
+  transition: all 0.4s ease;
+}
+
+.buttonLabel {
+  font-weight: bold;
+  font-size: 1.6rem;
+}
+
+
+.iconReady {
+  filter: none;
+  opacity: 1;
+}
+
+
+
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes fadeInHippo {
+  to {
+    opacity: 1;
+  }
+}
+

@@ -70,6 +70,33 @@ function Presenter() {
     navigate(`/presenter-game/${sessionId}`);
   };
 
+  function renderHippoSlot(
+    slot: { color: string; imgSrc: string },
+    player: { userId: string; role: string } | undefined
+  ) {
+    const isActive = !!player;
+
+    return (
+      <div key={slot.color} className={styles.hippoSlot}>
+        <div className={styles.hippoImageWrapper}>
+          <img
+            src="/assets/hippos/outlineHippo.png"
+            alt="Gray Hippo"
+            className={styles.hippoImage}
+          />
+          <img
+            src={slot.imgSrc}
+            alt={`${slot.color} hippo`}
+            className={`${styles.hippoImage} ${styles.coloredHippo} ${isActive ? styles.fadeIn : ''}`}
+          />
+        </div>
+        <span className={styles.username}>{isActive ? player!.userId : ''}</span>
+      </div>
+    );
+  }
+
+
+
   return (
     <div className={styles.containerImg}>
       <div className={styles.roleWrapper}>
@@ -93,6 +120,7 @@ function Presenter() {
                 {sessionId}
               </a>
             </h1>
+            <p className={styles.limitNote}>(Up to 4 Hippos)</p>
           </div>
 
 
@@ -110,21 +138,7 @@ function Presenter() {
               <img src={presenterBg} alt="Pond background" className={styles.pondImage} />
 
               <div className={styles.hippoGrid}>
-                {hippoSlots.map((slot, idx) => {
-                  const player = hippoPlayers[idx];
-                  return (
-                    <div key={slot.color} className={styles.hippoSlot}>
-                      <img
-                        src={slot.imgSrc}
-                        alt={`${slot.color} hippo`}
-                        className={`${styles.hippoImage} ${!player ? styles.silhouette : ''}`}
-                      />
-                      <span className={styles.username}>
-                        {player ? player.userId : ''}
-                      </span>
-                    </div>
-                  );
-                })}
+                {hippoSlots.map((slot, idx) => renderHippoSlot(slot, hippoPlayers[idx]))}
               </div>
 
               <div className={styles.aacCenter}>
@@ -140,10 +154,27 @@ function Presenter() {
 
           <div className={styles.startButtonWrapper}>
             <ButtonClick
-              text="Start Game"
+              text={
+                <div className={styles.buttonContent}>
+                  <div className={styles.iconRow}>
+                    <img
+                      src="/assets/hippos/brownHippo.png"
+                      alt="Hippo"
+                      className={`${styles.requirementIcon} ${hippoPlayers.length >= 1 ? styles.iconReady : ''}`}
+                    />
+                    <img
+                      src="/assets/aacDevice.png"
+                      alt="AAC"
+                      className={`${styles.requirementIcon} ${aacCount >= 1 ? styles.iconReady : ''}`}
+                    />
+                    <span className={styles.buttonLabel}>Start Game</span>
+                  </div>
+                </div>
+              }
               onClick={handleStartGame}
               disabled={hippoPlayers.length < 1 || aacCount < 1}
             />
+
           </div>
         </div>
 

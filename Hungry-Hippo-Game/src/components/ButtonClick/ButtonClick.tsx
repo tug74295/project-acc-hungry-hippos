@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import styles from './ButtonClick.module.css';
 
 /**
@@ -7,7 +8,7 @@ import styles from './ButtonClick.module.css';
  * @property {() => void} onClick - Callback function to handle the button click event.
  */
 interface ButtonClickProps {
-  text: string; // Text to display inside the button
+  text: ReactNode;
   onClick: () => void;
   disabled?: boolean;
 }
@@ -23,7 +24,6 @@ function ButtonClick({ text, onClick, disabled }: ButtonClickProps) {
   return (
     <button className={styles.button} onClick={onClick} disabled={disabled}>
       <span>{text}</span>
-      <span className={styles.arrow} aria-hidden="true">→</span>
     </button>
   );
 }

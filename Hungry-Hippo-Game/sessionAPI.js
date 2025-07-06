@@ -12,6 +12,9 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',
+  'http://localhost:3003',
+  'http://localhost:3004',
+  'http://localhost:3005',
   'https://www.draexico.com',
   'https://project-acc-hungry-hippos-9wsu.vercel.app'
 ];

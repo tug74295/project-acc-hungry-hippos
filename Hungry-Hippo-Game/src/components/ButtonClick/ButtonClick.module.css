@@ -2,7 +2,7 @@
 
 .button {
   padding: 1rem 2rem;
-  width: 15rem;
+  width: 20rem;
   font-size: 1.4rem;
   background-color: black;     
   color: white;             
@@ -17,7 +17,7 @@
   transition: background-color 0.2s ease-in-out, transform 0.15s ease;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4); 
   user-select: none;
-  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-family: 'Fredoka', sans-serif;
 }
 
 .button:hover {
