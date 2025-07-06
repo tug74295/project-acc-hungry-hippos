@@ -290,11 +290,11 @@
 }
 
 .aacImage:first-child {
-  opacity: 1; /* outline always visible */
+  opacity: 1; 
 }
 
 .fadeIn {
-  opacity: 1; /* only show colored one when AAC joined */
+  opacity: 1; 
 }
 
 
