@@ -2,7 +2,6 @@ import styles from './Presenter.module.css';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import { useEffect } from 'react';
-import ButtonClick from '../../components/ButtonClick/ButtonClick';
 import { QRCodeSVG } from 'qrcode.react';
 
 /**
@@ -81,7 +80,6 @@ function Presenter() {
         <div className={styles.hippoImageWrapper}>
           <img
             src="/assets/hippos/outlineHippo.png"
-            alt="Gray Hippo"
             className={styles.hippoImage}
           />
           <img
@@ -90,7 +88,7 @@ function Presenter() {
             className={`${styles.hippoImage} ${styles.coloredHippo} ${isActive ? styles.fadeIn : ''}`}
           />
         </div>
-        <span className={styles.username}>{isActive ? player!.userId : ''}</span>
+        <span className={styles.userId}>{isActive ? player!.userId : ''}</span>
       </div>
     );
   }
@@ -103,11 +101,13 @@ function Presenter() {
         <div className={styles.contentRow}>
           <div className={styles.leftColumn}>
             <h1 className={styles.scanQrCodeText}>Scan the QR code to play</h1>
-            <QRCodeSVG className={styles.QrCode} value={`${window.location.origin}/roleselect/${sessionId}`} size={128} />
-            <div className={styles.joinRoomDivider}> 
-              <span>
-                or
-              </span>
+            <QRCodeSVG
+              className={styles.QrCode}
+              value={`${window.location.origin}/roleselect/${sessionId}`}
+              size={128}
+            />
+            <div className={styles.joinRoomDivider}>
+              <span>or</span>
             </div>
             <h1 className={styles.gameCodeText}>
               Game Code:{' '}
@@ -123,66 +123,73 @@ function Presenter() {
             <p className={styles.limitNote}>(Up to 4 Hippos)</p>
           </div>
 
-
           <div className={styles.rightColumn}>
-          <button
-            className={styles.closeButton}
-            onClick={handleCancel}
-            aria-label="Cancel New Game"
-          >
-            ✖
-          </button>
+            <button
+              className={styles.closeButton}
+              onClick={handleCancel}
+              aria-label="Cancel New Game"
+            >
+              ✖
+            </button>
 
-          <div className={styles.mapWrapper}>
-            <div className={styles.pondArea}>
-              <img src={presenterBg} alt="Pond background" className={styles.pondImage} />
-
-              <div className={styles.hippoGrid}>
-                {hippoSlots.map((slot, idx) => renderHippoSlot(slot, hippoPlayers[idx]))}
-              </div>
-
-              <div className={styles.aacCenter}>
+            <div className={styles.mapWrapper}>
+              <div className={styles.pondArea}>
                 <img
-                  src="/assets/aacDevice.png"
-                  alt="AAC User"
-                  className={`${styles.aacImage} ${aacCount < 1 ? styles.aacSilhouette : ''}`}
+                  src={presenterBg}
+                  alt="Pond background"
+                  className={styles.pondImage}
                 />
-                <span className={styles.username}>AAC User</span>
+
+                <div className={styles.hippoGrid}>
+                  {hippoSlots.map((slot, idx) =>
+                    renderHippoSlot(slot, hippoPlayers[idx])
+                  )}
+                </div>
+
+                <div className={styles.aacCenter}>
+                  <img
+                    src="/assets/aacDevice.png"
+                    alt="AAC User"
+                    className={`${styles.aacImage} ${
+                      aacCount < 1 ? styles.aacSilhouette : ''
+                    }`}
+                  />
+                  <span className={styles.userId}>AAC User</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className={styles.startButtonWrapper}>
-            <ButtonClick
-              text={
+            <div className={styles.startButtonWrapper}>
+              <button
+                className={styles.startButton}
+                onClick={handleStartGame}
+                disabled={hippoPlayers.length < 1 || aacCount < 1}
+              >
                 <div className={styles.buttonContent}>
                   <div className={styles.iconRow}>
                     <img
                       src="/assets/hippos/brownHippo.png"
                       alt="Hippo"
-                      className={`${styles.requirementIcon} ${hippoPlayers.length >= 1 ? styles.iconReady : ''}`}
+                      className={`${styles.requirementIcon} ${
+                        hippoPlayers.length >= 1 ? styles.iconReady : ''
+                      }`}
                     />
                     <img
                       src="/assets/aacDevice.png"
                       alt="AAC"
-                      className={`${styles.requirementIcon} ${aacCount >= 1 ? styles.iconReady : ''}`}
+                      className={`${styles.requirementIcon} ${
+                        aacCount >= 1 ? styles.iconReady : ''
+                      }`}
                     />
                     <span className={styles.buttonLabel}>Start Game</span>
                   </div>
                 </div>
-              }
-              onClick={handleStartGame}
-              disabled={hippoPlayers.length < 1 || aacCount < 1}
-            />
-
+              </button>
+            </div>
           </div>
         </div>
-
-
-
       </div>
     </div>
-  </div>
   );
 }
 
