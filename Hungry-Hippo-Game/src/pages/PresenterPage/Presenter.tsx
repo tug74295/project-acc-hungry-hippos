@@ -147,13 +147,18 @@ function Presenter() {
                 </div>
 
                 <div className={styles.aacCenter}>
-                  <img
-                    src="/assets/aacDevice.png"
-                    alt="AAC User"
-                    className={`${styles.aacImage} ${
-                      aacCount < 1 ? styles.aacSilhouette : ''
-                    }`}
-                  />
+                  <div className={styles.aacImageWrapper}>
+                    <img
+                      src="/assets/aacDeviceOutline.png"
+                      alt="AAC Outline"
+                      className={styles.aacImage}
+                    />
+                    <img
+                      src="/assets/aacDevice.png"
+                      alt="AAC Device"
+                      className={`${styles.aacImage} ${aacCount >= 1 ? styles.fadeIn : ''}`}
+                    />
+                  </div>
                   <span className={styles.userId}>AAC User</span>
                 </div>
               </div>
