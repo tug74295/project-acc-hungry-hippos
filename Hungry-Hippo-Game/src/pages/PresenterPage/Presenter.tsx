@@ -1,7 +1,7 @@
 import styles from './Presenter.module.css';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useWebSocket } from '../../contexts/WebSocketContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
 /**
@@ -12,7 +12,6 @@ import { QRCodeSVG } from 'qrcode.react';
  * - Provides instructions to share the session code with other players.
  * - Includes a button to cancel the new game and return to the landing page.
  * - Shows a waiting lobby with connected users and their roles.
- *
  */
 const hippoSlots = [
   { color: 'brown', imgSrc: '/assets/hippos/brownHippo.png' },
@@ -23,10 +22,10 @@ const hippoSlots = [
 
 const presenterBg = '/assets/presenterBg.png';
 
-
 function Presenter() {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
+  const [copied, setCopied] = useState(false);
 
   if (!sessionId || sessionId.length < 5) {
     console.error('Invalid sessionId:', sessionId);
@@ -69,6 +68,12 @@ function Presenter() {
     navigate(`/presenter-game/${sessionId}`);
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(sessionId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   function renderHippoSlot(
     slot: { color: string; imgSrc: string },
     player: { userId: string; role: string } | undefined
@@ -93,8 +98,6 @@ function Presenter() {
     );
   }
 
-
-
   return (
     <div className={styles.containerImg}>
       <div className={styles.roleWrapper}>
@@ -111,14 +114,12 @@ function Presenter() {
             </div>
             <h1 className={styles.gameCodeText}>
               Game Code:{' '}
-              <a
-                href={`${window.location.origin}/roleselect/${sessionId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.gameCodeLink}
-              >
-                {sessionId}
-              </a>
+              <span className={styles.copyWrapper} onClick={handleCopy}>
+                <span className={styles.sessionId}>{sessionId}</span>
+                <span className={styles.tooltip}>
+                  {copied ? 'Code copied!' : 'Click to copy'}
+                </span>
+              </span>
             </h1>
             <p className={styles.limitNote}>(Up to 4 Hippos)</p>
           </div>
@@ -159,7 +160,7 @@ function Presenter() {
                       className={`${styles.aacImage} ${aacCount >= 1 ? styles.fadeIn : ''}`}
                     />
                   </div>
-                  <span className={styles.userId}>AAC User</span>
+                  {aacCount >= 1 && <span className={styles.userId}>AAC User</span>}
                 </div>
               </div>
             </div>
