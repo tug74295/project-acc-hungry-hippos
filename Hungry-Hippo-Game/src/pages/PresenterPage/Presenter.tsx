@@ -102,6 +102,8 @@ function Presenter() {
     <div className={styles.containerImg}>
       <div className={styles.roleWrapper}>
         <div className={styles.contentRow}>
+          
+          {/* Left Column: QR Code and Game Code */}
           <div className={styles.leftColumn}>
             <h1 className={styles.scanQrCodeText}>Scan the QR code to play</h1>
             <QRCodeSVG
