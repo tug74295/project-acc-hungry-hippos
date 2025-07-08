@@ -54,9 +54,14 @@ function RoleSelect() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const location = useLocation();
 
+  const generateUsername = () => {
+    const num = Math.floor(Math.random() * 1000);
+    return `User${String(num).padStart(3, '0')}`;
+  };
+
   const [role, setRole] = useState<string>(''); 
   const [error, setError] = useState<boolean>(false);
-  const [username] = useState(location.state?.userId || ''); 
+  const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
   const { gameStarted } = useWebSocket();
   const { sendMessage } = useWebSocket();
