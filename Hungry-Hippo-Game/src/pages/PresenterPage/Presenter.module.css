@@ -1,4 +1,4 @@
-/* ---------------- Container and Background ---------------- */
+/* ---------- CONTAINER & BACKGROUND ---------- */
 .containerImg {
   display: flex;
   flex-direction: column;
@@ -13,25 +13,8 @@
   box-sizing: border-box;
 }
 
-/* ---------------- Banner ---------------- */
-.bannerWrapper {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  margin-bottom: -1rem;
-  z-index: 1;
-}
-
-.bannerImage {
-  width: 100%;
-  max-width: 600px;
-  height: auto;
-  object-fit: contain;
-
-}
-
-/* ---------------- Role Container ---------------- */
-.roleContainer {
+/* ---------- ROLE CONTAINER ---------- */
+.roleWrapper {
   position: relative;
   background-color: #FFA726;
   border-radius: 2rem;
@@ -40,8 +23,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0rem;
-  max-width: 600px;
+  gap: 1rem;
+  width: 90vw;
+  max-width: 900px;
   width: 100%;
   margin: 0 auto 2rem auto;
   border: 4px solid #FB8C00;
@@ -49,10 +33,19 @@
   box-sizing: border-box;
 }
 
+.contentRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
 /* Animation for entrance */
 @keyframes bounceIn {
   0% {
-    transform: scale(0.95);
+    transform: scale(0.90);
     opacity: 0;
   }
   100% {
@@ -61,12 +54,119 @@
   }
 }
 
-/* ---------------- Close Button (Red X) ---------------- */
+/* ---------- LEFT COLUMN ---------- */
+
+.leftColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  gap: 0.5rem;
+  border-right: 3px solid black;
+  padding-right: 2rem;
+}
+
+.scanQrCodeText {
+  font-size: 1.80rem;
+  font-weight: 500;
+  color: black;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.joinRoomDivider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0.5rem 0;
+  color: black;
+  font-weight: 600;
+  font-size: 1.25rem;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.joinRoomDivider::before,
+.joinRoomDivider::after {
+  content: '';
+  flex: 1;
+  height: 3px;
+  background-color: black;
+  margin: 0 1rem;
+  border-radius: 4px;
+}
+
+.gameCodeText {
+  font-size: 1.80rem;
+  font-weight: 500;
+  color: black;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.copyWrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #1565C0;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.tooltip {
+  visibility: hidden;
+  background-color: black;
+  color: white;
+  text-align: center;
+  border-radius: 5px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.copyWrapper:hover .tooltip {
+  visibility: visible;
+}
+
+.limitNote {
+  font-size: 0.9rem;
+  color: black;
+  text-align: center;
+  margin-top: 0.25rem;
+  font-family: 'Fredoka', sans-serif;
+}
+
+/* ---------- RIGHT COLUMN ---------- */
+.rightColumn {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  position: relative;
+  padding: 0.5rem 1rem;
+}
+
 .closeButton {
   position: absolute;
   top: -12px;
   right: -12px;
-  background-color: #f44336; /* red */
+  background-color: #f44336;
   color: white;
   font-size: 1.5rem;
   font-weight: bold;
@@ -78,17 +178,278 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease;
 }
+
 .closeButton:hover {
   transform: scale(1.1);
 }
 
-.sessionText {
-  color: black;
-  margin-bottom: 1rem;
+/* ---------- POND ---------- */
+.mapWrapper {
+  width: 90vw;
+  max-width: 400px;
+  aspect-ratio: 1 / 1;
+  position: relative;
+  border-radius: 100%;
+  overflow: hidden;
 }
 
-.sessionText2 {
-  color: black;
-  margin-bottom: 1rem;
-  text-align: center;
+.pondArea {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.pondImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+/* ---------- HIPPOS ---------- */
+.hippoGrid {
+  position: absolute;
+  top: -2%;
+  left: -3%;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  place-items: center;
+  padding: 1rem;
+  z-index: 2;
+}
+
+.hippoSlot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 140px;
+}
+
+.hippoImageWrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hippoImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.5s ease;
+}
+
+.coloredHippo {
+  opacity: 0;
+  z-index: 2;
+}
+
+.fadeIn {
+  opacity: 1;
+}
+
+/* ---------- AAC ---------- */
+.aacCenter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+}
+
+.aacImageWrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.aacImage {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  transition: opacity 0.4s ease;
+  opacity: 0;
+}
+
+.aacImage:first-child {
+  opacity: 1; 
+}
+
+.fadeIn {
+  opacity: 1; 
+}
+
+.userId {
+  font-size: 1.1rem;
+  color: white;
+  font: 'Fredoka', sans-serif;
+  font-weight: 600;
+}
+
+.startButtonWrapper {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.startButton {
+  padding: 1rem 2rem;
+  width: 20rem;
+  font-size: 1.4rem;
+  background-color: #31b4c9;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  transition: background-color 0.2s ease-in-out, transform 0.15s ease;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+  user-select: none;
+  font-family: 'Fredoka', sans-serif;
+}
+
+.startButton:hover {
+  transform: scale(1.05);
+}
+
+.startButton:disabled {
+  background-color: #31b4c9;
+  color: #ddd;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+  transform: none;
+}
+
+.buttonContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* ---------- START BUTTON ICONS ---------- */
+.iconRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.requirementIcon {
+  width: 48px;
+  height: 48px;
+  filter: grayscale(100%) brightness(50%);
+  opacity: 0.4;
+  transition: all 0.4s ease;
+}
+
+.iconReady {
+  filter: none;
+  opacity: 1;
+}
+
+.buttonLabel {
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes fadeInHippo {
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* ---------- MEDIA VEIW ---------- */
+
+@media (max-width: 750px) {
+  .contentRow {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .leftColumn,
+  .rightColumn {
+    width: 100%;             
+    max-width: 100%;
+    padding: 0;              
+    border: none;            
+  }
+
+  .mapWrapper {
+    width: 75vw;             
+    max-width: 300px;        
+    margin: 1rem auto;      
+  }
+
+  .hippoGrid {
+    top: -12%;
+    left: -3%;
+  }
+
+  .hippoSlot {
+    justify-content: flex-end;
+  }
+
+  .hippoImageWrapper {
+    width: 70px;     
+    height: 70px;
+  }
+
+  .hippoGrid {
+    padding: 0.5rem;  
+    gap: 0.25rem;     
+  }
+
+  .aacImageWrapper {
+    width: 60px;      
+    height: 60px;
+  }
+
+  .userId {
+    font-size: 0.85rem;
+    min-height: 1rem;
+    margin-top: 0.3rem;
+  }
+
+  .rightColumn {
+    position: static;     
+  }
+
+  .closeButton {
+    top: -12px;            
+    right: -12px;
+    z-index: 20;         
+  }
+
+  .leftColumn {
+    border-right: none;
+    padding-right: 0;
+    width: 100%;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid black;
+    padding-bottom: 1rem;
+  }
 }
