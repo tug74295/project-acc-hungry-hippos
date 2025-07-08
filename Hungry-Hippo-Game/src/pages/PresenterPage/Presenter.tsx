@@ -4,6 +4,7 @@ import { useWebSocket } from '../../contexts/WebSocketContext';
 import UserList from '../../components/UserList/UserList';
 import { useEffect } from 'react';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
+import { QRCodeSVG } from 'qrcode.react';
 
 /**
  * Presenter - React component that displays the session ID to the host after creating a new game.
@@ -82,6 +83,13 @@ function Presenter() {
           <br />
           must join to start the game.
         </h3>
+         <h1 className={styles.scanQrCodeText}>Scan the QR code to play</h1>
+            <QRCodeSVG
+              className={styles.QrCode}
+              value={`${window.location.origin}/roleselect/${sessionId}`}
+              size={128}
+            />
+          
         <h2 className={styles.sessionText2}>Players Joined:</h2>
         <UserList users={connectedUsers.filter(u => u.role !== 'Presenter')} />
         <br />
