@@ -126,6 +126,7 @@ function Presenter() {
             <p className={styles.limitNote}>(Up to 4 Hippos)</p>
           </div>
 
+          {/* Right Column: Hippo Slots and AAC Device */}
           <div className={styles.rightColumn}>
             <button
               className={styles.closeButton}
@@ -142,7 +143,6 @@ function Presenter() {
                   alt="Pond background"
                   className={styles.pondImage}
                 />
-
                 <div className={styles.hippoGrid}>
                   {hippoSlots.map((slot, idx) =>
                     renderHippoSlot(slot, hippoPlayers[idx])
@@ -164,6 +164,7 @@ function Presenter() {
                   </div>
                   {aacCount >= 1 && <span className={styles.userId}>AAC User</span>}
                 </div>
+                
               </div>
             </div>
 

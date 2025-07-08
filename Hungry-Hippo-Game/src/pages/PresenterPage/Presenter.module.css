@@ -24,6 +24,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  width: 90vw;
   max-width: 900px;
   width: 100%;
   margin: 0 auto 2rem auto;
@@ -44,7 +45,7 @@
 /* Animation for entrance */
 @keyframes bounceIn {
   0% {
-    transform: scale(0.95);
+    transform: scale(0.90);
     opacity: 0;
   }
   100% {
@@ -67,24 +68,25 @@
   padding-right: 2rem;
 }
 
+@media (max-width: 768px) {
+  .leftColumn {
+    border-right: none;
+    padding-right: 0;
+    width: 100%;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid black;
+    padding-bottom: 1rem;
+  }
+}
+
 .scanQrCodeText {
   font-size: 1.80rem;
   font-weight: 500;
-  color: #000000;
+  color: black;
   text-align: center;
   margin-bottom: 0.5rem;
   margin-top: 0.5rem;
   padding: 0.5rem 1rem;
-  font-family: 'Fredoka', sans-serif;
-}
-
-.gameCodeText {
-  font-size: 1.80rem;
-  font-weight: 500;
-  color: #000000;
-  text-align: center;
-  padding: 0.5rem 1rem;
-  margin: 0;
   font-family: 'Fredoka', sans-serif;
 }
 
@@ -110,11 +112,13 @@
   border-radius: 4px;
 }
 
-.limitNote {
-  font-size: 0.9rem;
+.gameCodeText {
+  font-size: 1.80rem;
+  font-weight: 500;
   color: #000000;
   text-align: center;
-  margin-top: 0.25rem;
+  padding: 0.5rem 1rem;
+  margin: 0;
   font-family: 'Fredoka', sans-serif;
 }
 
@@ -142,12 +146,20 @@
   transform: translateX(-50%);
   transition: opacity 0.2s ease;
   white-space: nowrap;
+  font-family: 'Fredoka', sans-serif;
 }
 
 .copyWrapper:hover .tooltip {
   visibility: visible;
 }
 
+.limitNote {
+  font-size: 0.9rem;
+  color: #000000;
+  text-align: center;
+  margin-top: 0.25rem;
+  font-family: 'Fredoka', sans-serif;
+}
 
 /* ---------------- Right Column ---------------- */
 .rightColumn {
@@ -182,16 +194,11 @@
   transform: scale(1.1);
 }
 
-.sessionText2 {
-  color: black;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
 /* ---------- MAP & POND ---------- */
 .mapWrapper {
-  width: 400px;
-  height: 400px;
+  width: 90vw;
+  max-width: 400px;
+  aspect-ratio: 1 / 1;
   position: relative;
   border-radius: 100%;
   overflow: hidden;
