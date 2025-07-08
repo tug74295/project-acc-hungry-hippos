@@ -68,7 +68,7 @@
   padding-right: 2rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 750px) {
   .leftColumn {
     border-right: none;
     padding-right: 0;
@@ -207,7 +207,7 @@
 .pondArea {
   position: relative;
   width: 100%;
-  padding-top: 100%;
+  height: 100%;
   border-radius: 100px;
   overflow: hidden;
 }
@@ -241,7 +241,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  height: 140px;
 }
 
 .hippoImageWrapper {
@@ -406,3 +405,55 @@
   }
 }
 
+
+
+@media (max-width: 750px) {
+  .contentRow {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .leftColumn,
+  .rightColumn {
+    width: 100%;             
+    max-width: 100%;
+    padding: 0;              
+    border: none;            
+  }
+
+  .mapWrapper {
+    width: 75vw;             
+    max-width: 300px;        
+    margin: 1rem auto;      
+  }
+
+  .hippoGrid {
+    top: -6%;
+    left: -3%;
+  }
+
+  .hippoImageWrapper {
+    width: 70px;     
+    height: 70px;
+  }
+
+  .hippoGrid {
+    padding: 0.5rem;  
+    gap: 0.25rem;     
+  }
+
+  .aacImageWrapper {
+    width: 60px;      
+    height: 60px;
+  }
+
+  .rightColumn {
+    position: static;     
+  }
+
+  .closeButton {
+    top: -12px;            
+    right: -12px;
+    z-index: 20;         
+  }
+}
