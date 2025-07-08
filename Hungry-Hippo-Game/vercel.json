@@ -1,0 +1,18 @@
+{
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    }
+  ],
+
+  "rewrites": [
+    { "source": "/presenter/:code",          "destination": "/" },
+    { "source": "/roleselect/:code",         "destination": "/" },
+    { "source": "/presenter-game/:code",     "destination": "/" },
+    { "source": "/hippo/:code/:userId/:role","destination": "/" },
+    { "source": "/aac/:code/:userId/:role",  "destination": "/" },
+    { "source": "/(.*)",                     "destination": "/" }
+  ]
+}
