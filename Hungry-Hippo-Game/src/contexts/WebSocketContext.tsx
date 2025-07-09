@@ -36,8 +36,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      // console.log('[WS_CONTEXT] Message from server:', data);
-
+      
       if (data.type === 'USERS_LIST_UPDATE') {
         setConnectedUsers(data.payload.users);
         return; 
