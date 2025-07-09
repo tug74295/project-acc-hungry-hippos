@@ -49,6 +49,7 @@ import { useWebSocket } from '../../contexts/WebSocketContext';
  * - If `role` is not selected, the dropdown will receive a red border and an alert will be shown.
  * - ButtonClick component triggers `handleStart` on click.
  */
+
 function RoleSelect() {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -63,8 +64,19 @@ function RoleSelect() {
   const [error, setError] = useState<boolean>(false);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
-  const { gameStarted } = useWebSocket();
-  const { sendMessage } = useWebSocket();
+  const { connectedUsers, gameStarted, sendMessage, isConnected } = useWebSocket();
+
+  // Count connected users by role
+  const HIPPO_PLAYER_LIMIT = 4;
+  const AAC_USER_LIMIT = 1;
+  const hippoPlayersCount = connectedUsers.filter(user => user.role === 'Hippo Player').length;
+  const aacUsersCount = connectedUsers.filter(user => user.role === 'AAC User').length;
+  const isHippoRoleFull = hippoPlayersCount >= HIPPO_PLAYER_LIMIT;
+  const isAacRoleFull = aacUsersCount >= AAC_USER_LIMIT;
+  console.log('aacUsersCount:', aacUsersCount);
+  console.log('hippoPlayersCount:', hippoPlayersCount);
+
+
 
   // Navigate to the next page depending on the selected role.
   // and pass ALL player info in the state for the next page to use.
@@ -85,6 +97,20 @@ function RoleSelect() {
       }
     }
   }, [gameStarted, waiting, role, sessionId, username, navigate]);
+
+  useEffect(() => {
+    if (sessionId && username && isConnected) {
+      console.log(`[RoleSelect] Sending PLAYER_JOIN message for session ${sessionId} with user ${username}`);
+      sendMessage({
+        type: 'PLAYER_JOIN',
+        payload: {
+          sessionId,
+          userId: username,
+          role: 'pending', // Initial role is pending until user selects
+        },
+      });
+    }
+  }, [sessionId, username, isConnected, sendMessage]);
 /**
  * Handles the logic for starting the game after a role is selected.
  *
@@ -116,8 +142,6 @@ function RoleSelect() {
     });
 
     setWaiting(true);
-
-
     };
 
 
@@ -159,9 +183,13 @@ function RoleSelect() {
                 onChange={handleRoleChange}
                 className={`${styles.roleDropdown} ${error ? styles.errorBorder : ''}`}
               >
-                <option value="" disabled>Select role</option>
-                <option value="Hippo Player">Hippo Player</option>
-                <option value="AAC User">AAC User</option>
+                <option value="" disabled>Select a role</option>
+                <option value="Hippo Player" disabled={isHippoRoleFull}>
+                  Hippo Player {isHippoRoleFull ? '(Full)' : ''}
+                </option>
+                <option value="AAC User" disabled={isAacRoleFull}>
+                  AAC User {isAacRoleFull ? '(Full)' : ''}
+                </option>
               </select>
             </div>
             <ButtonClick text="Next" onClick={handleStart} />
