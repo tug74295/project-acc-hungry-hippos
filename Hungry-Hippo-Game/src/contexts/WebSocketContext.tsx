@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { movementStore } from '../game/scenes/MovementStore';
 
 interface IWebSocketContext {
   isConnected: boolean;
@@ -37,6 +38,14 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       // console.log('[WS_CONTEXT] Message from server:', data);
+
+
+      //update playermovement on socket
+      if (data.type === 'PLAYER_MOVE') {
+        movementStore.notifyMove(data.payload); // 
+        return;
+      }
+      //
 
       if (data.type === 'USERS_LIST_UPDATE') {
         setConnectedUsers(data.payload.users);

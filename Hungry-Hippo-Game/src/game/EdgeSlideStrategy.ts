@@ -1,6 +1,6 @@
 import { MoveStrategy } from "./moveStrategy/MoveStrategy";
 
-type Edge = 'top' | 'bottom' | 'left' | 'right';
+export type Edge = 'top' | 'bottom' | 'left' | 'right';
 
 export class EdgeSlideStrategy implements MoveStrategy {
 

@@ -13,7 +13,8 @@ const config: Types.Core.GameConfig = {
         default: 'arcade',
         arcade: {
             gravity: { x: 0, y: 0 }, // no global gravity; using velocity
-            debug: false // change to true if you want to see hitboxes
+            debug: false// change to true if you want to see hitboxes
+            
         }
     },
     scene: [
