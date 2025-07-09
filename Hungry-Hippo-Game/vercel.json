@@ -8,7 +8,6 @@
   ],
 
   "rewrites": [
-    { "source": "/roleselect/:code",         "destination": "/" },
-    { "source": "/(.*)",                     "destination": "/" }
+    { "source": "/roleselect/:code",         "destination": "/" }
   ]
 }
