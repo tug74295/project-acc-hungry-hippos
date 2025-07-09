@@ -17,6 +17,8 @@ function App() {
         <Route path="/roleselect/:sessionId" element={<RoleSelect />} />
         <Route path="/hippo/:sessionId/:userId/:role" element={<PhaserPage />} />
         <Route path="/aac/:sessionId/:userId/:role" element={<AacPage />} />
+        <Route path="/game" element={<PhaserPage />} /> {}
+
         <Route path="/presenter-game/:sessionId" element={<PresenterGamePage />} />
 
         {/* Redirect to landing page */}

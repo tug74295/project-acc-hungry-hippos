@@ -1,4 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { movementStore } from '../game/scenes/MovementStore';
+import { EventBus } from '../game/EventBus';
 
 interface IWebSocketContext {
   isConnected: boolean;
@@ -37,6 +39,22 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       // console.log('[WS_CONTEXT] Message from server:', data);
+
+
+
+      if (data.type === 'LAUNCH_FOOD') {
+        const { foodKey, angle } = data.payload;
+        console.log(`[WS_CONTEXT] Received LAUNCH_FOOD → ${foodKey}, angle ${angle}`);
+        EventBus.emit('launch-food', { foodKey, angle });  // 👈 Send to Phaser
+        return;
+      }
+      
+      //update playermovement on socket
+      if (data.type === 'PLAYER_MOVE') {
+        movementStore.notifyMove(data.payload); // 
+        return;
+      }
+      //
 
       if (data.type === 'USERS_LIST_UPDATE') {
         setConnectedUsers(data.payload.users);
