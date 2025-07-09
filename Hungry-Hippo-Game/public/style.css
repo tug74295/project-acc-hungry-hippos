@@ -246,7 +246,7 @@ h1 {
     color: #94a3b8;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 750px) {
 
     .aac-device {
         max-width: 100%;
