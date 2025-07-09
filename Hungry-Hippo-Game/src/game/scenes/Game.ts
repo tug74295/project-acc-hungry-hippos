@@ -1,9 +1,11 @@
-// Game.ts
-// Updated to ensure movement with cursor keys works correctly
-// FIXES:
-// - Makes sure the local player’s Hippo instance is updated using input
-// - Added debug logging in update() to verify cursor detection
-// - Fixes incorrect assignment of hippo (this.hippo was never set)
+/**
+ * @file Game.ts
+ * @description This file defines the main Game scene for the Phaser game,
+ * handling game logic, player interactions, food spawning, and score management.
+ * It integrates with a shared movement store and sends player movement updates.
+ */
+
+
 
 import { Scene } from 'phaser';
 import { EventBus } from '../EventBus';
@@ -11,7 +13,12 @@ import { AAC_DATA } from '../../Foods';
 import { Hippo } from '../Hippo';
 import { Edge, EdgeSlideStrategy } from '../EdgeSlideStrategy';
 import { movementStore } from './MovementStore';
-
+/**
+ * Represents the main Game scene in Phaser.
+ * This scene manages game elements like players (Hippos), food items,
+ * scoring, and interactions. It also handles input and communicates
+ * player movements to other clients.
+ */
 export class Game extends Scene {
   private hippo: Hippo | null = null;
   private foods: Phaser.Physics.Arcade.Group;
@@ -22,11 +29,19 @@ export class Game extends Scene {
   private playerScores: Record<string, number> = {};
   private scoreText: Phaser.GameObjects.Text;
   private players: Record<string, Hippo> = {};
-  private playerId: string;
+  //private playerId: string;
   private edgeAssignments: Record<string, string> = {};
-  private availableEdges = ['top', 'bottom', 'left', 'right'];
+  private availableEdges = [ 'bottom','top','right', 'left' ];
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+  /**
+   * Function to send messages to other clients (e.g., via a WebSocket).
+   * @private
+   */
   private sendMessage!: (msg: any) => void;
+  /**
+   * The ID of the local player.
+   * @private
+   */
   private localPlayerId!: string;
 
   constructor() {
@@ -70,7 +85,7 @@ export class Game extends Scene {
   }
 
   public addPlayer(playerId: string) {
-    if (!(playerId in this.playerScores)) this.playerScores[playerId] = 0;
+    //if (!(playerId in this.playerScores)) this.playerScores[playerId] = 0;
     if (!(playerId in this.players)) {
       const edge = (this.availableEdges.shift() || 'bottom') as Edge;
       this.edgeAssignments[playerId] = edge;
@@ -129,6 +144,9 @@ export class Game extends Scene {
       padding: { x: 10, y: 10 }
     });
     this.updateScoreText();
+
+   
+      
   }
 
   update() {
