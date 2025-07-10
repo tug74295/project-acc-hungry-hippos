@@ -246,6 +246,44 @@ h1 {
     color: #94a3b8;
 }
 
+/* Leaderboard */
+.leaderboard {
+    margin-top: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #94a3b8;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+    text-align: left;
+}
+
+.leaderboard h3 {
+    text-align: center;
+}
+
+.leaderboard ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.leaderboard li {
+    margin: 0.25rem 0;
+}
+
+.leaderboard-box {
+    position: absolute;
+    top: 300px;
+    right: 20px;
+    width: 220px;
+    background-color: #1e293b;
+    border: 2px solid rgba(255, 255, 255, 0.87);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    z-index: 10;
+}
+
 @media (max-width: 750px) {
 
     .aac-device {

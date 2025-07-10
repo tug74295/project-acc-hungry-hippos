@@ -20,6 +20,7 @@ import { movementStore } from './MovementStore';
  * player movements to other clients.
  */
 export class Game extends Scene {
+  private sessionId!: string;
   private hippo: Hippo | null = null;
   private foods: Phaser.Physics.Arcade.Group;
   private foodKeys: string[] = [];
@@ -27,7 +28,7 @@ export class Game extends Scene {
   private foodSpawnTimer: Phaser.Time.TimerEvent;
   private currentTargetFoodId: string | null = null;
   private playerScores: Record<string, number> = {};
-  private scoreText: Phaser.GameObjects.Text;
+  // private scoreText: Phaser.GameObjects.Text;
   private players: Record<string, Hippo> = {};
   //private playerId: string;
   private edgeAssignments: Record<string, string> = {};
@@ -54,10 +55,12 @@ export class Game extends Scene {
   init(data: { 
     sendMessage: (msg: any) => void; 
     localPlayerId: string; 
+    sessionId: string;
     connectedUsers?: { userId: string; role: string }[]; 
   }) {
     this.sendMessage = data.sendMessage;
     this.localPlayerId = data.localPlayerId;
+    this.sessionId = data.sessionId;
   
     if (data.connectedUsers) {
       data.connectedUsers
@@ -154,15 +157,15 @@ export class Game extends Scene {
     //this.playerScores["host"] = this.playerScores["host"] || 0; 
 
 
-    this.scoreText = this.add.text(32, 32, '', {
-      fontSize: '24px',
-      color: '#000',
-      fontFamily: 'Arial',
-      align: 'left',
-      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-      padding: { x: 10, y: 10 }
-    });
-    this.updateScoreText();
+    // this.scoreText = this.add.text(32, 32, '', {
+    //   fontSize: '24px',
+    //   color: '#000',
+    //   fontFamily: 'Arial',
+    //   align: 'left',
+    //   backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    //   padding: { x: 10, y: 10 }
+    // });
+    // this.updateScoreText();
 
    
       
@@ -193,18 +196,29 @@ export class Game extends Scene {
       } else {
         this.playerScores[playerId] = Math.max(0, this.playerScores[playerId] - 1);
       }
-      this.updateScoreText();
+      // this.updateScoreText();
       EventBus.emit('scoreUpdate', { scores: { ...this.playerScores } });
+
+      if (this.sendMessage && this.localPlayerId) {
+        this.sendMessage({
+          type: 'SCORE_UPDATE',
+          payload: {
+            sessionId: this.sessionId,
+            scores: this.playerScores
+          }
+        });
+      }
+
       EventBus.emit('fruit-eaten', { foodId, x: fruit.x, y: fruit.y });
     }
   }
 
-  private updateScoreText() {
-    const lines = Object.entries(this.playerScores)
-      .map(([player, score]) => `${player}: ${score}`)
-      .join('\n');
-    this.scoreText.setText(lines);
-  }
+  // private updateScoreText() {
+  //   const lines = Object.entries(this.playerScores)
+  //     .map(([player, score]) => `${player}: ${score}`)
+  //     .join('\n');
+  //   this.scoreText.setText(lines);
+  // }
 
   public setFoodKeys(keys: string[]) {
     this.foodKeys = keys;

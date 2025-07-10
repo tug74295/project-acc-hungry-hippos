@@ -279,6 +279,15 @@ wss.on('connection', (ws) => {
         });
       }
 
+      // Broadcast updated scores to all clients
+      if (data.type === 'SCORE_UPDATE') {
+        const { sessionId, scores } = data.payload;
+        broadcast(sessionId, {
+          type: 'SCORE_UPDATE_BROADCAST',
+          payload: { scores }
+        });
+      }
+
     } catch (error) {
         console.error('WSS Error processing message:', error);
     }
