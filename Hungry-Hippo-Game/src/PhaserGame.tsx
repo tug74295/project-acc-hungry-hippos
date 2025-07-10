@@ -82,7 +82,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
     {
         EventBus.on('current-scene-ready', (scene_instance: Phaser.Scene) =>
         {
-            const foodKeys = Object.values(AAC_DATA).flat().map(food => food.id);
+            const foodKeys = AAC_DATA.categories.flatMap(cat => cat.foods.map(f => f.id));
             if ('setFoodKeys' in scene_instance && typeof scene_instance['setFoodKeys'] === 'function') {
                 scene_instance['setFoodKeys'](foodKeys);
             }

@@ -237,53 +237,60 @@ export class Game extends Scene {
     food.setCollideWorldBounds(true);
   }
 
-  public addFoodManually(foodKey: string) {
+  public addFoodManually(selectedFoodId: string) {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
     const speed = 100;
 
+    const allFoodIds = this.foodKeys.filter(id => id !== selectedFoodId);
+    const decoyIds = Phaser.Utils.Array.Shuffle(allFoodIds).slice(0, 2); // exactly 2 decoys
+    const foodToSpawn = [selectedFoodId, ...decoyIds]; // 1 real + 2 decoys
+
     const activeEdges = new Set(Object.values(this.edgeAssignments));
 
       activeEdges.forEach((edge) => {
-        const food = this.foods.create(centerX, centerY, foodKey) as Phaser.Physics.Arcade.Image;
-        food.setScale(0.15);
-        food.setBounce(0);
-        food.setCollideWorldBounds(false);
-        food.setDamping(false);
-        food.setDrag(0);
+        foodToSpawn.forEach(foodId => {
+          const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
+          food.setScale(0.15);
+          food.setBounce(0);
+          food.setCollideWorldBounds(false);
+          food.setDamping(false);
+          food.setDrag(0);
 
-        let targetX = centerX;
-        let targetY = centerY;
+          let targetX = centerX;
+          let targetY = centerY;
 
-        switch (edge) {
-          case 'top':
-            targetX = Phaser.Math.Between(64, this.scale.width - 64);
-            targetY = 0;
-            break;
-          case 'bottom':
-            targetX = Phaser.Math.Between(64, this.scale.width - 64);
-            targetY = this.scale.height;
-            break;
-          case 'left':
-            targetX = 0;
-            targetY = Phaser.Math.Between(64, this.scale.height - 64);
-            break;
-          case 'right':
-            targetX = this.scale.width;
-            targetY = Phaser.Math.Between(64, this.scale.height - 64);
-            break;
-        }
+          switch (edge) {
+            case 'top':
+              targetX = Phaser.Math.Between(64, this.scale.width - 64);
+              targetY = 0;
+              break;
+            case 'bottom':
+              targetX = Phaser.Math.Between(64, this.scale.width - 64);
+              targetY = this.scale.height;
+              break;
+            case 'left':
+              targetX = 0;
+              targetY = Phaser.Math.Between(64, this.scale.height - 64);
+              break;
+            case 'right':
+              targetX = this.scale.width;
+              targetY = Phaser.Math.Between(64, this.scale.height - 64);
+              break;
+          }
 
-        const dx = targetX - centerX;
-        const dy = targetY - centerY;
-        const magnitude = Math.sqrt(dx * dx + dy * dy);
-        const velocityX = (dx / magnitude) * speed;
-        const velocityY = (dy / magnitude) * speed;
+          const dx = targetX - centerX;
+          const dy = targetY - centerY;
+          const magnitude = Math.sqrt(dx * dx + dy * dy);
+          const velocityX = (dx / magnitude) * speed;
+          const velocityY = (dy / magnitude) * speed;
 
-        food.setVelocity(velocityX, velocityY);
+          food.setVelocity(velocityX, velocityY);
 
-        console.log(`[SPAWN] ${foodKey} → ${edge} at (${targetX.toFixed(0)}, ${targetY.toFixed(0)})`);
+          console.log(`[SPAWN] ${foodId} → ${edge} at (${targetX.toFixed(0)}, ${targetY.toFixed(0)})`);
+        })
       })
+    this.setTargetFood(selectedFoodId);
   }
 
   public setTargetFood(foodId: string) {
