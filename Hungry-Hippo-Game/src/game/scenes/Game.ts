@@ -237,31 +237,53 @@ export class Game extends Scene {
     food.setCollideWorldBounds(true);
   }
 
-  public addFoodManually(foodKey: string, angle: number) {
+  public addFoodManually(foodKey: string) {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
-    const food = this.foods.create(centerX, centerY, foodKey) as Phaser.Physics.Arcade.Image;
-    food.setScale(0.15);
-    const speed = 300;
-    const velocityX = Math.cos(angle) * speed;
-    const velocityY = Math.sin(angle) * speed;
+    const speed = 100;
 
+    const activeEdges = new Set(Object.values(this.edgeAssignments));
 
-    
-    const degrees = Phaser.Math.RadToDeg(angle);
-        
-    let direction = '';
-    if (degrees >= 45 && degrees < 135) direction = 'down';
-    else if (degrees >= 135 && degrees < 225) direction = 'left';
-    else if (degrees >= 225 && degrees < 315) direction = 'up';
-    else direction = 'right';
-    console.log(`[SPAWN] ${foodKey} launched ${direction} (${degrees.toFixed(0)}°)`); // Logs direction food is launched
+      activeEdges.forEach((edge) => {
+        const food = this.foods.create(centerX, centerY, foodKey) as Phaser.Physics.Arcade.Image;
+        food.setScale(0.15);
+        food.setBounce(0);
+        food.setCollideWorldBounds(false);
+        food.setDamping(false);
+        food.setDrag(0);
 
-    food.setVelocity(velocityX, velocityY);
-    food.setBounce(1, 1);
-    food.setCollideWorldBounds(true);
-    food.setDamping(false);
-    food.setDrag(0);
+        let targetX = centerX;
+        let targetY = centerY;
+
+        switch (edge) {
+          case 'top':
+            targetX = Phaser.Math.Between(64, this.scale.width - 64);
+            targetY = 0;
+            break;
+          case 'bottom':
+            targetX = Phaser.Math.Between(64, this.scale.width - 64);
+            targetY = this.scale.height;
+            break;
+          case 'left':
+            targetX = 0;
+            targetY = Phaser.Math.Between(64, this.scale.height - 64);
+            break;
+          case 'right':
+            targetX = this.scale.width;
+            targetY = Phaser.Math.Between(64, this.scale.height - 64);
+            break;
+        }
+
+        const dx = targetX - centerX;
+        const dy = targetY - centerY;
+        const magnitude = Math.sqrt(dx * dx + dy * dy);
+        const velocityX = (dx / magnitude) * speed;
+        const velocityY = (dy / magnitude) * speed;
+
+        food.setVelocity(velocityX, velocityY);
+
+        console.log(`[SPAWN] ${foodKey} → ${edge} at (${targetX.toFixed(0)}, ${targetY.toFixed(0)})`);
+      })
   }
 
   public setTargetFood(foodId: string) {
