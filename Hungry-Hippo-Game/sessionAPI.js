@@ -300,6 +300,22 @@ wss.on('connection', (ws) => {
     // Remove the client from the ws
     if (sessions[sessionId]) {
       sessions[sessionId].delete(ws);
+
+      // If the session still exists, broadcast the updated user list
+      const usersInSession = Array.from(sessions[sessionId])
+        .filter(client => client.readyState === WebSocket.OPEN)
+        .map(client => ({
+          userId: client.userId,
+          role: client.role
+        }));
+
+      broadcast(sessionId, {
+        type: 'USERS_LIST_UPDATE',
+        payload: {
+          users: usersInSession
+        }
+      });
+      console.log(`WSS Player left, broadcasting updated USERS_LIST_UPDATE to ${sessionId}:`, usersInSession);
     }
 
     // Remove the session from the sessions object if it is empty
