@@ -48,10 +48,26 @@ export class Game extends Scene {
     super('Game');
   }
 
-  init(data: { sendMessage: (msg: any) => void; localPlayerId: string }) {
+
+  // get the connected user data
+
+  init(data: { 
+    sendMessage: (msg: any) => void; 
+    localPlayerId: string; 
+    connectedUsers?: { userId: string; role: string }[]; 
+  }) {
     this.sendMessage = data.sendMessage;
     this.localPlayerId = data.localPlayerId;
+  
+    if (data.connectedUsers) {
+      data.connectedUsers
+        .filter(u => u.role === 'Hippo Player')
+        .forEach(u => this.addPlayer(u.userId));
+    }
   }
+
+
+  
 
   preload() {
     this.load.image('background', '/assets/presenterBg.png');
@@ -85,7 +101,7 @@ export class Game extends Scene {
   }
 
   public addPlayer(playerId: string) {
-    //if (!(playerId in this.playerScores)) this.playerScores[playerId] = 0;
+    if (!(playerId in this.playerScores)) this.playerScores[playerId] = 0;
     if (!(playerId in this.players)) {
       const edge = (this.availableEdges.shift() || 'bottom') as Edge;
       this.edgeAssignments[playerId] = edge;
@@ -119,7 +135,10 @@ export class Game extends Scene {
     this.add.image(512, 384, 'background');
     this.foods = this.physics.add.group();
     this.cursors = this.input!.keyboard!.createCursorKeys();
-    this.addPlayer(this.localPlayerId);
+
+
+
+    //this.addPlayer(this.localPlayerId);
     EventBus.emit('current-scene-ready', this);
 
     movementStore.subscribe(({ userId, x, y }) => {
@@ -132,7 +151,7 @@ export class Game extends Scene {
 
     EventBus.emit('current-scene-ready', this);
     
-    this.playerScores["host"] = this.playerScores["host"] || 0; 
+    //this.playerScores["host"] = this.playerScores["host"] || 0; 
 
 
     this.scoreText = this.add.text(32, 32, '', {

@@ -37,7 +37,7 @@ const PhaserPage: React.FC = () => {
   /**
    * WebSocket context values: lastMessage received, sendMessage function, and a function to clear last message.
    */
-  const { lastMessage, sendMessage, clearLastMessage } = useWebSocket();
+  const {connectedUsers, lastMessage, sendMessage, clearLastMessage } = useWebSocket();
 
   /**
    * Effect hook to send a "PLAYER_JOIN" message over WebSocket when component mounts,
@@ -58,6 +58,20 @@ const PhaserPage: React.FC = () => {
     }
   }, [sessionId, userId, location.state?.role, sendMessage]);
 
+
+
+  // useEffect(() => {
+  //   const scene = phaserRef.current?.scene as any;
+  
+  //   if (scene && userId && connectedUsers) {
+  //     scene.init({
+  //       sendMessage,
+  //       localPlayerId: userId,
+  //       connectedUsers
+  //     });
+  //   }
+  // }, [phaserRef.current?.scene, sendMessage, userId, connectedUsers]);
+  
     // Listens for broadcasts from the server about food selection
     useEffect(() => {
         if (lastMessage?.type === 'FOOD_SELECTED_BROADCAST') {
@@ -139,7 +153,16 @@ const PhaserPage: React.FC = () => {
    */
   return (
     <div className="game-container">
-      <PhaserGame ref={phaserRef} />
+      <PhaserGame ref={phaserRef} currentActiveScene={(scene: Phaser.Scene) => {
+  if (scene && userId && connectedUsers && typeof (scene as any).init === 'function') {
+    (scene as any).init({
+      sendMessage,
+      localPlayerId: userId,
+      connectedUsers
+    });
+  }
+}} />
+
 
       <div className="current-food-indicator">
         <h3>Current Food to Eat:</h3>
