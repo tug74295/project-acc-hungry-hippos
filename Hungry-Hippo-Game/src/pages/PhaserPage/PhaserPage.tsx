@@ -5,6 +5,7 @@ import { useWebSocket } from '../../contexts/WebSocketContext';
 import { AacFood } from '../../Foods';
 import { EventBus } from '../../game/EventBus';
 import Leaderboard from '../../components/Leaderboard/Leaderboard';
+import styles from './PhaserPage.module.css';
 /**
  * PhaserPage component.
  *
@@ -154,7 +155,8 @@ const PhaserPage: React.FC = () => {
       const handleScoreUpdate = ({ scores }: { scores: Record<string, number> }) => {
         setScores(scores);
       };
-
+      console.log('[PhaserPage] Updating scores from EventBus:', scores);
+      
       EventBus.on('scoreUpdate', handleScoreUpdate);
 
       return () => {
@@ -167,40 +169,38 @@ const PhaserPage: React.FC = () => {
    * Render the PhaserGame component and the current food indicator UI.
    */
   return (
-    <div className="game-container">
+    <div className={styles.pageWrapper}>
+    <div className={styles.canvasWrapper}>
       <PhaserGame ref={phaserRef} currentActiveScene={(scene: Phaser.Scene) => {
         if (scene && userId && connectedUsers && typeof (scene as any).init === 'function') {
           (scene as any).init({
             sendMessage,
             localPlayerId: userId,
             sessionId,
-            connectedUsers
+            connectedUsers,
           });
         }
       }} />
+    </div>
 
-      {/* Box for Current Food */}
-      <div className="current-food-indicator">
+    <div className={styles.sidebar}>
+      <div className={styles.currentFood}>
         <h3>Current Food to Eat:</h3>
         {currentFood ? (
           <>
-            <img
-              src={currentFood.imagePath}
-              alt={currentFood.name}
-              className="current-food-image"
-            />
-            <p className="current-food-name">{currentFood.name}</p>
+            <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
+            <p>{currentFood.name}</p>
           </>
         ) : (
-          <p className="current-food-placeholder">No Food Selected</p>
+          <p>No Food Selected</p>
         )}
       </div>
 
-      {/*Leaderboard box */}
-      <div className="leaderboard-box">
+      <div className={styles.leaderboardBox}>
         <Leaderboard scores={scores} />
-      </div> 
+      </div>
     </div>
+  </div>
   );
 };
 

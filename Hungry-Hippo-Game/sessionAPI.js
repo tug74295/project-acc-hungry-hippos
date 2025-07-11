@@ -282,6 +282,8 @@ wss.on('connection', (ws) => {
       // Broadcast updated scores to all clients
       if (data.type === 'SCORE_UPDATE') {
         const { sessionId, scores } = data.payload;
+        console.log('[WSS] Received SCORE_UPDATE for session:', sessionId);
+        console.log('[WSS] Scores to broadcast:', scores);
         broadcast(sessionId, {
           type: 'SCORE_UPDATE_BROADCAST',
           payload: { scores }
