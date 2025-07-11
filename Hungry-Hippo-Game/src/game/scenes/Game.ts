@@ -20,6 +20,7 @@ import { movementStore } from './MovementStore';
  * player movements to other clients.
  */
 export class Game extends Scene {
+  private sessionId!: string;
   private hippo: Hippo | null = null;
   private foods: Phaser.Physics.Arcade.Group;
   private foodKeys: string[] = [];
@@ -27,7 +28,7 @@ export class Game extends Scene {
   private foodSpawnTimer: Phaser.Time.TimerEvent;
   private currentTargetFoodId: string | null = null;
   private playerScores: Record<string, number> = {};
-  private scoreText: Phaser.GameObjects.Text;
+  // private scoreText: Phaser.GameObjects.Text;
   private players: Record<string, Hippo> = {};
   //private playerId: string;
   private edgeAssignments: Record<string, string> = {};
@@ -54,10 +55,12 @@ export class Game extends Scene {
   init(data: { 
     sendMessage: (msg: any) => void; 
     localPlayerId: string; 
+    sessionId: string;
     connectedUsers?: { userId: string; role: string }[]; 
   }) {
     this.sendMessage = data.sendMessage;
     this.localPlayerId = data.localPlayerId;
+    this.sessionId = data.sessionId;
   
     if (data.connectedUsers) {
       data.connectedUsers
@@ -154,15 +157,15 @@ export class Game extends Scene {
     //this.playerScores["host"] = this.playerScores["host"] || 0; 
 
 
-    this.scoreText = this.add.text(32, 32, '', {
-      fontSize: '24px',
-      color: '#000',
-      fontFamily: 'Arial',
-      align: 'left',
-      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-      padding: { x: 10, y: 10 }
-    });
-    this.updateScoreText();
+    // this.scoreText = this.add.text(32, 32, '', {
+    //   fontSize: '24px',
+    //   color: '#000',
+    //   fontFamily: 'Arial',
+    //   align: 'left',
+    //   backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    //   padding: { x: 10, y: 10 }
+    // });
+    // this.updateScoreText();
 
    
       
@@ -193,18 +196,29 @@ export class Game extends Scene {
       } else {
         this.playerScores[playerId] = Math.max(0, this.playerScores[playerId] - 1);
       }
-      this.updateScoreText();
+      // this.updateScoreText();
       EventBus.emit('scoreUpdate', { scores: { ...this.playerScores } });
+
+      if (this.sendMessage && this.localPlayerId) {
+        this.sendMessage({
+          type: 'SCORE_UPDATE',
+          payload: {
+            sessionId: this.sessionId,
+            scores: this.playerScores
+          }
+        });
+      }
+
       EventBus.emit('fruit-eaten', { foodId, x: fruit.x, y: fruit.y });
     }
   }
 
-  private updateScoreText() {
-    const lines = Object.entries(this.playerScores)
-      .map(([player, score]) => `${player}: ${score}`)
-      .join('\n');
-    this.scoreText.setText(lines);
-  }
+  // private updateScoreText() {
+  //   const lines = Object.entries(this.playerScores)
+  //     .map(([player, score]) => `${player}: ${score}`)
+  //     .join('\n');
+  //   this.scoreText.setText(lines);
+  // }
 
   public setFoodKeys(keys: string[]) {
     this.foodKeys = keys;
@@ -237,31 +251,60 @@ export class Game extends Scene {
     food.setCollideWorldBounds(true);
   }
 
-  public addFoodManually(foodKey: string, angle: number) {
+  public addFoodManually(selectedFoodId: string) {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
-    const food = this.foods.create(centerX, centerY, foodKey) as Phaser.Physics.Arcade.Image;
-    food.setScale(0.15);
-    const speed = 300;
-    const velocityX = Math.cos(angle) * speed;
-    const velocityY = Math.sin(angle) * speed;
+    const speed = 100;
 
+    const allFoodIds = this.foodKeys.filter(id => id !== selectedFoodId);
+    const decoyIds = Phaser.Utils.Array.Shuffle(allFoodIds).slice(0, 2); // exactly 2 decoys
+    const foodToSpawn = [selectedFoodId, ...decoyIds]; // 1 real + 2 decoys
 
-    
-    const degrees = Phaser.Math.RadToDeg(angle);
-        
-    let direction = '';
-    if (degrees >= 45 && degrees < 135) direction = 'down';
-    else if (degrees >= 135 && degrees < 225) direction = 'left';
-    else if (degrees >= 225 && degrees < 315) direction = 'up';
-    else direction = 'right';
-    console.log(`[SPAWN] ${foodKey} launched ${direction} (${degrees.toFixed(0)}°)`); // Logs direction food is launched
+    const activeEdges = new Set(Object.values(this.edgeAssignments));
 
-    food.setVelocity(velocityX, velocityY);
-    food.setBounce(1, 1);
-    food.setCollideWorldBounds(true);
-    food.setDamping(false);
-    food.setDrag(0);
+      activeEdges.forEach((edge) => {
+        foodToSpawn.forEach(foodId => {
+          const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
+          food.setScale(0.15);
+          food.setBounce(0);
+          food.setCollideWorldBounds(false);
+          food.setDamping(false);
+          food.setDrag(0);
+
+          let targetX = centerX;
+          let targetY = centerY;
+
+          switch (edge) {
+            case 'top':
+              targetX = Phaser.Math.Between(64, this.scale.width - 64);
+              targetY = 0;
+              break;
+            case 'bottom':
+              targetX = Phaser.Math.Between(64, this.scale.width - 64);
+              targetY = this.scale.height;
+              break;
+            case 'left':
+              targetX = 0;
+              targetY = Phaser.Math.Between(64, this.scale.height - 64);
+              break;
+            case 'right':
+              targetX = this.scale.width;
+              targetY = Phaser.Math.Between(64, this.scale.height - 64);
+              break;
+          }
+
+          const dx = targetX - centerX;
+          const dy = targetY - centerY;
+          const magnitude = Math.sqrt(dx * dx + dy * dy);
+          const velocityX = (dx / magnitude) * speed;
+          const velocityY = (dy / magnitude) * speed;
+
+          food.setVelocity(velocityX, velocityY);
+
+          console.log(`[SPAWN] ${foodId} → ${edge} at (${targetX.toFixed(0)}, ${targetY.toFixed(0)})`);
+        })
+      })
+    this.setTargetFood(selectedFoodId);
   }
 
   public setTargetFood(foodId: string) {

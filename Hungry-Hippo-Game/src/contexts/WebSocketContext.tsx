@@ -66,6 +66,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setGameStarted(true);
         return;
       }
+
+      if (data.type === 'SCORE_UPDATE_BROADCAST') {
+        EventBus.emit('scoreUpdate', data.payload);
+        return;
+      }
       setLastMessage(data);
     };
 

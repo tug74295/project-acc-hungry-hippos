@@ -4,6 +4,7 @@ import { PhaserGame, IRefPhaserGame } from '../../PhaserGame';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import { AacFood } from '../../Foods';
 import { EventBus } from '../../game/EventBus';
+import Leaderboard from '../../components/Leaderboard/Leaderboard';
 /**
  * PhaserPage component.
  *
@@ -33,6 +34,8 @@ const PhaserPage: React.FC = () => {
    * Holds the currently selected food object to display.
    */
   const [currentFood, setCurrentFood] = useState<AacFood | null>(null);
+
+  const [scores, setScores] = useState<Record<string, number>>({});
 
   /**
    * WebSocket context values: lastMessage received, sendMessage function, and a function to clear last message.
@@ -147,6 +150,18 @@ const PhaserPage: React.FC = () => {
         };
     }, [sendMessage, sessionId]);
 
+    useEffect(() => {
+      const handleScoreUpdate = ({ scores }: { scores: Record<string, number> }) => {
+        setScores(scores);
+      };
+
+      EventBus.on('scoreUpdate', handleScoreUpdate);
+
+      return () => {
+        EventBus.off('scoreUpdate', handleScoreUpdate);
+      };
+    }, []);
+
 
   /**
    * Render the PhaserGame component and the current food indicator UI.
@@ -154,16 +169,17 @@ const PhaserPage: React.FC = () => {
   return (
     <div className="game-container">
       <PhaserGame ref={phaserRef} currentActiveScene={(scene: Phaser.Scene) => {
-  if (scene && userId && connectedUsers && typeof (scene as any).init === 'function') {
-    (scene as any).init({
-      sendMessage,
-      localPlayerId: userId,
-      connectedUsers
-    });
-  }
-}} />
+        if (scene && userId && connectedUsers && typeof (scene as any).init === 'function') {
+          (scene as any).init({
+            sendMessage,
+            localPlayerId: userId,
+            sessionId,
+            connectedUsers
+          });
+        }
+      }} />
 
-
+      {/* Box for Current Food */}
       <div className="current-food-indicator">
         <h3>Current Food to Eat:</h3>
         {currentFood ? (
@@ -179,6 +195,11 @@ const PhaserPage: React.FC = () => {
           <p className="current-food-placeholder">No Food Selected</p>
         )}
       </div>
+
+      {/*Leaderboard box */}
+      <div className="leaderboard-box">
+        <Leaderboard scores={scores} />
+      </div> 
     </div>
   );
 };
