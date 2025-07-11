@@ -68,6 +68,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       if (data.type === 'SCORE_UPDATE_BROADCAST') {
+        console.log('[WS_CONTEXT] Received SCORE_UPDATE_BROADCAST:', data.payload.scores);
         EventBus.emit('scoreUpdate', data.payload);
         return;
       }

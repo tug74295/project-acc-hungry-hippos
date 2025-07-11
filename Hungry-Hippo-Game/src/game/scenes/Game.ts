@@ -135,7 +135,10 @@ export class Game extends Scene {
   }
 
   create() {
-    this.add.image(512, 384, 'background');
+    const bg = this.add.image(512, 512, 'background');
+    bg.setOrigin(0.5, 0.5);
+    bg.setDisplaySize(this.scale.width, this.scale.height);
+    
     this.foods = this.physics.add.group();
     this.cursors = this.input!.keyboard!.createCursorKeys();
 
@@ -200,6 +203,9 @@ export class Game extends Scene {
       EventBus.emit('scoreUpdate', { scores: { ...this.playerScores } });
 
       if (this.sendMessage && this.localPlayerId) {
+        console.log('[Game.ts] Sending SCORE_UPDATE with scores:', this.playerScores);
+        console.log('[Game.ts] Session ID being sent:', this.sessionId);
+
         this.sendMessage({
           type: 'SCORE_UPDATE',
           payload: {
