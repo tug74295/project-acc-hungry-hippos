@@ -13,6 +13,7 @@ import { AAC_DATA } from '../../Foods';
 import { Hippo } from '../Hippo';
 import { Edge, EdgeSlideStrategy } from '../EdgeSlideStrategy';
 import { movementStore } from './MovementStore';
+import { ModeSettings } from '../../config/gameModes';
 /**
  * Represents the main Game scene in Phaser.
  * This scene manages game elements like players (Hippos), food items,
@@ -47,10 +48,17 @@ export class Game extends Scene {
   private localPlayerId!: string;
 
 
-
   private lastSentX: number | null = null;
   private lastSentY: number | null = null;
   private lastMoveSentAt: number = 0;
+
+  /**
+   * Settings for the game mode, which can be adjusted based on the game difficulty.
+   * @private
+   */
+  private modeSettings: ModeSettings = { fruitSpeed: 500, allowPenalty: true }; // fallback default easy
+
+
 
   constructor() {
     super('Game');
@@ -64,13 +72,22 @@ export class Game extends Scene {
     localPlayerId: string; 
     sessionId: string;
     connectedUsers?: { userId: string; role: string }[]; 
+    modeSettings?: ModeSettings;
   }) {
     this.sendMessage = data.sendMessage;
     this.localPlayerId = data.localPlayerId;
     this.sessionId = data.sessionId;
+
     this.lastMoveSentAt = 0;
     this.lastSentX = null;
     this.lastSentY = null;
+
+
+    if (data.modeSettings) {
+        this.modeSettings = data.modeSettings;
+        console.log('[Game] Mode settings applied in init:', this.modeSettings);
+    }
+
   
     if (data.connectedUsers) {
       data.connectedUsers 
@@ -219,11 +236,16 @@ export class Game extends Scene {
     if ('texture' in fruit && fruit instanceof Phaser.GameObjects.Sprite) {
       const foodId = fruit.texture.key;
       const isCorrect = foodId === this.currentTargetFoodId;
+    //   if (isCorrect) {
+    //     this.playerScores[playerId] += 1;
+    //   } else {
+    //     this.playerScores[playerId] = Math.max(0, this.playerScores[playerId] - 1);
+    //   }
       if (isCorrect) {
         this.playerScores[playerId] += 1;
-      } else {
+      } else if (this.modeSettings.allowPenalty) {
         this.playerScores[playerId] = Math.max(0, this.playerScores[playerId] - 1);
-      }
+     }
       // this.updateScoreText();
       EventBus.emit('scoreUpdate', { scores: { ...this.playerScores } });
 
@@ -255,6 +277,16 @@ export class Game extends Scene {
     this.foodKeys = keys;
   }
 
+  /**
+ * Applies the specified mode settings to the game.
+ *
+ * @param {ModeSettings} settings - An object containing game mode configuration values.
+ */
+  public applyModeSettings(settings: ModeSettings) {
+    console.log('[Game] Applying mode settings:', settings);
+    this.modeSettings = settings;
+  }
+
   public startSpawningFood() {
 
     if (!this.foodSpawnTimer) {
@@ -266,7 +298,7 @@ export class Game extends Scene {
       });
     }
   }
-
+  
   spawnFood() {
     console.log("[Game Scene] spawnFood() triggered by timer.");
 
@@ -285,7 +317,7 @@ export class Game extends Scene {
   public addFoodManually(selectedFoodId: string) {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
-    const speed = 100;
+    const speed = this.modeSettings.fruitSpeed;
 
     const allFoodIds = this.foodKeys.filter(id => id !== selectedFoodId);
     const decoyIds = Phaser.Utils.Array.Shuffle(allFoodIds).slice(0, 2); // exactly 2 decoys

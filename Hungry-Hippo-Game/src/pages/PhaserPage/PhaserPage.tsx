@@ -6,6 +6,7 @@ import { AacFood } from '../../Foods';
 import { EventBus } from '../../game/EventBus';
 import Leaderboard from '../../components/Leaderboard/Leaderboard';
 import styles from './PhaserPage.module.css';
+import { GameMode, MODE_CONFIG } from '../../config/gameModes';
 /**
  * PhaserPage component.
  *
@@ -43,6 +44,8 @@ const PhaserPage: React.FC = () => {
    */
   const {connectedUsers, lastMessage, sendMessage, clearLastMessage } = useWebSocket();
 
+  const [gameMode, setGameMode] = useState<GameMode | null>(null);
+
   /**
    * Effect hook to send a "PLAYER_JOIN" message over WebSocket when component mounts,
    * informing the server about the player's session, userId, and role.
@@ -76,6 +79,7 @@ const PhaserPage: React.FC = () => {
   //   }
   // }, [phaserRef.current?.scene, sendMessage, userId, connectedUsers]);
 
+
   useEffect(() => {
   if (lastMessage?.type === 'PLAYER_MOVE_BROADCAST') {
     const { userId: movingUserId, x, y } = lastMessage.payload;
@@ -91,6 +95,27 @@ const PhaserPage: React.FC = () => {
     if (clearLastMessage) clearLastMessage();
   }
 }, [lastMessage, userId, clearLastMessage]);
+
+
+  // If the server broadcasts a game start message, apply mode settings
+  // to the Phaser scene.
+  useEffect(() => {
+    if (lastMessage?.type === 'START_GAME_BROADCAST') {
+      const { mode } = lastMessage.payload as { mode: GameMode };
+      const settings = MODE_CONFIG[mode];
+      const scene = phaserRef.current?.scene as any;
+      console.log(`[PhaserPage] Applying mode settings for "${mode}":`, settings);
+
+      setGameMode(mode); 
+
+      if (scene && typeof scene.applyModeSettings === 'function') {
+        scene.applyModeSettings(settings);
+      }
+
+      clearLastMessage?.();
+    }
+
+  }, [lastMessage, clearLastMessage]);
 
   
     // Listens for broadcasts from the server about food selection
@@ -123,29 +148,9 @@ const PhaserPage: React.FC = () => {
                 scene.removeFruitAt(foodId, x, y);
             }
         }
+
     }, [lastMessage, clearLastMessage]);
-
-    /**
-     * Listens for fruit-eaten events emitted from the Phaser scene,
-     * and sends a WebSocket message to the server with fruit info.
-    */
-    useEffect(() => {
-        const handleFruitEaten = ({ foodId, x, y }: { foodId: string; x: number; y: number }) => {
-            if (sessionId) {
-                sendMessage({
-                    type: 'FRUIT_EATEN',
-                    payload: { sessionId, foodId, x, y }
-                });
-            }
-        };
-
-        EventBus.on('fruit-eaten', handleFruitEaten);
-
-        return () => {
-            EventBus.off('fruit-eaten', handleFruitEaten);
-        };
-    }, [sendMessage, sessionId]);
-
+    
 
     /**
      * Listens for fruit-eaten events emitted from the Phaser scene,
@@ -195,6 +200,7 @@ const PhaserPage: React.FC = () => {
             localPlayerId: userId,
             sessionId,
             connectedUsers,
+            modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined, 
           });
         }
       }} />

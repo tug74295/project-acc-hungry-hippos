@@ -65,6 +65,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (data.type === 'START_GAME_BROADCAST') {
         console.log('[WS_CONTEXT] Game started!');
         setGameStarted(true);
+        setLastMessage(data);
         return;
       }
 
