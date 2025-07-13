@@ -83,7 +83,7 @@ wss.on('connection', (ws) => {
   ws.on('message', async (message) => {
     try {
       const data = JSON.parse(message);
-      console.log('WSS Received:', data);
+      // console.log('WSS Received:', data);
 
       // Validate session request
       if (data.type === 'VALIDATE_SESSION') {
@@ -232,12 +232,12 @@ wss.on('connection', (ws) => {
       // When the presenter clicks "Start Game", broadcast to all clients in the session
       // to signal that the game has begun. Clients will navigate to the game screen.
       if (data.type === 'START_GAME') {
-        const { sessionId } = data.payload;
-        console.log(`[WSS] Start game received for session ${sessionId}`);
+        const { sessionId, mode } = data.payload;
+        console.log(`[WSS] Start game received for session ${sessionId} with mode ${mode}`);
 
         broadcast(sessionId, {
           type: 'START_GAME_BROADCAST',
-          payload: { sessionId }
+          payload: { sessionId, mode }, 
         });
       }
 
