@@ -50,10 +50,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
       
       //update playermovement on socket
-      if (data.type === 'PLAYER_MOVE') {
-        movementStore.notifyMove(data.payload); // 
-        return;
+     if (data.type === 'PLAYER_MOVE_BROADCAST') {
+       movementStore.notifyMove(data.payload);
+       return;
       }
+
       //
 
       if (data.type === 'USERS_LIST_UPDATE') {

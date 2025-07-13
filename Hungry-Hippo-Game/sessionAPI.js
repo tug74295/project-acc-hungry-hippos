@@ -150,6 +150,15 @@ wss.on('connection', (ws) => {
         }));
       }
 
+      if (data.type === 'PLAYER_MOVE') {
+      const { sessionId, userId, x, y } = data.payload;
+      broadcast(sessionId, {
+          type: 'PLAYER_MOVE_BROADCAST',
+          payload: { userId, x, y }
+         });
+        }
+
+
       /*
       // When a player selects a role, update their role in the session
       if (data.type === 'UPDATE_ROLE') {
