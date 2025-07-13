@@ -102,24 +102,32 @@ const PhaserPage: React.FC = () => {
     // Listens for broadcasts from the server about food selection
     useEffect(() => {
         if (lastMessage?.type === 'FOOD_SELECTED_BROADCAST') {
+        const { launches, targetFoodId, targetFoodData } = lastMessage.payload as {
+          launches: { foodId: string; angle: number }[];
+          targetFoodId: string;
+          targetFoodData: AacFood;
+        };
 
-            const { foods } = lastMessage.payload;
-            const scene = phaserRef.current?.scene as any;
+        const scene = phaserRef.current?.scene as any;
 
-            if (Array.isArray(foods)) {
-                foods.forEach(({ food, angle }: { food: AacFood, angle: number }) => {
-                    if (scene && typeof scene.addFoodManually === 'function') {
-                        scene.addFoodManually(food.id, angle);
-                    }
-                });
-
-                if (foods.length > 0 && typeof scene.setTargetFood === 'function') {
-                    scene.setTargetFood(foods[0].food.id);
-                    setCurrentFood(foods[0].food);
-                }
+        if (Array.isArray(launches)) {
+          launches.forEach(({ foodId, angle }) => {
+            if (scene && typeof scene.addFoodManually === 'function') {
+              scene.addFoodManually(foodId, angle);
             }
-            if (clearLastMessage) clearLastMessage();
+          });
         }
+
+        if (typeof scene.setTargetFood === 'function') {
+          scene.setTargetFood(targetFoodId);
+        }
+
+        if (targetFoodData) {
+          setCurrentFood(targetFoodData);
+        }
+
+        clearLastMessage?.();
+      }
 
         if (lastMessage?.type === 'FRUIT_EATEN_BROADCAST') {
             const { foodId, x, y } = lastMessage.payload;
@@ -183,6 +191,19 @@ const PhaserPage: React.FC = () => {
             connectedUsers,
             modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined, 
           });
+
+          // Sends assigned edge to server
+          const edges = (scene as any).getEdgeAssignments?.();
+          if (edges && edges[userId]) {
+            sendMessage({
+              type: 'SET_EDGE',
+              payload: {
+                sessionId,
+                userId,
+                edge: edges[userId],
+              }
+            });
+          }
         }
       }} />
     </div>
