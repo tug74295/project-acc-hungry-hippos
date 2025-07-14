@@ -176,8 +176,8 @@ export class Game extends Scene {
 
     movementStore.subscribe(({ userId, x, y }) => {
       const player = this.players[userId];
-      if (player) {
-        player.setPosition(x, y);
+      if (player && userId !== this.localPlayerId) {
+        player.setTargetPosition(x, y);
       }
     });
 
@@ -211,7 +211,7 @@ export class Game extends Scene {
 
       if (this.lastSentX !== newX || this.lastSentY !== newY) {
         const now = Date.now();
-        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 100) {
+        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 50) {
           this.lastSentX = newX;
           this.lastSentY = newY;
           this.lastMoveSentAt = now;
@@ -226,6 +226,12 @@ export class Game extends Scene {
           }
         });
       }
+    }
+  }
+
+  for (const [id, hippo] of Object.entries(this.players)) {
+    if (id !== this.localPlayerId) {
+      hippo.update(); // triggers interpolation
     }
   }
 }
