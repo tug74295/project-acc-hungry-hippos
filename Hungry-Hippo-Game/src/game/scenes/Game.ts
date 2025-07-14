@@ -154,6 +154,7 @@ export class Game extends Scene {
         const fruitGO = fruit instanceof Phaser.GameObjects.GameObject ? fruit : null;
         if (fruitGO) this.handleFruitCollision(playerId, fruitGO);
       });
+      playerSprite.setTargetPosition(x, y); // fix interpolation bug
       this.players[playerId] = playerSprite;
       if (playerId === this.localPlayerId) {
         this.hippo = playerSprite;
