@@ -130,10 +130,14 @@ const PhaserPage: React.FC = () => {
         const scene = phaserRef.current?.scene as any;
 
         if (Array.isArray(launches)) {
-          launches.forEach(({ foodId, angle }) => {
-            if (scene && typeof scene.addFoodManually === 'function') {
-              scene.addFoodManually(foodId, angle);
-            }
+          const launchesPerSet = 3; // 3 foods per hippo player
+          launches.forEach(({ foodId, angle }, index) => {
+            const setIndex = index % launchesPerSet;
+            setTimeout(() => {
+              if (scene && typeof scene.addFoodManually === 'function') {
+                scene.addFoodManually(foodId, angle);
+              }
+            }, setIndex * 400); // delay: 0ms, 400ms, 800ms
           });
         }
 
