@@ -211,7 +211,7 @@ export class Game extends Scene {
 
       if (this.lastSentX !== newX || this.lastSentY !== newY) {
         const now = Date.now();
-        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 50) {
+        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 30) {
           this.lastSentX = newX;
           this.lastSentY = newY;
           this.lastMoveSentAt = now;
