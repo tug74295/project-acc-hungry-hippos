@@ -154,6 +154,7 @@ export class Game extends Scene {
         const fruitGO = fruit instanceof Phaser.GameObjects.GameObject ? fruit : null;
         if (fruitGO) this.handleFruitCollision(playerId, fruitGO);
       });
+      playerSprite.setTargetPosition(x, y); // fix interpolation bug
       this.players[playerId] = playerSprite;
       if (playerId === this.localPlayerId) {
         this.hippo = playerSprite;
@@ -237,33 +238,43 @@ export class Game extends Scene {
 }
 
   private handleFruitCollision(playerId: string, fruit: Phaser.GameObjects.GameObject) {
-    if (!fruit.active) return;
-    fruit.active = false; // prevent duplicate triggers
-    fruit.destroy();
+    // Skips if the fruit has already been claimed
+    if (!fruit.active || fruit.getData('eatenBy')) return;
 
-    if ('texture' in fruit && fruit instanceof Phaser.GameObjects.Sprite) {
-      const sprite = fruit as Phaser.GameObjects.Sprite;
-      const foodId = sprite.texture.key;
+    // Marks the fruit as eaten to prevent duplicate scoring
+    fruit.setData('eatenBy', playerId);
 
-      console.log(`[HANDLE COLLISION] Player ${playerId} collided with ${foodId}`);
-
-      const isCorrect = foodId === this.currentTargetFoodId;
-    
-      console.log(`[SCORING] IsCorrect: ${isCorrect}, Target: ${this.currentTargetFoodId}`);
-
-      if (this.sendMessage && this.localPlayerId) {
-        this.sendMessage({
-          type: 'FRUIT_EATEN_BY_PLAYER',
-          payload: {
-            sessionId: this.sessionId,
-            userId: playerId,
-            isCorrect,
-            allowPenalty: this.modeSettings.allowPenalty
-          },
-        });
+    if (this.players[playerId] === this.hippo) {
+      // HideS the fruit and remove physics but doesn't destroy immediately
+      if ('disableBody' in fruit) {
+        (fruit as Phaser.Physics.Arcade.Image).disableBody(true, true);
       }
 
-      EventBus.emit('fruit-eaten', { foodId, x: fruit.x, y: fruit.y });
+      if ('texture' in fruit && fruit instanceof Phaser.GameObjects.Sprite) {
+        const sprite = fruit as Phaser.GameObjects.Sprite;
+        const foodId = sprite.texture.key;
+
+        console.log(`[HANDLE COLLISION] Player ${playerId} collided with ${foodId}`);
+
+        const isCorrect = foodId === this.currentTargetFoodId;
+        console.log(`[SCORING] IsCorrect: ${isCorrect}, Target: ${this.currentTargetFoodId}`);
+
+        // Sends the score update to the server
+        if (this.sendMessage) {
+          this.sendMessage({
+            type: 'FRUIT_EATEN_BY_PLAYER',
+            payload: {
+              sessionId: this.sessionId,
+              userId: playerId,
+              isCorrect,
+              allowPenalty: this.modeSettings.allowPenalty
+            },
+          });
+        }
+
+        // Let all clients know to remove the fruit visually
+        EventBus.emit('fruit-eaten', { foodId, x: fruit.x, y: fruit.y });
+      }
     }
   }
 
