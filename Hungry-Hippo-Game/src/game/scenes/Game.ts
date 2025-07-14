@@ -35,6 +35,7 @@ export class Game extends Scene {
   private edgeAssignments: Record<string, string> = {};
   private availableEdges = [ 'bottom','top','right', 'left' ];
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+  
   /**
    * Function to send messages to other clients (e.g., via a WebSocket).
    * @private
@@ -46,11 +47,17 @@ export class Game extends Scene {
    */
   private localPlayerId!: string;
 
+
+  private lastSentX: number | null = null;
+  private lastSentY: number | null = null;
+  private lastMoveSentAt: number = 0;
+
   /**
    * Settings for the game mode, which can be adjusted based on the game difficulty.
    * @private
    */
   private modeSettings: ModeSettings = { fruitSpeed: 500, allowPenalty: true }; // fallback default easy
+
 
 
   constructor() {
@@ -71,13 +78,19 @@ export class Game extends Scene {
     this.localPlayerId = data.localPlayerId;
     this.sessionId = data.sessionId;
 
+    this.lastMoveSentAt = 0;
+    this.lastSentX = null;
+    this.lastSentY = null;
+
+
     if (data.modeSettings) {
         this.modeSettings = data.modeSettings;
         console.log('[Game] Mode settings applied in init:', this.modeSettings);
     }
+
   
     if (data.connectedUsers) {
-      data.connectedUsers
+      data.connectedUsers 
         .filter(u => u.role === 'Hippo Player')
         .forEach(u => this.addPlayer(u.userId));
     }
@@ -188,20 +201,35 @@ export class Game extends Scene {
       
   }
 
-  update() {
-    if (this.hippo && this.cursors) {
-      this.hippo.update(this.cursors);
-      this.sendMessage?.({
-        type: 'PLAYER_MOVE',
-        payload: {
-          userId: this.localPlayerId,
-          x: this.hippo.x,
-          y: this.hippo.y
-        }
-      });
+ update() {
+  if (this.hippo && this.cursors) {
+    this.hippo.update(this.cursors);
 
+    // Check if position changed
+    const newX = this.hippo.x;
+      const newY = this.hippo.y;
+
+      if (this.lastSentX !== newX || this.lastSentY !== newY) {
+        const now = Date.now();
+        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 100) {
+          this.lastSentX = newX;
+          this.lastSentY = newY;
+          this.lastMoveSentAt = now;
+
+          this.sendMessage?.({
+            type: 'PLAYER_MOVE',
+            payload: {
+              sessionId: this.sessionId,
+              userId: this.localPlayerId,
+              x: newX,
+              y: newY
+          }
+        });
+      }
     }
   }
+}
+
 
   private handleFruitCollision(playerId: string, fruit: Phaser.GameObjects.GameObject) {
     fruit.destroy();

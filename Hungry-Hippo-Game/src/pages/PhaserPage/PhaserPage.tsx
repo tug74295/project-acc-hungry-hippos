@@ -79,6 +79,24 @@ const PhaserPage: React.FC = () => {
   //   }
   // }, [phaserRef.current?.scene, sendMessage, userId, connectedUsers]);
 
+
+  useEffect(() => {
+  if (lastMessage?.type === 'PLAYER_MOVE_BROADCAST') {
+    const { userId: movingUserId, x, y } = lastMessage.payload;
+
+    // Avoid updating local player
+    if (movingUserId !== userId) {
+      const scene = phaserRef.current?.scene as any;
+      if (scene && typeof scene.updateRemotePlayer === 'function') {
+        scene.updateRemotePlayer(movingUserId, x, y);
+      }
+    }
+
+    if (clearLastMessage) clearLastMessage();
+  }
+}, [lastMessage, userId, clearLastMessage]);
+
+
   // If the server broadcasts a game start message, apply mode settings
   // to the Phaser scene.
   useEffect(() => {
@@ -98,6 +116,7 @@ const PhaserPage: React.FC = () => {
     }
 
   }, [lastMessage, clearLastMessage]);
+
   
     // Listens for broadcasts from the server about food selection
     useEffect(() => {
