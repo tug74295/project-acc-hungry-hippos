@@ -203,6 +203,11 @@ wss.on('connection', (ws) => {
         sessions[sessionId].add(ws);
         console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
 
+        if (!scoresBySession[sessionId]) scoresBySession[sessionId] = {};
+        if (role === 'Hippo Player' && !scoresBySession[sessionId][userId]) {
+          scoresBySession[sessionId][userId] = 0;
+        }
+
         if (IS_PROD) {
           // If in production, insert the player into the database
           try {
@@ -237,6 +242,11 @@ wss.on('connection', (ws) => {
         });
         console.log(`[WSS] Broadcasting USERS_LIST_UPDATE to ${sessionId}:`, usersInSession);
 
+        // Broadcast initial leaderboard with everyone at score 0
+        broadcast(sessionId, {
+          type: 'SCORE_UPDATE_BROADCAST',
+          payload: { scores: scoresBySession[sessionId] }
+        });
 
       }
 
