@@ -236,48 +236,36 @@ export class Game extends Scene {
   }
 }
 
-
   private handleFruitCollision(playerId: string, fruit: Phaser.GameObjects.GameObject) {
+    if (!fruit.active) return;
+    fruit.active = false; // prevent duplicate triggers
     fruit.destroy();
+
     if ('texture' in fruit && fruit instanceof Phaser.GameObjects.Sprite) {
-      const foodId = fruit.texture.key;
+      const sprite = fruit as Phaser.GameObjects.Sprite;
+      const foodId = sprite.texture.key;
+
+      console.log(`[HANDLE COLLISION] Player ${playerId} collided with ${foodId}`);
+
       const isCorrect = foodId === this.currentTargetFoodId;
-    //   if (isCorrect) {
-    //     this.playerScores[playerId] += 1;
-    //   } else {
-    //     this.playerScores[playerId] = Math.max(0, this.playerScores[playerId] - 1);
-    //   }
-      if (isCorrect) {
-        this.playerScores[playerId] += 1;
-      } else if (this.modeSettings.allowPenalty) {
-        this.playerScores[playerId] = Math.max(0, this.playerScores[playerId] - 1);
-     }
-      // this.updateScoreText();
-      EventBus.emit('scoreUpdate', { scores: { ...this.playerScores } });
+    
+      console.log(`[SCORING] IsCorrect: ${isCorrect}, Target: ${this.currentTargetFoodId}`);
 
       if (this.sendMessage && this.localPlayerId) {
-        console.log('[Game.ts] Sending SCORE_UPDATE with scores:', this.playerScores);
-        console.log('[Game.ts] Session ID being sent:', this.sessionId);
-
         this.sendMessage({
-          type: 'SCORE_UPDATE',
+          type: 'FRUIT_EATEN_BY_PLAYER',
           payload: {
             sessionId: this.sessionId,
-            scores: this.playerScores
-          }
+            userId: playerId,
+            isCorrect,
+            allowPenalty: this.modeSettings.allowPenalty
+          },
         });
       }
 
       EventBus.emit('fruit-eaten', { foodId, x: fruit.x, y: fruit.y });
     }
   }
-
-  // private updateScoreText() {
-  //   const lines = Object.entries(this.playerScores)
-  //     .map(([player, score]) => `${player}: ${score}`)
-  //     .join('\n');
-  //   this.scoreText.setText(lines);
-  // }
 
   public setFoodKeys(keys: string[]) {
     this.foodKeys = keys;

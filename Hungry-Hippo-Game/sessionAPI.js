@@ -35,6 +35,8 @@ server.on('upgrade', (request, socket, head) => {
 const sessions = {};
 const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 
+const scoresBySession = {};
+
 const IS_PROD = process.env.NODE_ENV === 'production';
 let pool;
 if (IS_PROD) {
@@ -338,14 +340,22 @@ wss.on('connection', (ws) => {
         });
       }
 
-      // Broadcast updated scores to all clients
-      if (data.type === 'SCORE_UPDATE') {
-        const { sessionId, scores } = data.payload;
-        console.log('[WSS] Received SCORE_UPDATE for session:', sessionId);
-        console.log('[WSS] Scores to broadcast:', scores);
+      // Broadcast updated scores
+      if (data.type === 'FRUIT_EATEN_BY_PLAYER') {
+        const { sessionId, userId, isCorrect, allowPenalty } = data.payload;
+
+        if (!scoresBySession[sessionId]) scoresBySession[sessionId] = {};
+        const prev = scoresBySession[sessionId][userId] || 0;
+
+        if (isCorrect) {
+          scoresBySession[sessionId][userId] = prev + 1;
+        } else if (allowPenalty) {
+          scoresBySession[sessionId][userId] = Math.max(0, prev - 1);
+        }
+
         broadcast(sessionId, {
           type: 'SCORE_UPDATE_BROADCAST',
-          payload: { scores }
+          payload: { scores: scoresBySession[sessionId] }
         });
       }
 
