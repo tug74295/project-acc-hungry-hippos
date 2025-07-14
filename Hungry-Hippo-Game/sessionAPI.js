@@ -250,6 +250,16 @@ wss.on('connection', (ws) => {
         });
       }
 
+      if (data.type === 'SET_EDGE') {
+        const { sessionId, userId, edge } = data.payload;
+        for (const client of sessions[sessionId]) {
+          if (client.userId === userId) {
+            client.edge = edge;
+            console.log(`[WSS] Stored edge "${edge}" for user ${userId}`);
+            break;
+          }
+        }
+      }
 
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
@@ -257,19 +267,59 @@ wss.on('connection', (ws) => {
         if (sessions[sessionId]) {
           console.log(`WSS Food selected in session ${sessionId}:`, food);
 
-          const responses = [{
-            food,
-            angle: Math.random() * Math.PI * 2
-          }];
-          console.log(`WSS Launching ${responses.length} ${food.id}(s) in session ${sessionId}`);
+          // Gets 2 decoys
+          const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
+          const decoys = allFoods.filter(f => f.id !== food.id);
+          const shuffled = decoys.sort(() => 0.5 - Math.random()).slice(0, 2);
+          const fruitsToSend = [food, ...shuffled];
 
-          // Sends all as an array in one broadcast
+          // Gets all active Hippo Players
+          const hippoClients = [...sessions[sessionId]].filter(
+            client =>
+              client.readyState === WebSocket.OPEN &&
+              client.role === 'Hippo Player'
+          );
+
+          const launches = [];
+
+          hippoClients.forEach((client) => {
+            const edge = client.edge || 'bottom'; // fallback
+            const angleRange = getAngleRangeForEdge(edge);
+
+            fruitsToSend.forEach((f) => {
+              const randomAngle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
+              launches.push({
+                foodId: f.id,
+                angle: randomAngle,
+              });
+            });
+          });
+
+          // Broadcasts synced launches
           broadcast(sessionId, {
             type: 'FOOD_SELECTED_BROADCAST',
-            payload: { foods: responses }
+            payload: {
+              launches,
+              targetFoodId: food.id,
+              targetFoodData: food
+            }
           });
+
+          console.log(`[WSS] Launching ${launches.length} fruits (${fruitsToSend.length} per hippo) to ${hippoClients.length} hippos`);
         }
       }
+
+      // Defines angle ranges in radians
+      function getAngleRangeForEdge(edge) {
+        switch (edge) {
+          case 'top': return { min: -Math.PI * 3/4, max: -Math.PI / 4 };   // upward cone
+          case 'bottom': return { min: Math.PI / 4, max: Math.PI * 3/4 };  // downward cone
+          case 'left': return { min: Math.PI * 5/8, max: Math.PI * 11/8 }; // leftward cone
+          case 'right': return { min: -Math.PI / 8, max: Math.PI / 8 };    // rightward cone
+          default: return { min: 0, max: 2 * Math.PI }; // fallback (full circle)
+        }
+      }
+
       // Notify all players in the session to remove the fruit
       if (data.type === 'FRUIT_EATEN') {
         const { sessionId, foodId, x, y } = data.payload;
