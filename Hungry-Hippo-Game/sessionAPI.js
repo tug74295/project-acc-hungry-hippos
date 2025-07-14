@@ -331,15 +331,6 @@ wss.on('connection', (ws) => {
         });
       }
 
-            // Notify all players in the session to remove the fruit
-      if (data.type === 'FRUIT_EATEN') {
-        const { sessionId, foodId, x, y } = data.payload;
-        broadcast(sessionId, {
-          type: 'FRUIT_EATEN_BROADCAST',
-          payload: { foodId, x, y }
-        });
-      }
-
       // Broadcast updated scores
       if (data.type === 'FRUIT_EATEN_BY_PLAYER') {
         const { sessionId, userId, isCorrect, allowPenalty } = data.payload;
