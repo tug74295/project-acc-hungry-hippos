@@ -285,6 +285,9 @@ wss.on('connection', (ws) => {
           const shuffled = decoys.sort(() => 0.5 - Math.random()).slice(0, 2);
           const fruitsToSend = [food, ...shuffled];
 
+          // Creates a new randomized copy of the set for each hippo
+          const randomizedFruits = [...fruitsToSend].sort(() => 0.5 - Math.random());
+
           // Gets all active Hippo Players
           const hippoClients = [...sessions[sessionId]].filter(
             client =>
@@ -298,7 +301,9 @@ wss.on('connection', (ws) => {
             const edge = client.edge || 'bottom'; // fallback
             const angleRange = getAngleRangeForEdge(edge);
 
-            fruitsToSend.forEach((f) => {
+            const randomizedFruits = [food, ...shuffled].sort(() => 0.5 - Math.random());
+
+            randomizedFruits.forEach((f) => {
               const randomAngle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
               launches.push({
                 foodId: f.id,
