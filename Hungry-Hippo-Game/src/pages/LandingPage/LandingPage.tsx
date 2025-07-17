@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import styles from './LandingPage.module.css';
-import ButtonClick from '../../components/ButtonClick/ButtonClick';
 import { useRef, useState, useEffect } from 'react';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 
