@@ -218,7 +218,9 @@ function LandingPage() {
       >
         No code? Create new game!
       </p>
-      <ButtonClick text="Join Game" onClick={handleStart} />
+      <button className={styles.joinButton} onClick={handleStart}>
+        Join Game
+      </button>
     </div>
   );
 }
