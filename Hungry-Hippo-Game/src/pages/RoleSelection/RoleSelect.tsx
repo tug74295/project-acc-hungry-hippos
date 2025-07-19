@@ -3,6 +3,7 @@ import styles from './RoleSelect.module.css';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ButtonClick from '../../components/ButtonClick/ButtonClick';
 import { useWebSocket } from '../../contexts/WebSocketContext';
+import { HIPPO_COLORS } from '../../config/hippoColors';  
 
 /**
  * RoleSelect - React component for selecting a player's role in the game.
@@ -61,6 +62,7 @@ function RoleSelect() {
   };
 
   const [role, setRole] = useState<string>(''); 
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [error, setError] = useState<boolean>(false);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
@@ -73,10 +75,6 @@ function RoleSelect() {
   const aacUsersCount = connectedUsers.filter(user => user.role === 'AAC User').length;
   const isHippoRoleFull = hippoPlayersCount >= HIPPO_PLAYER_LIMIT;
   const isAacRoleFull = aacUsersCount >= AAC_USER_LIMIT;
-  console.log('aacUsersCount:', aacUsersCount);
-  console.log('hippoPlayersCount:', hippoPlayersCount);
-
-
 
   // Navigate to the next page depending on the selected role.
   // and pass ALL player info in the state for the next page to use.
@@ -92,15 +90,14 @@ function RoleSelect() {
         });
       } else if (role === 'Hippo Player') {
         navigate(`/hippo/${sessionId}/${username}/${role}`, {
-          state: { userId: username, role },
+          state: { userId: username, role, color: selectedColor },
         });
       }
     }
-  }, [gameStarted, waiting, role, sessionId, username, navigate]);
+  }, [gameStarted, waiting, role, selectedColor, sessionId, username, navigate]);
 
   useEffect(() => {
     if (sessionId && username && isConnected) {
-      console.log(`[RoleSelect] Sending PLAYER_JOIN message for session ${sessionId} with user ${username}`);
       sendMessage({
         type: 'PLAYER_JOIN',
         payload: {
@@ -126,7 +123,7 @@ function RoleSelect() {
  * @returns {Promise<void>} Resolves after role is updated and user is navigated to next page.
  */
     const handleStart = () => {
-    if (!role) {
+    if (!role && !selectedColor) {
         setError(true);
         return;
     }
@@ -135,9 +132,10 @@ function RoleSelect() {
     sendMessage({
         type: 'PLAYER_JOIN',
         payload: {
-        sessionId,
-        userId: username,
-        role,
+          sessionId,
+          userId: username,
+          role,
+          color: selectedColor,
         },
     });
 
@@ -153,12 +151,15 @@ function RoleSelect() {
    */
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setRole(e.target.value);
+    setSelectedColor(null);
     if (error) setError(false);
   };
 
   const handleCancel = () => {
     navigate('/');
   };
+
+  const isNextDisabled = !role || (role === 'Hippo Player' && !selectedColor)
 
   return (
     <div className={styles.containerImg}>
@@ -175,7 +176,7 @@ function RoleSelect() {
           <h2 className={styles.sessionText2}>Waiting for game to start...</h2>
         ) : (
           <>
-            <h2 className={styles.sessionText2}>You are: {username || '_____'} </h2>
+            {/* Role Selection Header */}
             <div className={styles.roleSelectGroup}>
               <select
                 id="role-select"
@@ -192,6 +193,24 @@ function RoleSelect() {
                 </option>
               </select>
             </div>
+
+            {/* Color Selection for Hippo Player */}
+            {role === 'Hippo Player' && (
+              <div className={styles.colorSelectionContainer}>
+                  <h3 className={styles.selectColorTitle}>Choose your Hippo</h3>
+                  <div className={styles.hippoGrid}>
+                      {HIPPO_COLORS.map((hippo) => (
+                          <button
+                              key={hippo.color}
+                              className={`${styles.colorButton} ${selectedColor === hippo.color ? styles.selected : ''}`}
+                              onClick={() => setSelectedColor(hippo.color)}
+                          >
+                              <img src={hippo.imgSrc} alt={hippo.color} className={styles.hippoImage} />
+                          </button>
+                      ))}
+                  </div>
+              </div>
+            )}
             <ButtonClick text="Next" onClick={handleStart} />
           </>
         )}
