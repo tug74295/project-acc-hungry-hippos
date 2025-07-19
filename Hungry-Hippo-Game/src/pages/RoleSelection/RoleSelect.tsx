@@ -118,6 +118,13 @@ function RoleSelect() {
       clearLastMessage?.();
     }
   }, [lastMessage, clearLastMessage]);
+
+  // Reset role if AAC User is selected and the role is full
+  useEffect(() => {
+    if (role === 'AAC User' && isAacRoleFull) {
+        setRole('');
+    }
+  }, [connectedUsers, role, isAacRoleFull]);
   /**
    * Handles the logic for starting the game after a role is selected.
    *
@@ -222,7 +229,7 @@ function RoleSelect() {
                           <button
                               key={hippo.color}
                               className={`${styles.colorButton} ${selectedColor === hippo.color ? styles.selected : ''}`}
-                              disabled={takenColors.includes(hippo.color)}
+                              disabled={takenColors.includes(hippo.color) && hippo.color !== selectedColor}
                               onClick={() => handleColorSelect(hippo.color)}
                           >
                               <img src={hippo.imgSrc} alt={hippo.color} className={styles.hippoImage} />

@@ -126,6 +126,13 @@
   background-color: #6ee993;
 }
 
+.colorButton:disabled {
+  opacity: 0.4; /* Make the button semi-transparent */
+  filter: grayscale(80%); /* Turn the image mostly gray */
+  cursor: not-allowed; /* Show a "not allowed" cursor on hover */
+  transform: none; /* Prevent any hover effects like scaling */
+}
+
 .hippoImage {
   width: 100%;
   height: 100%;
