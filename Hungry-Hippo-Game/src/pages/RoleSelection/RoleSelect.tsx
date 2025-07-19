@@ -208,7 +208,7 @@ function RoleSelect() {
                 onClick={() => handleRoleSelect('Hippo Player')}
                 disabled={isHippoRoleFull}
               >
-                <img src="/assets/hippos/brownHippo.png" alt="Hippo Player" className={styles.roleIcon} />
+                <img src="/assets/hippos/outlineHippo.png" alt="Hippo Player" className={styles.roleIcon} />
                 <span>Hippo Player {isHippoRoleFull ? '(Full)' : ''}</span>
               </button>
 
