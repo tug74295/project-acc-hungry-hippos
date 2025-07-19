@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import styles from './RoleSelect.module.css';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import ButtonClick from '../../components/ButtonClick/ButtonClick';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import { HIPPO_COLORS } from '../../config/hippoColors';  
 
