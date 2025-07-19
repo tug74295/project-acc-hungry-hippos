@@ -159,17 +159,9 @@ function RoleSelect() {
     setWaiting(true);
   };
 
-
-  /**
-   * Updates the role state as the user selects an option from the dropdown.
-   * Clears error if previously triggered.
-   *
-   * @param e - The change event triggered by selecting a dropdown option.
-   */
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRole(e.target.value);
+  const handleRoleSelect = (selectedRole: string) => {
+    setRole(selectedRole);
     setSelectedColor(null);
-    if (error) setError(false);
   };
 
   const handleCancel = () => {
@@ -203,21 +195,27 @@ function RoleSelect() {
         ) : (
           <>
             {/* Role Selection Header */}
-            <div className={styles.roleSelectGroup}>
-              <select
-                id="role-select"
-                value={role}
-                onChange={handleRoleChange}
-                className={`${styles.roleDropdown} ${error ? styles.errorBorder : ''}`}
+            <h3 className={styles.selectRoleTitle}>Select Your Role</h3>
+            <div className={styles.roleChoiceContainer}>
+              {/* Hippo Player Choice Button */}
+              <button 
+                className={`${styles.roleChoiceButton} ${role === 'Hippo Player' ? styles.selected : ''}`}
+                onClick={() => handleRoleSelect('Hippo Player')}
+                disabled={isHippoRoleFull}
               >
-                <option value="" disabled>Select a role</option>
-                <option value="Hippo Player" disabled={isHippoRoleFull}>
-                  Hippo Player {isHippoRoleFull ? '(Full)' : ''}
-                </option>
-                <option value="AAC User" disabled={isAacRoleFull}>
-                  AAC User {isAacRoleFull ? '(Full)' : ''}
-                </option>
-              </select>
+                <img src="/assets/hippos/brownHippo.png" alt="Hippo Player" className={styles.roleIcon} />
+                <span>Hippo Player {isHippoRoleFull ? '(Full)' : ''}</span>
+              </button>
+
+              {/* AAC User Choice Button */}
+              <button 
+                className={`${styles.roleChoiceButton} ${role === 'AAC User' ? styles.selected : ''}`}
+                onClick={() => handleRoleSelect('AAC User')}
+                disabled={isAacRoleFull}
+              >
+                <img src="/assets/aacDevice.png" alt="AAC User" className={styles.roleIcon} />
+                <span>AAC User {isAacRoleFull ? '(Full)' : ''}</span>
+              </button>
             </div>
 
             {/* Color Selection for Hippo Player */}

@@ -127,10 +127,10 @@
 }
 
 .colorButton:disabled {
-  opacity: 0.4; /* Make the button semi-transparent */
-  filter: grayscale(80%); /* Turn the image mostly gray */
-  cursor: not-allowed; /* Show a "not allowed" cursor on hover */
-  transform: none; /* Prevent any hover effects like scaling */
+  opacity: 0.4;
+  filter: grayscale(80%);
+  cursor: not-allowed;
+  transform: none;
 }
 
 .hippoImage {
@@ -175,22 +175,6 @@
 .roleDropdown:focus {
   box-shadow: 0 0 12px #d67600;
   outline: none;
-}
-
-/* ---------------- Custom Arrow ---------------- */
-.roleSelectGroup::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 1rem;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 10px solid #f44336;
-  transform: translateY(-50%);
-  box-sizing: content-box;
 }
 
 /* ---------------- Start Button ---------------- */
