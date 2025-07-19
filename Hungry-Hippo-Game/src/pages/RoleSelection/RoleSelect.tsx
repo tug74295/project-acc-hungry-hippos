@@ -66,7 +66,10 @@ function RoleSelect() {
   const [error, setError] = useState<boolean>(false);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
-  const { connectedUsers, gameStarted, sendMessage, isConnected } = useWebSocket();
+  const { connectedUsers, gameStarted, sendMessage, isConnected, lastMessage, clearLastMessage } = useWebSocket();
+
+  // State to track colors already taken by connected users
+  const [takenColors, setTakenColors] = useState<string[]>([]);
 
   // Count connected users by role
   const HIPPO_PLAYER_LIMIT = 4;
@@ -108,21 +111,29 @@ function RoleSelect() {
       });
     }
   }, [sessionId, username, isConnected, sendMessage]);
-/**
- * Handles the logic for starting the game after a role is selected.
- *
- * <p>This function validates that a role has been selected. It then sends a POST request
- * to the server to update the user's role for the current session. Upon a successful
- * update, the user is navigated to the appropriate game page based on their role.
- *
- * <p>If no role is selected, an error state is triggered and the function exits early.
- * If the server fails to update the role, an alert is shown to the user.
- *
- * @async
- * @function handleStart
- * @returns {Promise<void>} Resolves after role is updated and user is navigated to next page.
- */
-    const handleStart = () => {
+
+  // Listen for updates on which colors are taken by other players
+  useEffect(() => {
+    if (lastMessage?.type === 'COLOR_UPDATE') {
+      setTakenColors(lastMessage.payload.takenColors);
+      clearLastMessage?.();
+    }
+  }, [lastMessage, clearLastMessage]);
+  /**
+   * Handles the logic for starting the game after a role is selected.
+   *
+   * <p>This function validates that a role has been selected. It then sends a POST request
+   * to the server to update the user's role for the current session. Upon a successful
+   * update, the user is navigated to the appropriate game page based on their role.
+   *
+   * <p>If no role is selected, an error state is triggered and the function exits early.
+   * If the server fails to update the role, an alert is shown to the user.
+   *
+   * @async
+   * @function handleStart
+   * @returns {Promise<void>} Resolves after role is updated and user is navigated to next page.
+   */
+  const handleStart = () => {
     if (!role && !selectedColor) {
         setError(true);
         return;
@@ -140,7 +151,7 @@ function RoleSelect() {
     });
 
     setWaiting(true);
-    };
+  };
 
 
   /**
@@ -157,6 +168,15 @@ function RoleSelect() {
 
   const handleCancel = () => {
     navigate('/');
+  };
+
+  // Handle color selection for Hippo Player
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    sendMessage({
+        type: 'SELECT_COLOR',
+        payload: { sessionId, userId: username, color }
+    });
   };
 
   const isNextDisabled = !role || (role === 'Hippo Player' && !selectedColor)
@@ -203,7 +223,8 @@ function RoleSelect() {
                           <button
                               key={hippo.color}
                               className={`${styles.colorButton} ${selectedColor === hippo.color ? styles.selected : ''}`}
-                              onClick={() => setSelectedColor(hippo.color)}
+                              disabled={takenColors.includes(hippo.color)}
+                              onClick={() => handleColorSelect(hippo.color)}
                           >
                               <img src={hippo.imgSrc} alt={hippo.color} className={styles.hippoImage} />
                           </button>
