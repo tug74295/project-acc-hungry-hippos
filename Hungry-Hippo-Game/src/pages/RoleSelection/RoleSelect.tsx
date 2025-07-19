@@ -211,7 +211,9 @@ function RoleSelect() {
                   </div>
               </div>
             )}
-            <ButtonClick text="Next" onClick={handleStart} />
+            <button className={styles.nextButton} onClick={handleStart} disabled={isNextDisabled}>
+              Next
+            </button>
           </>
         )}
       </div>
