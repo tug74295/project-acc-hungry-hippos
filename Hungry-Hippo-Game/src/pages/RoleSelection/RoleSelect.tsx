@@ -62,7 +62,6 @@ function RoleSelect() {
 
   const [role, setRole] = useState<string>(''); 
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  const [error, setError] = useState<boolean>(false);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
   const { connectedUsers, gameStarted, sendMessage, isConnected, lastMessage, clearLastMessage } = useWebSocket();
@@ -141,10 +140,8 @@ function RoleSelect() {
    */
   const handleStart = () => {
     if (!role && !selectedColor) {
-        setError(true);
         return;
     }
-    setError(false);
 
     sendMessage({
         type: 'PLAYER_JOIN',
@@ -159,6 +156,7 @@ function RoleSelect() {
     setWaiting(true);
   };
 
+  // Handle role selection
   const handleRoleSelect = (selectedRole: string) => {
     setRole(selectedRole);
     setSelectedColor(null);
