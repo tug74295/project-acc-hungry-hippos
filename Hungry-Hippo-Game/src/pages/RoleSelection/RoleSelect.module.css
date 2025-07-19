@@ -65,18 +65,63 @@
   transform: scale(1.1);
 }
 
-/* ---------------- Username Text ---------------- */
-.sessionText,
-.sessionText2 {
-  color: black;
-  margin-bottom: 1rem;
-  text-align: center;
+
+/* ---------------- Role Selection ---------------- */
+
+.selectRoleTitle {
+    color: black;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 500;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    text-align: center;
 }
 
-.sessionText2 {
-  font-weight: 700;
-  width: 100%;
-  max-width: 320px;
+.roleChoiceContainer {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    max-width: 500px;
+    justify-content: center;
+}
+
+.roleChoiceButton {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 3px solid transparent;
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.roleChoiceButton:hover {
+    transform: translateY(-3px);
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.roleChoiceButton.selected {
+  border-color: #6ee993;
+  background-color: #6ee993;
+}
+
+.roleChoiceButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(80%);
+}
+
+.roleIcon {
+    height: 90px;
+    width: auto;
+    object-fit: contain;
 }
 
 /* ---------------- Hippo Color Selection ---------------- */
@@ -139,65 +184,7 @@
   object-fit: contain;
 }
 
-/* ---------------- Role Selection ---------------- */
-
-.selectRoleTitle {
-    color: black;
-    font-family: 'Fredoka', sans-serif;
-    font-weight: 500;
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-    text-align: center;
-}
-
-.roleChoiceContainer {
-    display: flex;
-    gap: 1rem;
-    width: 100%;
-    max-width: 500px;
-    justify-content: center;
-}
-
-.roleChoiceButton {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    border: 3px solid transparent;
-    border-radius: 12px;
-    background-color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: 'Fredoka', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
-}
-
-.roleChoiceButton:hover {
-    transform: translateY(-3px);
-    background-color: rgba(255, 255, 255, 0.8);
-}
-
-.roleChoiceButton.selected {
-  border-color: #6ee993;
-  background-color: #6ee993;
-}
-
-.roleChoiceButton:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    filter: grayscale(80%);
-}
-
-.roleIcon {
-    height: 90px;
-    width: auto;
-    object-fit: contain;
-}
-
-/* ---------------- Start Button ---------------- */
+/* ---------------- Next Button ---------------- */
 .nextButton {
   background-color: rgba(255, 255, 255, 0.8);
   color: black;
@@ -209,11 +196,11 @@
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 0.5rem;
-  width: 6rem;
-  height: 2rem;
+  width: 7rem;
+  height: 2.5rem;
 }
 
-.nextButton:hover:not(:disabled) {
+.nextButton:hover {
   transform: translateY(-3px);
 }
 
@@ -225,24 +212,24 @@
   box-shadow: none;
 }
 
+/* ---------------- Waiting For Game ---------------- */
+.waitingText {
+  color: black;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 550;
+  width: 100%;
+  max-width: 320px;
+  font-family: 'Fredoka', sans-serif;
+}
+
+
 @media (max-width: 500px) {
   .roleContainer {
     width: 100%;
     padding: 1.2rem;
     border-radius: 1.2rem;
-  }
-
-  .sessionText,
-  .sessionText2 {
-    font-size: 1.4rem;
-  }
-
-  .roleDropdown {
-    font-size: 1.5rem;
-  }
-
-  .roleSelectGroup {
-    max-width: 100%;
   }
 }
 

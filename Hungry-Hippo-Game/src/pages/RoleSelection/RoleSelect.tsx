@@ -196,7 +196,7 @@ function RoleSelect() {
         </button>
 
         {waiting ? (
-          <h2 className={styles.sessionText2}>Waiting for game to start...</h2>
+          <h2 className={styles.waitingText}>Waiting for game to start...</h2>
         ) : (
           <>
             {/* Role Selection Header */}
