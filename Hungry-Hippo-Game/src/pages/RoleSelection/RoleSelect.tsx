@@ -158,6 +158,13 @@ function RoleSelect() {
 
   // Handle role selection
   const handleRoleSelect = (selectedRole: string) => {
+    // If switching from Hippo Player to AAC User, release the color
+    if (role === 'Hippo Player' && selectedColor) {
+      sendMessage({
+        type: 'SELECT_COLOR',
+        payload: { sessionId, userId: username, color: null }
+      });
+    }
     setRole(selectedRole);
     setSelectedColor(null);
   };
