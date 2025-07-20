@@ -24,13 +24,30 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
 
   useEffect(() => {
     if (sessionId && userId && role && sendMessage) {
-      console.log('AAC Client sending PLAYER_JOIN');
       sendMessage({
         type: 'PLAYER_JOIN',
         payload: { sessionId, userId, role }
       });
     }
   }, [sessionId, userId, role, sendMessage]);
+
+  /**
+   * Plays the audio for the selected item.
+   * @param {string | undefined} audioPath - The path to the audio file.
+   * @returns {void}
+   */
+  const playAudio = (audioPath: string | undefined) => {
+    if (audioPath) {
+      const audio = new Audio(audioPath);
+      setIsAudioPlaying(true);
+      audio.onended = () => setIsAudioPlaying(false);
+      audio.onerror = () => {
+        console.error(`Error playing audio for ${selectedFood?.name}`);
+        setIsAudioPlaying(false);
+      };
+      audio.play()
+    }
+  };
 
   /**
    * Handles the click event for a food item.
@@ -49,23 +66,6 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
           sessionId, userId, role, food
         }
       });
-    }
-    console.log("Sending AAC_FOOD_SELECTED", {
-  sessionId,
-  userId,
-  role,
-  food
-});
-
-    if (food.audioPath) {
-      const audio = new Audio(food.audioPath);
-      setIsAudioPlaying(true);
-      audio.onended = () => setIsAudioPlaying(false);
-      audio.onerror = () => {
-        console.error(`Error playing audio for ${food.name}`);
-        setIsAudioPlaying(false);
-      };
-      audio.play()
     }
   };
 
