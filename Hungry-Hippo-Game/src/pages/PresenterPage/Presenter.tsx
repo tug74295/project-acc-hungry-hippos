@@ -17,6 +17,12 @@ import { HIPPO_COLORS } from '../../config/hippoColors';
 
 const presenterBg = '/assets/presenterBg.png';
 
+const modeDetails = {
+  Easy: { label: 'Easy', iconPath: '/assets/fruits/strawberry.png', count: 1 },
+  Medium: { label: 'Medium', iconPath: '/assets/fruits/strawberry.png', count: 2 },
+  Hard: { label: 'Hard', iconPath: '/assets/fruits/strawberry.png', count: 3 },
+};
+
 function Presenter() {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -213,7 +219,19 @@ function Presenter() {
                       fontFamily: 'Fredoka, sans-serif',
                 }}
               >
-                {mode}
+                <div className={styles.flexRowWrapper}>
+                  <span className={styles.modeLabel}>{modeDetails[mode].label}</span>
+                  <div className={styles.modeIconContainer}>
+                    {Array.from({ length: modeDetails[mode].count }).map((_, i) => (
+                      <img 
+                        key={i}
+                        src={modeDetails[mode].iconPath}
+                        alt={mode}
+                        className={styles.modeIcon}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <button
