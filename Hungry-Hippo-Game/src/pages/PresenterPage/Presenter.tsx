@@ -204,12 +204,13 @@ function Presenter() {
               <div
                 className={styles.modeDisplay}
                 style={{
+                  color: 'black',
                   backgroundColor:
-                    mode === 'Easy'
-                      ? '#4CAF50'   // green
-                      : mode === 'Medium'
-                      ? '#FB8C00'   // yellow
-                      : '#F44336',  // red
+                    mode === 'Easy' ? '#4CAF50'
+                      : mode === 'Medium' ? '#e2d733ff'
+                      : '#fe1c1cff',
+                      fontWeight: '550',
+                      fontFamily: 'Fredoka, sans-serif',
                 }}
               >
                 {mode}
