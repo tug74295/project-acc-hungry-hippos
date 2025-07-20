@@ -9,8 +9,8 @@ export interface ModeSettings {
  * Maps each `GameMode` to its corresponding game settings.
  * 
  * - `Easy`: fruitSpeed = 100, no penalty.
- * - `Medium`: fruitSpeed = 150, penalty applied.
- * - `Hard`: fruitSpeed = 300, penalty applied.
+ * - `Medium`: fruitSpeed = 125, penalty applied.
+ * - `Hard`: fruitSpeed = 150, penalty applied.
  * 
  * Can be used to dynamically configure game behavior based on user-selected mode.
  */
