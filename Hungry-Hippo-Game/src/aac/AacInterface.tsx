@@ -67,6 +67,28 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         }
       });
     }
+    playAudio(food.audioPath);
+  };
+
+  /**
+   * Handles the click event for a category.
+   * @param {typeof AAC_DATA.categories[0]} category - The category that was clicked.
+   * @precondition The category must be part of the AAC_DATA.
+   * @postcondition The selected category is set, and the audio for the category is played if available.
+   * @returns {void}
+   */
+  const handleCategoryClick = (category: typeof AAC_DATA.categories[0]) => {
+    setSelectedCategory(category.categoryName);
+    playAudio(category.categoryAudioPath);
+  };
+
+  /**
+   * Handles the click event for the back button.
+   * @returns {void}
+   */
+  const handleBackClick = () => {
+    setSelectedCategory(null);
+    playAudio("/audio/back.mp3");
   };
 
   /**
@@ -79,7 +101,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         {AAC_DATA.categories.map((category) => (
           <button
             key={category.categoryName}
-            onClick={() => setSelectedCategory(category.categoryName)}
+            onClick={() => handleCategoryClick(category)}
             disabled={isAudioPlaying}
             className={"aac-food-button aac-category-button"}
           >
@@ -106,7 +128,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
       <div className="aac-grid aac-grid-foods">
         {/* Back Button */}
         <button
-          onClick={() => setSelectedCategory(null)}
+          onClick={() => handleBackClick()}
           disabled={isAudioPlaying}
           className="aac-food-button aac-back-button"
         >

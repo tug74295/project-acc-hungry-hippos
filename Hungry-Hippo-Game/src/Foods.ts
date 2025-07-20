@@ -17,6 +17,7 @@ export interface AacCategory {
     categoryName: string;
     categoryIcon: string;
     foods: AacFood[];
+    categoryAudioPath?: string;
 }
 
 /**
