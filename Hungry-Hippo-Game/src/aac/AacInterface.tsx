@@ -36,7 +36,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
    * @param {string | undefined} audioPath - The path to the audio file.
    * @returns {void}
    */
-  const playAudio = (audioPath: string | undefined) => {
+  const playAudioWithDelay = (audioPath: string | undefined) => {
     if (audioPath) {
       const audio = new Audio(audioPath);
       setIsAudioPlaying(true);
@@ -46,6 +46,16 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         setIsAudioPlaying(false);
       };
       audio.play()
+    }
+  };
+
+  const playNavigationAudio = (audioPath: string | undefined) => {
+    if (audioPath) {
+      const audio = new Audio(audioPath);
+      audio.onerror = () => {
+        console.error(`Error playing navigation audio for ${selectedCategory}`);
+      };
+      audio.play();
     }
   };
 
@@ -67,7 +77,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         }
       });
     }
-    playAudio(food.audioPath);
+    playAudioWithDelay(food.audioPath);
   };
 
   /**
@@ -79,7 +89,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
    */
   const handleCategoryClick = (category: typeof AAC_DATA.categories[0]) => {
     setSelectedCategory(category.categoryName);
-    playAudio(category.categoryAudioPath);
+    playNavigationAudio(category.categoryAudioPath);
   };
 
   /**
@@ -88,7 +98,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
    */
   const handleBackClick = () => {
     setSelectedCategory(null);
-    playAudio("/audio/back.mp3");
+    playNavigationAudio("/audio/back.mp3");
   };
 
   /**
