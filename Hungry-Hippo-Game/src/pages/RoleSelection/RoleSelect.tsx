@@ -64,7 +64,7 @@ function RoleSelect() {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
-  const { connectedUsers, gameStarted, sendMessage, isConnected, lastMessage, clearLastMessage } = useWebSocket();
+  const { connectedUsers, gameStarted, sendMessage, isConnected } = useWebSocket();
 
   // State to track colors already taken by connected users
   const [takenColors, setTakenColors] = useState<string[]>([]);

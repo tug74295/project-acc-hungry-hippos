@@ -4,7 +4,6 @@ import { useWebSocket } from '../../contexts/WebSocketContext';
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { HIPPO_COLORS } from '../../config/hippoColors';  
-import { render } from '@testing-library/react';
 
 /**
  * Presenter - React component that displays the session ID to the host after creating a new game.
@@ -117,7 +116,7 @@ function Presenter() {
             />
           )}
         </div>
-        <span className={styles.userId}>{isActive ? player!.userId : ''}</span>
+        <span className={styles.userId}>{isActive ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : ''}</span>
       </div>
     );
   }
