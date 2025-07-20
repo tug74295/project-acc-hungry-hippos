@@ -112,11 +112,12 @@ function RoleSelect() {
 
   // Listen for updates on which colors are taken by other players
   useEffect(() => {
-    if (lastMessage?.type === 'COLOR_UPDATE') {
-      setTakenColors(lastMessage.payload.takenColors);
-      clearLastMessage?.();
-    }
-  }, [lastMessage, clearLastMessage]);
+    const colors = connectedUsers
+      .filter(user => user.role === 'Hippo Player' && user.color)
+      .map(user => user.color)
+      .filter((color): color is string => typeof color === 'string');
+    setTakenColors(colors);
+  }, [connectedUsers]);
 
   // Reset role if AAC User is selected and the role is full
   useEffect(() => {
