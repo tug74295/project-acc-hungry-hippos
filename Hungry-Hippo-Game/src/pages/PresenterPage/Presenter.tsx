@@ -122,7 +122,7 @@ function Presenter() {
             />
           )}
         </div>
-        <span className={styles.userId}>{isActive ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : ''}</span>
+        <span className={styles.userId}>{isActive && player.color ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : ''}</span>
       </div>
     );
   }
