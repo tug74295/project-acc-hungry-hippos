@@ -192,11 +192,10 @@ wss.on('connection', (ws) => {
         
       // When a player joins, store their WebSocket connection in the correct session room
       if (data.type === 'PLAYER_JOIN') {
-        const { sessionId, userId, role, color } = data.payload;
+        const { sessionId, userId, role } = data.payload;
         ws.sessionId = sessionId;
         ws.userId = userId;
         ws.role = role;
-        ws.color = color;
 
         if (!sessions[sessionId]) {
           sessions[sessionId] = new Set(); 
@@ -223,7 +222,7 @@ wss.on('connection', (ws) => {
         broadcast(sessionId, { 
           type: 'PLAYER_JOINED_BROADCAST', 
           payload: { 
-            userId, role, color
+            userId, role 
           } 
         });
         // Collect all users in the session
@@ -231,8 +230,7 @@ wss.on('connection', (ws) => {
           .filter(client => client.readyState === WebSocket.OPEN)
           .map(client => ({
             userId: client.userId,
-            role: client.role,
-            color: client.color
+            role: client.role
           }));
 
         // Send full user list
@@ -262,6 +260,25 @@ wss.on('connection', (ws) => {
           type: 'START_GAME_BROADCAST',
           payload: { sessionId, mode }, 
         });
+      }
+      if (data.type === 'START_TIMER') {
+        const { sessionId } = data.payload;
+        console.log(`[WSS] Starting timer for session ${sessionId}`);
+
+        let secondsLeft = 60;
+        const interval = setInterval(() => {
+          if(secondsLeft <= 0) {
+            console.log(`[WSS] Timer ended for session ${sessionId}`);
+            broadcast(sessionId, { type: 'TIMER_UPDATE', secondsLeft: 0 });
+            broadcast(sessionId, { type: 'GAME_OVER' });
+            clearInterval(interval);
+          }
+          else
+          {
+            broadcast(sessionId, { type: 'TIMER_UPDATE', secondsLeft });
+            secondsLeft--;
+          }
+        }, 1000);
       }
 
       if (data.type === 'SET_EDGE') {
