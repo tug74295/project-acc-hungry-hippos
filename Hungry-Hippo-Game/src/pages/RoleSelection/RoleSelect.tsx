@@ -64,7 +64,7 @@ function RoleSelect() {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
-  const { connectedUsers, gameStarted, sendMessage, isConnected, lastMessage, clearLastMessage } = useWebSocket();
+  const { connectedUsers, gameStarted, sendMessage, isConnected } = useWebSocket();
 
   // State to track colors already taken by connected users
   const [takenColors, setTakenColors] = useState<string[]>([]);
@@ -112,15 +112,16 @@ function RoleSelect() {
 
   // Listen for updates on which colors are taken by other players
   useEffect(() => {
-    if (lastMessage?.type === 'COLOR_UPDATE') {
-      setTakenColors(lastMessage.payload.takenColors);
-      clearLastMessage?.();
-    }
-  }, [lastMessage, clearLastMessage]);
+    const colors = connectedUsers
+      .filter(user => user.role === 'Hippo Player' && user.color)
+      .map(user => user.color)
+      .filter((color): color is string => typeof color === 'string');
+    setTakenColors(colors);
+  }, [connectedUsers]);
 
   // Reset role if AAC User is selected and the role is full
   useEffect(() => {
-    if (role === 'AAC User' && isAacRoleFull) {
+    if (!waiting && role === 'AAC User' && isAacRoleFull) {
         setRole('');
     }
   }, [connectedUsers, role, isAacRoleFull]);

@@ -7,7 +7,7 @@ interface IWebSocketContext {
   lastMessage: any;
   sendMessage: (message: object) => void;
   clearLastMessage?: () => void;
-  connectedUsers: { userId: string; role: string }[];
+  connectedUsers: { userId: string; role: string; color?: string }[];
   gameStarted: boolean;
 }
 
@@ -16,7 +16,7 @@ const WebSocketContext = createContext<IWebSocketContext | null>(null);
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<any>(null);
-  const [connectedUsers, setConnectedUsers] = useState<{ userId: string; role: string }[]>([]);
+  const [connectedUsers, setConnectedUsers] = useState<{ userId: string; role: string; color?: string }[]>([]);
   const ws = useRef<WebSocket | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
 

@@ -3,6 +3,7 @@
         {
             "categoryName": "Fruits",
             "categoryIcon": "/assets/categories/fruits.png",
+            "categoryAudioPath": "/audio/fruits/fruits.mp3",
             "foods": [
                 {
                     "id": "apple",
@@ -117,6 +118,7 @@
         {
             "categoryName": "Vegetables",
             "categoryIcon": "/assets/categories/vegetables.png",
+            "categoryAudioPath": "/audio/vegetables/vegetables.mp3",
             "foods": [
                 {
                     "id": "avocado",
@@ -231,6 +233,7 @@
         {
             "categoryName": "Fast Foods",
             "categoryIcon": "/assets/categories/fastfoods.png",
+            "categoryAudioPath": "/audio/fast-foods/fast_foods.mp3",
             "foods": [
                 {
                     "id": "bacon",

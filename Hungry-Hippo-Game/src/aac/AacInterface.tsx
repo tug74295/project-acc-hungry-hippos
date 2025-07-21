@@ -24,13 +24,40 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
 
   useEffect(() => {
     if (sessionId && userId && role && sendMessage) {
-      console.log('AAC Client sending PLAYER_JOIN');
       sendMessage({
         type: 'PLAYER_JOIN',
         payload: { sessionId, userId, role }
       });
     }
   }, [sessionId, userId, role, sendMessage]);
+
+  /**
+   * Plays the audio for the selected item.
+   * @param {string | undefined} audioPath - The path to the audio file.
+   * @returns {void}
+   */
+  const playAudioWithDelay = (audioPath: string | undefined) => {
+    if (audioPath) {
+      const audio = new Audio(audioPath);
+      setIsAudioPlaying(true);
+      audio.onended = () => setIsAudioPlaying(false);
+      audio.onerror = () => {
+        console.error(`Error playing audio for ${selectedFood?.name}`);
+        setIsAudioPlaying(false);
+      };
+      audio.play()
+    }
+  };
+
+  const playNavigationAudio = (audioPath: string | undefined) => {
+    if (audioPath) {
+      const audio = new Audio(audioPath);
+      audio.onerror = () => {
+        console.error(`Error playing navigation audio for ${selectedCategory}`);
+      };
+      audio.play();
+    }
+  };
 
   /**
    * Handles the click event for a food item.
@@ -50,23 +77,28 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         }
       });
     }
-    console.log("Sending AAC_FOOD_SELECTED", {
-  sessionId,
-  userId,
-  role,
-  food
-});
+    playAudioWithDelay(food.audioPath);
+  };
 
-    if (food.audioPath) {
-      const audio = new Audio(food.audioPath);
-      setIsAudioPlaying(true);
-      audio.onended = () => setIsAudioPlaying(false);
-      audio.onerror = () => {
-        console.error(`Error playing audio for ${food.name}`);
-        setIsAudioPlaying(false);
-      };
-      audio.play()
-    }
+  /**
+   * Handles the click event for a category.
+   * @param {typeof AAC_DATA.categories[0]} category - The category that was clicked.
+   * @precondition The category must be part of the AAC_DATA.
+   * @postcondition The selected category is set, and the audio for the category is played if available.
+   * @returns {void}
+   */
+  const handleCategoryClick = (category: typeof AAC_DATA.categories[0]) => {
+    setSelectedCategory(category.categoryName);
+    playNavigationAudio(category.categoryAudioPath);
+  };
+
+  /**
+   * Handles the click event for the back button.
+   * @returns {void}
+   */
+  const handleBackClick = () => {
+    setSelectedCategory(null);
+    playNavigationAudio("/audio/back.mp3");
   };
 
   /**
@@ -79,7 +111,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         {AAC_DATA.categories.map((category) => (
           <button
             key={category.categoryName}
-            onClick={() => setSelectedCategory(category.categoryName)}
+            onClick={() => handleCategoryClick(category)}
             disabled={isAudioPlaying}
             className={"aac-food-button aac-category-button"}
           >
@@ -106,7 +138,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
       <div className="aac-grid aac-grid-foods">
         {/* Back Button */}
         <button
-          onClick={() => setSelectedCategory(null)}
+          onClick={() => handleBackClick()}
           disabled={isAudioPlaying}
           className="aac-food-button aac-back-button"
         >

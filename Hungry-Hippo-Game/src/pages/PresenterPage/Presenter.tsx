@@ -3,6 +3,7 @@ import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { HIPPO_COLORS } from '../../config/hippoColors';  
 
 /**
  * Presenter - React component that displays the session ID to the host after creating a new game.
@@ -13,14 +14,14 @@ import { QRCodeSVG } from 'qrcode.react';
  * - Includes a button to cancel the new game and return to the landing page.
  * - Shows a waiting lobby with connected users and their roles.
  */
-const hippoSlots = [
-  { color: 'brown', imgSrc: '/assets/hippos/brownHippo.png' },
-  { color: 'red',   imgSrc: '/assets/hippos/redHippo.png'   },
-  { color: 'purple',imgSrc: '/assets/hippos/purpleHippo.png'},
-  { color: 'green', imgSrc: '/assets/hippos/greenHippo.png' },
-];
 
 const presenterBg = '/assets/presenterBg.png';
+
+const modeDetails = {
+  Easy: { label: 'Easy', iconPath: '/assets/fruits/strawberry.png', count: 1 },
+  Medium: { label: 'Medium', iconPath: '/assets/fruits/strawberry.png', count: 2 },
+  Hard: { label: 'Hard', iconPath: '/assets/fruits/strawberry.png', count: 3 },
+};
 
 function Presenter() {
   const navigate = useNavigate();
@@ -98,26 +99,30 @@ function Presenter() {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  function renderHippoSlot(
-    slot: { color: string; imgSrc: string },
-    player: { userId: string; role: string } | undefined
-  ) {
+  const lobbyHippoSlots = [0, 1, 2, 3];
+
+  function renderHippoSlot(player: any, index: number) {
     const isActive = !!player;
+    // Use the HIPPO_COLORS array to get the color for the slot
+    const hippoColor = isActive ? HIPPO_COLORS.find(h => h.color === player.color) : null;
+    console.log('Rendering hippo slot:', index, 'Player:', player, 'Color:', hippoColor);
 
     return (
-      <div key={slot.color} className={styles.hippoSlot}>
+      <div key={index} className={styles.hippoSlot}>
         <div className={styles.hippoImageWrapper}>
           <img
             src="/assets/hippos/outlineHippo.png"
             className={styles.hippoImage}
           />
-          <img
-            src={slot.imgSrc}
-            alt={`${slot.color} hippo`}
-            className={`${styles.hippoImage} ${styles.coloredHippo} ${isActive ? styles.fadeIn : ''}`}
-          />
+          {isActive && hippoColor && (
+            <img
+              src={hippoColor.imgSrc}
+              alt={`${hippoColor.color} Hippo`}
+              className={`${styles.hippoImage} ${styles.fadeIn}`}
+            />
+          )}
         </div>
-        <span className={styles.userId}>{isActive ? player!.userId : ''}</span>
+        <span className={styles.userId}>{isActive && player.color ? player.color.charAt(0).toUpperCase() + player.color.slice(1) : ''}</span>
       </div>
     );
   }
@@ -168,8 +173,8 @@ function Presenter() {
                   className={styles.pondImage}
                 />
                 <div className={styles.hippoGrid}>
-                  {hippoSlots.map((slot, idx) =>
-                    renderHippoSlot(slot, hippoPlayers[idx])
+                  {lobbyHippoSlots.map((slotIndex) =>
+                    renderHippoSlot(hippoPlayers[slotIndex], slotIndex)
                   )}
                 </div>
 
@@ -205,15 +210,28 @@ function Presenter() {
               <div
                 className={styles.modeDisplay}
                 style={{
+                  color: 'black',
                   backgroundColor:
-                    mode === 'Easy'
-                      ? '#4CAF50'   // green
-                      : mode === 'Medium'
-                      ? '#FB8C00'   // yellow
-                      : '#F44336',  // red
+                    mode === 'Easy' ? '#4CAF50'
+                      : mode === 'Medium' ? '#e2d733ff'
+                      : '#fe1c1cff',
+                      fontWeight: '550',
+                      fontFamily: 'Fredoka, sans-serif',
                 }}
               >
-                {mode}
+                <div className={styles.flexRowWrapper}>
+                  <span className={styles.modeLabel}>{modeDetails[mode].label}</span>
+                  <div className={styles.modeIconContainer}>
+                    {Array.from({ length: modeDetails[mode].count }).map((_, i) => (
+                      <img 
+                        key={i}
+                        src={modeDetails[mode].iconPath}
+                        alt={mode}
+                        className={styles.modeIcon}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <button
