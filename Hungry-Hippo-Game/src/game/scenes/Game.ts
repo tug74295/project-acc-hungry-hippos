@@ -429,4 +429,9 @@ export class Game extends Scene {
       this.sendMessage({ type: 'START_TIMER', payload: { sessionId: this.sessionId} });
     }
   }
+
+  public getEdgeAssignments(): Record<string, string> {
+    return this.edgeAssignments;
+
+  }
 }
