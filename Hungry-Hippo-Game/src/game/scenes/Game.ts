@@ -24,8 +24,6 @@ export class Game extends Scene {
   private sessionId!: string;
   private hippo: Hippo | null = null;
   private foods: Phaser.Physics.Arcade.Group;
-  private foodKeys: string[] = [];
-  private lanePositions = [256, 512, 768];
   private foodSpawnTimer: Phaser.Time.TimerEvent;
   private currentTargetFoodId: string | null = null;
   private playerScores: Record<string, number> = {};
@@ -223,11 +221,6 @@ export class Game extends Scene {
     EventBus.on('TIMER_UPDATE', (secondsLeft: number) => {
       console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
       this.updateTimerUI(secondsLeft);
-
-      if(secondsLeft === 60) {
-        console.log(`[Game.ts] Timer at 60, starting to spawn food`);
-        this.startSpawningFood();
-      }
     });
   }
 
@@ -307,10 +300,6 @@ export class Game extends Scene {
     }
   }
 
-  public setFoodKeys(keys: string[]) {
-    this.foodKeys = keys;
-  }
-
   /**
  * Applies the specified mode settings to the game.
  *
@@ -319,53 +308,6 @@ export class Game extends Scene {
   public applyModeSettings(settings: ModeSettings) {
     console.log('[Game] Applying mode settings:', settings);
     this.modeSettings = settings;
-  }
-
-  public startSpawningFood() {
-
-    if (!this.foodSpawnTimer) {
-      this.foodSpawnTimer = this.time.addEvent({
-        delay: 1500,
-        callback: this.spawnFood,
-        callbackScope: this,
-        loop: true
-      });
-    }
-  }
-  
-  spawnFood() {
-    console.log("[Game Scene] spawnFood() triggered by timer.");
-
-    if (this.foodKeys.length === 0) return;
-    const randomLaneX = Phaser.Utils.Array.GetRandom(this.lanePositions);
-    const randomKey = Phaser.Utils.Array.GetRandom(this.foodKeys);
-    const food = this.foods.create(randomLaneX, 0, randomKey) as Phaser.Physics.Arcade.Image;
-    console.log(`[SPAWN] ${randomKey} at lane X=${randomLaneX}`);
-
-    food.setScale(0.25);
-    food.setVelocityY(750);
-    food.setBounce(0.2);
-    food.setCollideWorldBounds(true);
-  }
-
-  public addFoodManually(foodId: string, angle: number) {
-    const centerX = this.scale.width / 2;
-    const centerY = this.scale.height / 2;
-    const speed = this.modeSettings.fruitSpeed;
-
-    const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
-    food.setScale(0.15);
-    food.setBounce(0);
-    food.setCollideWorldBounds(false);
-    food.setDamping(false);
-    food.setDrag(0);
-
-    const velocityX = Math.cos(angle) * speed;
-    const velocityY = Math.sin(angle) * speed;
-
-    food.setVelocity(velocityX, velocityY);
-
-    console.log(`[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)}`);
   }
 
   public setTargetFood(foodId: string) {
