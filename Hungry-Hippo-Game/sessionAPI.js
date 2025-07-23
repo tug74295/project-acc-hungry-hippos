@@ -196,6 +196,7 @@ wss.on('connection', (ws) => {
         ws.sessionId = sessionId;
         ws.userId = userId;
         ws.role = role;
+        ws.color = color;
 
         if (!sessions[sessionId]) {
           sessions[sessionId] = new Set(); 
@@ -222,7 +223,7 @@ wss.on('connection', (ws) => {
         broadcast(sessionId, { 
           type: 'PLAYER_JOINED_BROADCAST', 
           payload: { 
-            userId, role 
+            userId, role, color 
           } 
         });
         // Collect all users in the session
@@ -230,7 +231,8 @@ wss.on('connection', (ws) => {
           .filter(client => client.readyState === WebSocket.OPEN)
           .map(client => ({
             userId: client.userId,
-            role: client.role
+            role: client.role,
+            color: client.color
           }));
 
         // Send full user list
