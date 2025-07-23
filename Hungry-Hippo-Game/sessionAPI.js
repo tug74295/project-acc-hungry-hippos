@@ -192,7 +192,7 @@ wss.on('connection', (ws) => {
         
       // When a player joins, store their WebSocket connection in the correct session room
       if (data.type === 'PLAYER_JOIN') {
-        const { sessionId, userId, role } = data.payload;
+        const { sessionId, userId, role, color } = data.payload;
         ws.sessionId = sessionId;
         ws.userId = userId;
         ws.role = role;
@@ -223,7 +223,7 @@ wss.on('connection', (ws) => {
         broadcast(sessionId, { 
           type: 'PLAYER_JOINED_BROADCAST', 
           payload: { 
-            userId, role, color 
+            userId, role, color
           } 
         });
         // Collect all users in the session
