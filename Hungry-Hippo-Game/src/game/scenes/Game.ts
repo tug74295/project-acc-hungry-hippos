@@ -209,16 +209,7 @@ export class Game extends Scene {
     // this.updateScoreText();
       
     EventBus.on('external-message', (data: any) => {
-      if(data.type === 'TIMER_UPDATE')
-      {
-        this.updateTimerUI(data.secondsLeft);
-        if(data.secondsLeft === 60)
-        {
-          console.log('[Game.ts] Timer started, starting to spawn food.');
-          this.startSpawningFood();
-        }
-      }
-      else if(data.type == 'gameOver')
+      if(data.type == 'gameOver')
       {
         this.handleGameOver();
       }
@@ -227,7 +218,17 @@ export class Game extends Scene {
     EventBus.on('start-game', () => {
       console.log('[Game.ts] start-game event received, requesting timer start.')
       this.requestStartTimer();
-    })
+    });
+
+    EventBus.on('TIMER_UPDATE', (secondsLeft: number) => {
+      console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
+      this.updateTimerUI(secondsLeft);
+
+      if(secondsLeft === 60) {
+        console.log(`[Game.ts] Timer at 60, starting to spawn food`);
+        this.startSpawningFood();
+      }
+    });
   }
 
  update() {
@@ -389,6 +390,10 @@ export class Game extends Scene {
    */
   private updateTimerUI(secondsLeft: number)
   {
+    if(!this.timerText)
+    {
+      return;
+    }
     if(this.timerText)
     {
       this.timerText.setText(`Time: ${secondsLeft}`);
