@@ -142,19 +142,26 @@ const PhaserPage: React.FC = () => {
   }, []);
 
   // ---- RENDER ----
-  return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.canvasWrapper}>
-        <PhaserGame ref={phaserRef} currentActiveScene={(scene: Phaser.Scene) => {
-          // Defensive: only initialize scene if props and methods exist
-          if (scene && userId && connectedUsers && typeof (scene as any).init === 'function') {
+return (
+  <div className={styles.pageWrapper}>
+    {/* Game Canvas */}
+    <div className={styles.canvasWrapper}>
+      <PhaserGame
+        ref={phaserRef}
+        currentActiveScene={(scene: Phaser.Scene) => {
+          if (
+            scene &&
+            userId &&
+            connectedUsers &&
+            typeof (scene as any).init === 'function'
+          ) {
             (scene as any).init({
               sendMessage,
               localPlayerId: userId,
               sessionId,
               connectedUsers,
-              modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined, 
-              role: location.state?.role
+              modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined,
+              role: location.state?.role,
             });
 
             // Only non-spectators need edges assigned
@@ -167,31 +174,42 @@ const PhaserPage: React.FC = () => {
                     sessionId,
                     userId,
                     edge: edges[userId],
-                  }
+                  },
                 });
               }
             }
           }
-        }} />
+        }}
+      />
+    </div>
+
+    {/* Sidebar */}
+    <div className={styles.sidebar}>
+      {isSpectator && (
+        <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
+          <div className={styles.spectatorIcon} aria-hidden="true">👀</div>
+          <span className={styles.spectatorText}>
+            You’re in <span className={styles.spectatorHighlight}>Spectator Mode</span>
+          </span>
+        </div>
+      )}
+      <div className={styles.currentFood}>
+        <h3>Current Food to Eat:</h3>
+        {currentFood ? (
+          <>
+            <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
+            <p>{currentFood.name}</p>
+          </>
+        ) : (
+          <p>No Food Selected</p>
+        )}
       </div>
-      <div className={styles.sidebar}>
-        <div className={styles.currentFood}>
-          <h3>Current Food to Eat:</h3>
-          {currentFood ? (
-            <>
-              <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
-              <p>{currentFood.name}</p>
-            </>
-          ) : (
-            <p>No Food Selected</p>
-          )}
-        </div>
-        <div className={styles.leaderboardBox}>
-          <Leaderboard scores={scores} />
-        </div>
+      <div className={styles.leaderboardBox}>
+        <Leaderboard scores={scores} />
       </div>
     </div>
-  );
-};
-
+  </div>
+);
+}
 export default PhaserPage;
+

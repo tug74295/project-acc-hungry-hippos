@@ -95,7 +95,7 @@ function Presenter() {
       payload: { sessionId, mode },
     });
     // uncomment when finished later
-    // navigate(`/presenter-game/${sessionId}`);
+    //navigate(`/spectator/${sessionId}/${username}`);
   };
 
   const handleCopy = () => {

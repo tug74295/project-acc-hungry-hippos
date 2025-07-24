@@ -140,11 +140,6 @@ export class Game extends Scene {
     this.foods = this.physics.add.group();
     this.cursors = this.input!.keyboard!.createCursorKeys();
 
-
-
-    //this.addPlayer(this.localPlayerId);
-    EventBus.emit('current-scene-ready', this);
-
     movementStore.subscribe(({ userId, x, y }) => {
       const player = this.players[userId];
       if (player && userId !== this.localPlayerId) {
