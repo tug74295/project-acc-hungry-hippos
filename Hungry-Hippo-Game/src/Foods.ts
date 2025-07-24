@@ -37,6 +37,7 @@ export interface AacVerb {
     name: string;
     imagePath: string;
     audioPath: string;
+    color?: string;
 }
 
 export const AAC_VERBS: AacVerb[] = [
@@ -44,18 +45,21 @@ export const AAC_VERBS: AacVerb[] = [
         id: "stop",
         name: "Stop",
         imagePath: "/assets/verbs/stop.png",
-        audioPath: "/audio/verbs/stop.mp3"
+        audioPath: "/audio/verbs/stop.mp3",
+        color: "#9ce3ecff"
     },
     {
         id: "grow",
         name: "Grow",
         imagePath: "/assets/verbs/grow.png",
-        audioPath: "/audio/verbs/grow.mp3"
+        audioPath: "/audio/verbs/grow.mp3",
+        color: "#38a169"
     },
     {
         id: "hurt",
         name: "Hurt",
         imagePath: "/assets/verbs/hurt.png",
-        audioPath: "/audio/verbs/hurt.mp3"
+        audioPath: "/audio/verbs/hurt.mp3",
+        color: "#f35236ff"
     }
 ];

@@ -94,6 +94,8 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
 
   /**
    * Handles the click event for the back button.
+   * @precondition The user must be in a category view.
+   * @postcondition The selected category is reset to null, and the back navigation audio is played.
    * @returns {void}
    */
   const handleBackClick = () => {
@@ -101,8 +103,23 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
     playNavigationAudio("/audio/back.mp3");
   };
 
+  /**
+   * Handles the click event for a verb button.
+   * @param {AacVerb} verb - The verb that was clicked.
+   * @precondition The verb must be part of the AAC_VERBS.
+   * @postcondition The selected verb is set, and the audio for the verb is played if available.
+   * @returns {void}
+   */
   const handleVerbClick = (verb: AacVerb) => {
     setSelectedFood(verb);
+    if (sessionId) {
+      sendMessage({
+        type: "AAC_VERB_SELECTED",
+        payload: {
+          sessionId, userId, role, verb
+        }
+      });
+    }
     playAudioWithDelay(verb.audioPath);
   };
 
@@ -158,16 +175,17 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         {/* Verb Buttons */}
         {AAC_VERBS.map((verb) => (
           <button
-            key={verb.id}
+            key={verb.name}
             onClick={() => handleVerbClick(verb)}
             disabled={isAudioPlaying}
             className='aac-food-button'
+            style={{ backgroundColor: verb.color || '#0ea5e9' }}
           >
             <img
               src={verb.imagePath}
-              alt={verb.id}
+              alt={verb.name}
               className="aac-food-image" />
-            {verb.id}
+            {verb.name}
           </button>
         ))}
         

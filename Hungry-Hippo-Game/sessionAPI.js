@@ -347,6 +347,20 @@ wss.on('connection', (ws) => {
         }
       }
 
+      // When an AAC verb is selected, broadcast it to the session
+      if (data.type === 'AAC_VERB_SELECTED') {
+        const { sessionId, verb } = data.payload;
+        if (sessions[sessionId]) {
+          console.log(`WSS Verb selected in session ${sessionId}:`, verb);
+
+          // Broadcast the verb selection to all clients in the session
+          broadcast(sessionId, {
+            type: 'AAC_VERB_SELECTED_BROADCAST',
+            payload: { verb }
+          });
+        }
+      }
+
       // Defines angle ranges in radians
       function getAngleRangeForEdge(edge) {
         switch (edge) {
