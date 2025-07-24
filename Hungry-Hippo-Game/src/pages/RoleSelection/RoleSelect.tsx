@@ -229,15 +229,6 @@ function RoleSelect() {
               </button>
             </div>
 
-            <button 
-              className={`${styles.roleChoiceButton} ${role === 'Spectator' ? styles.selected : ''}`}
-              onClick={() => handleRoleSelect('Spectator')}
-            >
-              <img src="/assets/spectatorIcon.png" alt="Spectator" className={styles.roleIcon} />
-              <span>Spectator</span>
-            </button>
-
-
             {/* Color Selection for Hippo Player */}
             {role === 'Hippo Player' && (
               <div className={styles.colorSelectionContainer}>

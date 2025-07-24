@@ -34,7 +34,7 @@ export class Game extends Scene {
   private lastSentX: number | null = null;
   private lastSentY: number | null = null;
   private lastMoveSentAt: number = 0;
-  private modeSettings: ModeSettings = { fruitSpeed: 500, allowPenalty: true }; // fallback
+  private modeSettings: ModeSettings = { fruitSpeed: 100, allowPenalty: true }; // fallback
   //private pendingHippoPlayers: string[] = [];
 
   constructor() {
@@ -49,6 +49,7 @@ export class Game extends Scene {
   sendMessage: (msg: any) => void; 
   localPlayerId: string; 
   sessionId: string;
+  role: string;
   connectedUsers?: { userId: string; role: string }[]; 
   modeSettings?: ModeSettings;
 }) {
@@ -56,14 +57,16 @@ export class Game extends Scene {
   this.localPlayerId = data.localPlayerId;
   this.sessionId = data.sessionId;
   // ... your resets
+
   if (data.modeSettings) {
     this.modeSettings = data.modeSettings;
   }
   if (data.connectedUsers) {
     data.connectedUsers
-      .filter(u => u.role === 'Hippo Player')
-      .forEach(u => this.addPlayer(u.userId));
+    .filter(u => u.role === 'Hippo Player')
+    .forEach(u => this.addPlayer(u.userId));
   }
+  this.role = data.role;
 }
 
 
@@ -126,7 +129,7 @@ export class Game extends Scene {
       }
       playerSprite.setTargetPosition(x, y);
       this.players[playerId] = playerSprite;
-      if (playerId === this.localPlayerId) {
+      if (playerId === this.localPlayerId && this.role !== 'Spectator') {
         this.hippo = playerSprite;
       }
     }
@@ -136,6 +139,9 @@ export class Game extends Scene {
     const bg = this.add.image(512, 512, 'background');
     bg.setOrigin(0.5, 0.5);
     bg.setDisplaySize(this.scale.width, this.scale.height);
+
+    if (this.role === 'Spectator'){this.physics.pause();}
+
     
     this.foods = this.physics.add.group();
     this.cursors = this.input!.keyboard!.createCursorKeys();
@@ -268,8 +274,10 @@ export class Game extends Scene {
     const velocityY = Math.sin(angle) * speed;
 
     food.setVelocity(velocityX, velocityY);
-
-    console.log(`[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)}`);
+    console.log(
+    `[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)} | speed: ${speed} | velocity: (${velocityX.toFixed(2)}, ${velocityY.toFixed(2)})`
+  );
+    //console.log(`[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)}`);
   }
 
   public setTargetFood(foodId: string) {

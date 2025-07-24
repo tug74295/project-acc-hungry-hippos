@@ -329,6 +329,7 @@ wss.on('connection', (ws) => {
               launches.push({
                 foodId: f.id,
                 angle: randomAngle,
+                edge,
               });
             });
           });
