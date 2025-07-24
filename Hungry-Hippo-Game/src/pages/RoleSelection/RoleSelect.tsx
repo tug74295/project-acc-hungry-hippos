@@ -94,6 +94,11 @@ function RoleSelect() {
           state: { userId: username, role, color: selectedColor },
         });
       }
+      else if (role === 'Spectator') {
+        navigate(`/spectator/${sessionId}/${username}`, {
+          state: { userId: username, role },
+        });
+      }
     }
   }, [gameStarted, waiting, role, selectedColor, sessionId, username, navigate]);
 
