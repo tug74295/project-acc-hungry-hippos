@@ -15,8 +15,6 @@ export class Game extends Scene {
   private sessionId!: string;
   private hippo: Hippo | null = null;
   private foods!: Phaser.Physics.Arcade.Group;
-  private foodKeys: string[] = [];
-  private lanePositions = [256, 512, 768];
   private foodSpawnTimer?: Phaser.Time.TimerEvent;
   private currentTargetFoodId: string | null = null;
   private playerScores: Record<string, number> = {};
@@ -26,12 +24,18 @@ export class Game extends Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private sendMessage!: (msg: any) => void;
   private localPlayerId!: string;
+  /**
+   * Variable to track time left
+   */
+  private timerText!: Phaser.GameObjects.Text;
+
+
   private role: string = 'Hippo Player';
   private lastSentX: number | null = null;
   private lastSentY: number | null = null;
   private lastMoveSentAt: number = 0;
   private modeSettings: ModeSettings = { fruitSpeed: 500, allowPenalty: true }; // fallback
-  private pendingHippoPlayers: string[] = [];
+  //private pendingHippoPlayers: string[] = [];
 
   constructor() {
     super('Game');
@@ -79,28 +83,6 @@ export class Game extends Scene {
     });
   }
 
-  create() {
-    console.log('[Game] Create called');
-    const bg = this.add.image(512, 512, 'background');
-    bg.setOrigin(0.5, 0.5);
-    bg.setDisplaySize(this.scale.width, this.scale.height);
-
-    this.foods = this.physics.add.group();
-    this.cursors = this.input!.keyboard!.createCursorKeys();
-
-    // Add all hippo players after foods group exists!
-    this.pendingHippoPlayers.forEach(playerId => this.addPlayer(playerId));
-    this.pendingHippoPlayers = [];
-
-    movementStore.subscribe(({ userId, x, y }) => {
-      const player = this.players[userId];
-      if (player && userId !== this.localPlayerId) {
-        player.setTargetPosition(x, y);
-      }
-    });
-
-    EventBus.emit('current-scene-ready', this);
-  }
 
   private getEdgePosition(edge: string) {
     const w = this.scale.width;
@@ -147,8 +129,59 @@ export class Game extends Scene {
       if (playerId === this.localPlayerId) {
         this.hippo = playerSprite;
       }
-      console.log(`[Game] Added player ${playerId} at edge ${edge}`);
     }
+  }
+
+  create() {
+    const bg = this.add.image(512, 512, 'background');
+    bg.setOrigin(0.5, 0.5);
+    bg.setDisplaySize(this.scale.width, this.scale.height);
+    
+    this.foods = this.physics.add.group();
+    this.cursors = this.input!.keyboard!.createCursorKeys();
+
+
+
+    //this.addPlayer(this.localPlayerId);
+    EventBus.emit('current-scene-ready', this);
+
+    movementStore.subscribe(({ userId, x, y }) => {
+      const player = this.players[userId];
+      if (player && userId !== this.localPlayerId) {
+        player.setTargetPosition(x, y);
+      }
+    });
+
+
+    EventBus.emit('current-scene-ready', this);
+    
+   
+    this.timerText = this.add.text(32, 80, 'Time: 60', {
+    fontSize: '28px',
+    color: '#ffffff',
+    backgroundColor: '#000000',
+    padding: { x: 8, y: 4 }
+   }).setScrollFactor(0);
+
+
+   
+    EventBus.on('external-message', (data: any) => {
+      if(data.type == 'gameOver')
+      {
+        this.handleGameOver();
+      }
+    });
+
+    EventBus.on('start-game', () => {
+      console.log('[Game.ts] start-game event received, requesting timer start.')
+      this.requestStartTimer();
+    });
+
+    EventBus.on('TIMER_UPDATE', (secondsLeft: number) => {
+      console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
+      this.updateTimerUI(secondsLeft);
+    });
+      
   }
 
   update() {
@@ -219,36 +252,11 @@ export class Game extends Scene {
     }
   }
 
-  public setFoodKeys(keys: string[]) {
-    this.foodKeys = keys;
-  }
-
   public applyModeSettings(settings: ModeSettings) {
     console.log('[Game] Applying mode settings:', settings);
     this.modeSettings = settings;
   }
 
-  public startSpawningFood() {
-    if (!this.foodSpawnTimer) {
-      this.foodSpawnTimer = this.time.addEvent({
-        delay: 1500,
-        callback: this.spawnFood,
-        callbackScope: this,
-        loop: true
-      });
-    }
-  }
-  
-  spawnFood() {
-    if (this.foodKeys.length === 0) return;
-    const randomLaneX = Phaser.Utils.Array.GetRandom(this.lanePositions);
-    const randomKey = Phaser.Utils.Array.GetRandom(this.foodKeys);
-    const food = this.foods.create(randomLaneX, 0, randomKey) as Phaser.Physics.Arcade.Image;
-    food.setScale(0.25);
-    food.setVelocityY(750);
-    food.setBounce(0.2);
-    food.setCollideWorldBounds(true);
-  }
 
   public addFoodManually(foodId: string, angle: number) {
     const centerX = this.scale.width / 2;
@@ -284,7 +292,55 @@ export class Game extends Scene {
     });
   }
 
+  /**
+   * 
+   * @param secondsLeft the number of seconds left in this session
+   * If a text for the timer exists, updates the text to the number of seconds left.
+   */
+  private updateTimerUI(secondsLeft: number)
+  {
+    if(!this.timerText)
+    {
+      return;
+    }
+    if(this.timerText)
+    {
+      this.timerText.setText(`Time: ${secondsLeft}`);
+    }
+  }
+
+  /**
+   * This method handles the game when the timer hits 0.
+   */
+  private handleGameOver()
+  {
+    this.add.rectangle(512, 384, 1024, 768, 0x000000, 0.7).setDepth(10);
+    this.add.text(512, 384, 'Game Over', {
+      fontSize: '64px',
+      color: '#ffffff'
+    }).setOrigin(0.5).setDepth(11);
+
+    this.physics.pause();
+
+    if(this.foodSpawnTimer)
+    {
+      this.foodSpawnTimer.remove(false);
+    }
+  }
+
+  /**
+   * This method requests system for a start timer.
+   */
+  public requestStartTimer()
+  {
+    if(this.sendMessage)
+    {
+      this.sendMessage({ type: 'START_TIMER', payload: { sessionId: this.sessionId} });
+    }
+  }
+
   public getEdgeAssignments(): Record<string, string> {
     return this.edgeAssignments;
+
   }
 }

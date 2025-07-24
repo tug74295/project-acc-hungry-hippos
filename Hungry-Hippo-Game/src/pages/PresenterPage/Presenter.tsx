@@ -89,6 +89,11 @@ function Presenter() {
       type: 'START_GAME',
       payload: { sessionId, mode },
     });
+    console.log('Sending START_TIMER for session ', sessionId, ' with mode ', mode);
+    sendMessage({
+      type: 'START_TIMER',
+      payload: { sessionId, mode },
+    });
     // uncomment when finished later
     // navigate(`/presenter-game/${sessionId}`);
   };
