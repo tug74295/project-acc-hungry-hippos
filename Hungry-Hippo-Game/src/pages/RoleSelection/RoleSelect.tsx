@@ -94,6 +94,11 @@ function RoleSelect() {
           state: { userId: username, role, color: selectedColor },
         });
       }
+      else if (role === 'Spectator') {
+        navigate(`/spectator/${sessionId}/${username}`, {
+          state: { userId: username, role },
+        });
+      }
     }
   }, [gameStarted, waiting, role, selectedColor, sessionId, username, navigate]);
 
@@ -223,6 +228,15 @@ function RoleSelect() {
                 <span>AAC User {isAacRoleFull ? '(Full)' : ''}</span>
               </button>
             </div>
+
+            <button 
+              className={`${styles.roleChoiceButton} ${role === 'Spectator' ? styles.selected : ''}`}
+              onClick={() => handleRoleSelect('Spectator')}
+            >
+              <img src="/assets/spectatorIcon.png" alt="Spectator" className={styles.roleIcon} />
+              <span>Spectator</span>
+            </button>
+
 
             {/* Color Selection for Hippo Player */}
             {role === 'Hippo Player' && (
