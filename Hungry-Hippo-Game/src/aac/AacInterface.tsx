@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { AacFood, AAC_DATA } from "../Foods";
+import { AacFood, AAC_DATA, AacVerb, AAC_VERBS } from "../Foods";
 import { useWebSocket } from "../contexts/WebSocketContext";
 
 /**
@@ -101,6 +101,11 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
     playNavigationAudio("/audio/back.mp3");
   };
 
+  const handleVerbClick = (verb: AacVerb) => {
+    setSelectedFood(verb);
+    playAudioWithDelay(verb.audioPath);
+  };
+
   /**
    * Renders the category view with buttons for each food category.
    * @returns {JSX.Element} The rendered category view.
@@ -149,6 +154,22 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
           />
           Back
         </button>
+
+        {/* Verb Buttons */}
+        {AAC_VERBS.map((verb) => (
+          <button
+            key={verb.id}
+            onClick={() => handleVerbClick(verb)}
+            disabled={isAudioPlaying}
+            className='aac-food-button'
+          >
+            <img
+              src={verb.imagePath}
+              alt={verb.id}
+              className="aac-food-image" />
+            {verb.id}
+          </button>
+        ))}
         
         {/* Food items for the selected category */}
         {category.foods.map((food) => (
