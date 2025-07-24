@@ -177,7 +177,6 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
   return (
     <div className="aac-container">
       <div className="aac-device">
-        <h1> AAC Device </h1>
 
         {/* Display the selected fruit */}
         <div className="aac-foods">
