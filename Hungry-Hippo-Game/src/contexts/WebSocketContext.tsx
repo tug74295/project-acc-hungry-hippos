@@ -66,8 +66,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
        return;
       }
 
-      //
-
       if (data.type === 'USERS_LIST_UPDATE') {
         setConnectedUsers(data.payload.users);
         return; 
@@ -93,6 +91,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (data.type === 'SCORE_UPDATE_BROADCAST') {
         console.log('[WS_CONTEXT] Received SCORE_UPDATE_BROADCAST:', data.payload.scores);
         EventBus.emit('scoreUpdate', data.payload);
+        return;
+      }
+
+      if (data.type === 'AAC_VERB_SELECTED_BROADCAST') {
+        console.log('[WS_CONTEXT] Received AAC_VERB_SELECTED_BROADCAST:', data.payload);
+        EventBus.emit('aacVerbSelected', data.payload);
         return;
       }
       setLastMessage(data);

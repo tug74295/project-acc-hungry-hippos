@@ -353,7 +353,6 @@ wss.on('connection', (ws) => {
         if (sessions[sessionId]) {
           console.log(`WSS Verb selected in session ${sessionId}:`, verb);
 
-          // Broadcast the verb selection to all clients in the session
           broadcast(sessionId, {
             type: 'AAC_VERB_SELECTED_BROADCAST',
             payload: { verb }

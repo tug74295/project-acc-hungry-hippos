@@ -49,7 +49,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
     }
   };
 
-  const playNavigationAudio = (audioPath: string | undefined) => {
+  const playAudioWithoutDelay = (audioPath: string | undefined) => {
     if (audioPath) {
       const audio = new Audio(audioPath);
       audio.onerror = () => {
@@ -89,7 +89,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
    */
   const handleCategoryClick = (category: typeof AAC_DATA.categories[0]) => {
     setSelectedCategory(category.categoryName);
-    playNavigationAudio(category.categoryAudioPath);
+    playAudioWithoutDelay(category.categoryAudioPath);
   };
 
   /**
@@ -100,7 +100,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
    */
   const handleBackClick = () => {
     setSelectedCategory(null);
-    playNavigationAudio("/audio/back.mp3");
+    playAudioWithoutDelay("/audio/back.mp3");
   };
 
   /**
@@ -120,7 +120,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         }
       });
     }
-    playAudioWithDelay(verb.audioPath);
+    playAudioWithoutDelay(verb.audioPath);
   };
 
   /**

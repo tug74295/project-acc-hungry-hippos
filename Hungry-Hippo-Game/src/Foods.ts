@@ -42,11 +42,11 @@ export interface AacVerb {
 
 export const AAC_VERBS: AacVerb[] = [
     {
-        id: "stop",
-        name: "Stop",
-        imagePath: "/assets/verbs/stop.png",
-        audioPath: "/audio/verbs/stop.mp3",
-        color: "#9ce3ecff"
+        id: "freeze",
+        name: "Freeze",
+        imagePath: "/assets/verbs/freeze.png",
+        audioPath: "/audio/verbs/freeze.mp3",
+        color: "#52869eff"
     },
     {
         id: "grow",
@@ -56,10 +56,10 @@ export const AAC_VERBS: AacVerb[] = [
         color: "#38a169"
     },
     {
-        id: "hurt",
-        name: "Hurt",
-        imagePath: "/assets/verbs/hurt.png",
-        audioPath: "/audio/verbs/hurt.mp3",
+        id: "burn",
+        name: "Burn",
+        imagePath: "/assets/verbs/burn.png",
+        audioPath: "/audio/verbs/burn.mp3",
         color: "#f35236ff"
     }
 ];
