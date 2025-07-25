@@ -19,6 +19,8 @@ function App() {
         <Route path="/hippo/:sessionId/:userId/:role" element={<PhaserPage />} />
         <Route path="/aac/:sessionId/:userId/:role" element={<AacPage />} />
         <Route path="/game" element={<PhaserPage />} /> {}
+        <Route path="/spectator/:sessionId/:userId" element={<PhaserPage />} />
+
 
         <Route path="/presenter-game/:sessionId" element={<PresenterGamePage />} />
         <Route path="/victory/:sessionId" element={<Victory />} />

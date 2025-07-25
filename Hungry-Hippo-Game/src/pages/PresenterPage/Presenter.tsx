@@ -76,8 +76,13 @@ function Presenter() {
     navigate('/');
   };
 
+  const spectatorId = "PresenterSpectator"; // Or use presenterId, or generate unique
+
   const aacCount = connectedUsers.filter(u => u.role === 'AAC User').length;
   const hippoPlayers = connectedUsers.filter(u => u.role === 'Hippo Player');
+
+
+
   // Function to handle start game 
   const handleStartGame = () => {
     console.log('Start Game button clicked, sending START_GAME message');
@@ -85,6 +90,16 @@ function Presenter() {
       console.error('No sessionId available');
       return;
     }
+
+     sendMessage({
+    type: 'PLAYER_JOIN',
+    payload: {
+      sessionId,
+      userId: spectatorId,
+      role: 'Spectator'
+    }
+  });
+
     sendMessage({
       type: 'START_GAME',
       payload: { sessionId, mode },
@@ -94,8 +109,10 @@ function Presenter() {
       type: 'START_TIMER',
       payload: { sessionId, mode },
     });
-    // uncomment when finished later
-    // navigate(`/presenter-game/${sessionId}`);
+    navigate(`/spectator/${sessionId}/${spectatorId}`, {
+  state: { userId: spectatorId, role: 'Spectator' }
+ });
+
   };
 
   const handleCopy = () => {
