@@ -7,6 +7,7 @@ import { EventBus } from '../../game/EventBus';
 import Leaderboard from '../../components/Leaderboard/Leaderboard';
 import styles from './PhaserPage.module.css';
 import { GameMode, MODE_CONFIG } from '../../config/gameModes';
+import { useNavigate } from 'react-router-dom';
 /**
  * PhaserPage component.
  *
@@ -46,10 +47,13 @@ const PhaserPage: React.FC = () => {
 
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
 
+  const navigate = useNavigate(); 
+
   /**
    * Effect hook to send a "PLAYER_JOIN" message over WebSocket when component mounts,
    * informing the server about the player's session, userId, and role.
-   *
+   * This is only done if the player has not already joined with the same role.
+   * Prevents colors to be overwritten
    * Dependencies:
    * - sessionId, userId: URL parameters identifying player/session.
    * - location.state?.role: User role passed in navigation state.
@@ -57,14 +61,17 @@ const PhaserPage: React.FC = () => {
    */
   useEffect(() => {
     const role = location.state?.role;
-    if (sessionId && userId && role) {
+    const alreadyJoined = connectedUsers.some(
+      (u) => u.userId === userId && u.role === role
+    );
+
+    if (sessionId && userId && role && !alreadyJoined) {
       sendMessage({
         type: 'PLAYER_JOIN',
         payload: { sessionId, userId, role }
       });
     }
-  }, [sessionId, userId, location.state?.role, sendMessage]);
-
+  }, [sessionId, userId, location.state?.role, sendMessage, connectedUsers]);
 
 
   // useEffect(() => {
@@ -198,6 +205,31 @@ const PhaserPage: React.FC = () => {
       };
     }, []);
 
+  // If GAME_OVER navigate to victory route.
+  // Also, pass the scores and colors of connected users to the Victory page.
+  // If sessionId is not present, navigate to home.
+  useEffect(() => {
+    const handleGameOver = () => {
+      const colors = Object.fromEntries(
+        connectedUsers
+          .filter(user => user.color)
+          .map(user => [user.userId, user.color])
+      );
+
+      console.log('[PhaserPage] Game Over received. Navigating to Victory screen.');
+      if (sessionId) {
+        navigate(`/victory/${sessionId}`, { state: { scores, colors } });
+      } else {
+        navigate('/');
+      }
+    };
+
+    EventBus.on('gameOver', handleGameOver);
+
+    return () => {
+      EventBus.off('gameOver', handleGameOver);
+    };
+  }, [navigate, sessionId, scores, connectedUsers]);
 
   /**
    * Render the PhaserGame component and the current food indicator UI.
