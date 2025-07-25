@@ -35,9 +35,9 @@ const AacPage: React.FC = () => {
   const navigate = useNavigate();
   
   /**
-   * Get last message from WebSocket context.
+   * Get last message and connectedUsers from WebSocket context.
    */
-  const { lastMessage } = useWebSocket();
+  const { lastMessage, connectedUsers } = useWebSocket();
 
   /**
    * State to hold scores for the game.
@@ -65,9 +65,16 @@ const AacPage: React.FC = () => {
   useEffect(() => {
     if (lastMessage?.type === 'GAME_OVER' && sessionId) {
       console.log('[AacPage] GAME_OVER received. Navigating to Victory screen.');
-      navigate(`/victory/${sessionId}`, { state: { scores } });
+
+      const colors = Object.fromEntries(
+        connectedUsers
+          .filter(user => user.color)
+          .map(user => [user.userId, user.color])
+      );
+
+      navigate(`/victory/${sessionId}`, { state: { scores, colors } });
     }
-  }, [lastMessage, sessionId, navigate, scores]);
+  }, [lastMessage, sessionId, navigate, scores, connectedUsers]);
 
   /**
    * If sessionId is not present, display an error message.
