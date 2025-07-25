@@ -7,7 +7,7 @@ import { EventBus } from '../../game/EventBus';
 import Leaderboard from '../../components/Leaderboard/Leaderboard';
 import styles from './PhaserPage.module.css';
 import { GameMode, MODE_CONFIG } from '../../config/gameModes';
-
+import { useNavigate } from 'react-router-dom';
 /**
  * PhaserPage component.
  *
@@ -24,6 +24,7 @@ const PhaserPage: React.FC = () => {
   const [currentFood, setCurrentFood] = useState<AacFood | null>(null);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
+  const navigate = useNavigate(); 
 
   // Defensive: what if no state? Fallback to false.
   const isSpectator = location.state?.role === 'Spectator';
@@ -31,10 +32,21 @@ const PhaserPage: React.FC = () => {
   // ---- WEBSOCKET ----
   const {connectedUsers, lastMessage, sendMessage, clearLastMessage } = useWebSocket();
 
+  // Build color map from connected users
+  const colors: Record<string, string> = Object.fromEntries(
+    connectedUsers
+      .filter(user => typeof user.color === 'string') // remove undefined/null
+      .map(user => [user.userId, user.color as string]) // safe to cast now
+  );
+
   // --- JOIN on MOUNT ---
   useEffect(() => {
     const role = location.state?.role;
-    if (sessionId && userId && role) {
+    const alreadyJoined = connectedUsers.some(
+      (u) => u.userId === userId && u.role === role
+    );
+
+    if (sessionId && userId && role && !alreadyJoined) {
       // Defensive: avoid double joining as both.
       if (role === 'Spectator') {
         sendMessage({
@@ -48,8 +60,7 @@ const PhaserPage: React.FC = () => {
         });
       }
     }
-  }, [sessionId, userId, location.state?.role, sendMessage]);
-
+  }, [sessionId, userId, location.state?.role, sendMessage, connectedUsers]);
   // --- REMOTE PLAYER MOVEMENT SYNC ---
   useEffect(() => {
     if (lastMessage?.type === 'PLAYER_MOVE_BROADCAST') {
@@ -141,6 +152,33 @@ const PhaserPage: React.FC = () => {
     };
   }, []);
 
+  // If GAME_OVER navigate to victory route.
+  // Pass the scores and colors of connected users to the Victory page.
+  // If sessionId is not present, navigate to home.
+  useEffect(() => {
+    const handleGameOver = () => {
+      const colors = Object.fromEntries(
+        connectedUsers
+          .filter(user => user.color)
+          .map(user => [user.userId, user.color])
+      );
+
+      console.log('[PhaserPage] Game Over received. Navigating to Victory screen.');
+      if (sessionId) {
+        navigate(`/victory/${sessionId}`, { state: { scores, colors } });
+      } else {
+        navigate('/');
+      }
+    };
+
+    EventBus.on('gameOver', handleGameOver);
+
+    return () => {
+      EventBus.off('gameOver', handleGameOver);
+    };
+  }, [navigate, sessionId, scores, connectedUsers]);
+
+
   // ---- RENDER ----
 return (
   <div className={styles.pageWrapper}>
@@ -204,11 +242,10 @@ return (
         )}
       </div>
       <div className={styles.leaderboardBox}>
-        <Leaderboard scores={scores} />
+      <Leaderboard scores={scores} colors={colors} userId={userId ?? ''} />
       </div>
     </div>
   </div>
 );
 }
 export default PhaserPage;
-
