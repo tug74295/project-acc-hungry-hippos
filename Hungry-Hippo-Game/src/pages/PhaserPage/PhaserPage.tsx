@@ -187,9 +187,8 @@ return (
     <div className={styles.sidebar}>
       {isSpectator && (
         <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
-          <div className={styles.spectatorIcon} aria-hidden="true">👀</div>
           <span className={styles.spectatorText}>
-            You’re in <span className={styles.spectatorHighlight}>Spectator Mode</span>
+           <span className={styles.spectatorHighlight}>Spectator Mode</span>
           </span>
         </div>
       )}

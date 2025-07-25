@@ -111,7 +111,7 @@
   border-radius: 20px;
   background: linear-gradient(90deg, #fffae3 0%, #b3e4ff 100%);
   box-shadow: 0 4px 24px 0 rgba(0, 30, 100, 0.12), 0 2px 8px rgba(190, 230, 255, 0.09);
-  border: 2.5px solid #ffd700;
+  border: 2.5px solid #f8f8f7;
   font-family: 'Baloo 2', 'Comic Sans MS', 'Arial Rounded MT Bold', Arial, sans-serif;
   font-size: 1.7rem;
   font-weight: 600;
@@ -131,13 +131,13 @@
   color: #183153;
 }
 
-.spectatorHighlight {
-  color: #ffd700;
+/* .spectatorHighlight {
+  color: #d4ca92;
   font-weight: bold;
   padding: 0 8px;
   background: #fffbe7;
   border-radius: 8px;
-}
+} */
 
 /* Responsive for small screens */
 @media (max-width: 600px) {
