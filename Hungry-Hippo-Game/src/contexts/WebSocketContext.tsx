@@ -94,9 +94,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return;
       }
 
-      if (data.type === 'AAC_VERB_SELECTED_BROADCAST') {
-        console.log('[WS_CONTEXT] Received AAC_VERB_SELECTED_BROADCAST:', data.payload);
-        EventBus.emit('aacVerbSelected', data.payload);
+      if (data.type === 'GAME_OVER') {
+        console.log('[WS_CONTEXT] GAME_OVER');
+        EventBus.emit('gameOver', data.payload);
+        setLastMessage(data);
         return;
       }
       setLastMessage(data);

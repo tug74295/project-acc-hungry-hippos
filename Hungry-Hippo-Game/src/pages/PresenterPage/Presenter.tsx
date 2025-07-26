@@ -44,6 +44,18 @@ function Presenter() {
   const modes: Array<'Easy' | 'Medium' | 'Hard'> = ['Easy', 'Medium', 'Hard'];
 
   /**
+   * Plays the audio for the selected game mode.
+   * 
+   * @param selectedMode - The mode for which to play the audio.
+   */
+  const playModeAudio = (selectedMode: 'Easy' | 'Medium' | 'Hard') => {
+    const audio = new Audio(`/audio/modes/${selectedMode.toLowerCase()}.mp3`);
+    audio.play().catch((e) => {
+      console.warn('Audio playback failed:', e);
+    });
+  };
+
+  /**
    * Cycles through the available game modes either to the left (previous) or right (next).
    * 
    * @param direction - The direction to cycle: `'left'` for previous, `'right'` for next.
@@ -56,6 +68,12 @@ function Presenter() {
         : (currentIndex + 1) % modes.length;
     setMode(modes[newIndex]);
   };
+
+  // Play audio for the initial mode when the component mounts
+  useEffect(() => {
+    playModeAudio(mode);
+  }, [mode]);
+
 
   // Join session as "Presenter" to receive updates
   useEffect(() => {
@@ -76,8 +94,13 @@ function Presenter() {
     navigate('/');
   };
 
+  const spectatorId = "PresenterSpectator"; // Or use presenterId, or generate unique
+
   const aacCount = connectedUsers.filter(u => u.role === 'AAC User').length;
   const hippoPlayers = connectedUsers.filter(u => u.role === 'Hippo Player');
+
+
+
   // Function to handle start game 
   const handleStartGame = () => {
     console.log('Start Game button clicked, sending START_GAME message');
@@ -85,6 +108,16 @@ function Presenter() {
       console.error('No sessionId available');
       return;
     }
+
+     sendMessage({
+    type: 'PLAYER_JOIN',
+    payload: {
+      sessionId,
+      userId: spectatorId,
+      role: 'Spectator'
+    }
+  });
+
     sendMessage({
       type: 'START_GAME',
       payload: { sessionId, mode },
@@ -94,8 +127,10 @@ function Presenter() {
       type: 'START_TIMER',
       payload: { sessionId, mode },
     });
-    // uncomment when finished later
-    // navigate(`/presenter-game/${sessionId}`);
+    navigate(`/spectator/${sessionId}/${spectatorId}`, {
+  state: { userId: spectatorId, role: 'Spectator' }
+ });
+
   };
 
   const handleCopy = () => {
@@ -117,6 +152,7 @@ function Presenter() {
         <div className={styles.hippoImageWrapper}>
           <img
             src="/assets/hippos/outlineHippo.png"
+            alt="Image of Hippo"
             className={styles.hippoImage}
           />
           {isActive && hippoColor && (
@@ -139,19 +175,33 @@ function Presenter() {
           
           {/* Left Column: QR Code and Game Code */}
           <div className={styles.leftColumn}>
-            <h1 className={styles.scanQrCodeText}>Scan the QR code to play</h1>
-            <QRCodeSVG
-              className={styles.QrCode}
-              value={`${window.location.origin}/roleselect/${sessionId}`}
-              size={128}
-            />
+            <h1 className={styles.scanQrCodeText}>
+              QR Code{' '}
+              <img
+                src="/assets/cameraIcon.png"
+                alt="Camera icon"
+                className={styles.cameraIcon}
+              />
+            </h1>
+            <div className={styles.qrWrapper}>
+              <QRCodeSVG
+                className={styles.QrCode}
+                value={`${window.location.origin}/roleselect/${sessionId}`}
+                size={128}
+              />
+            </div>
             <div className={styles.joinRoomDivider}>
               <span>or</span>
             </div>
             <h1 className={styles.gameCodeText}>
               Game Code:{' '}
               <span className={styles.copyWrapper} onClick={handleCopy}>
-                <span className={styles.sessionId}>{sessionId}</span>
+                <span className={styles.sessionBox}>
+                  <span className={styles.sessionId}>{sessionId}</span>
+                  <span className={styles.copyIcon} aria-label="Copy icon" role="img">
+                    &#x2398;
+                  </span>
+                </span>
                 <span className={styles.tooltip}>
                   {copied ? 'Code copied!' : 'Click to copy'}
                 </span>
@@ -225,7 +275,7 @@ function Presenter() {
                 }}
               >
                 <div className={styles.flexRowWrapper}>
-                  <span className={styles.modeLabel}>{modeDetails[mode].label}</span>
+                  {/* <span className={styles.modeLabel}>{modeDetails[mode].label}</span> */}
                   <div className={styles.modeIconContainer}>
                     {Array.from({ length: modeDetails[mode].count }).map((_, i) => (
                       <img 

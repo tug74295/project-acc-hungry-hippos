@@ -79,6 +79,13 @@
   font-family: 'Fredoka', sans-serif;
 }
 
+.qrWrapper {
+  background-color: white;
+  padding: 0.8rem;
+  border-radius: 8px; 
+  display: inline-block;
+}
+
 .joinRoomDivider {
   display: flex;
   align-items: center;
@@ -116,10 +123,46 @@
   display: inline-block;
   cursor: pointer;
   font-weight: bold;
+  font-family: 'Fredoka', sans-serif;
+  padding-top: 1rem;
+}
+
+.copyWrapper:hover .sessionId {
   text-decoration: underline;
-  color: #1565C0;
+  cursor: pointer;
+}
+
+.sessionBox {
+  background-color: white;
+  padding: 0.4em 0.7em;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  user-select: none;
+  cursor: pointer;
+}
+
+.sessionId {
+  color: #1e293b; /* dark navy for contrast */
+  font-weight: 600;
+  font-size: 2rem;
   font-family: 'Fredoka', sans-serif;
 }
+
+.copyIcon {
+  font-size: 3rem;
+  user-select: none;
+}
+
+.cameraIcon {
+  width: 40px;     
+  height: 40px;
+  vertical-align: middle;
+  margin-left: 0.4rem;
+}
+
 
 .tooltip {
   visibility: hidden;
@@ -525,6 +568,6 @@
 }
 
 .modeIcon {
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
 }
