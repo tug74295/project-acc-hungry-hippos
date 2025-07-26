@@ -71,28 +71,19 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
     setSelectedItem(food);
 
     // If a verb is active, send the verb and food selection
-    if (activeVerb && sessionId) {
+    if (sessionId) {
       sendMessage({
-        type: "AAC_VERB_SELECTED",
+        type: "AAC_FOOD_SELECTED",
         payload: {
           sessionId,
           userId,
           role,
-          verb: activeVerb,
-          noun: food
+          food,
+          effectType: activeVerb ? activeVerb.id : null,
         }
       });
-      setActiveVerb(null);
-    } else {
-      if (sessionId) {
-        sendMessage({
-          type: "AAC_FOOD_SELECTED",
-          payload: {
-            sessionId, userId, role, food
-          }
-        });
-      }
     }
+    setActiveVerb(null);
     playAudioWithDelay(food.audioPath);
   };
 

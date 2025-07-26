@@ -296,9 +296,9 @@ wss.on('connection', (ws) => {
 
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
-        const { sessionId, food } = data.payload;
+        const { sessionId, food, effectType } = data.payload;
         if (sessions[sessionId]) {
-          console.log(`WSS Food selected in session ${sessionId}:`, food);
+          console.log(`WSS Food selected in session ${sessionId}:`, food, effectType);
 
           // Gets 2 decoys
           const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
@@ -344,19 +344,6 @@ wss.on('connection', (ws) => {
           });
 
           console.log(`[WSS] Launching ${launches.length} fruits (${fruitsToSend.length} per hippo) to ${hippoClients.length} hippos`);
-        }
-      }
-
-      // When an AAC verb is selected, broadcast it to the session
-      if (data.type === 'AAC_VERB_SELECTED') {
-        const { sessionId, verb } = data.payload;
-        if (sessions[sessionId]) {
-          console.log(`WSS Verb selected in session ${sessionId}:`, verb);
-
-          broadcast(sessionId, {
-            type: 'AAC_VERB_SELECTED_BROADCAST',
-            payload: { verb }
-          });
         }
       }
 
