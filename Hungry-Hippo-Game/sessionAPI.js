@@ -296,9 +296,9 @@ wss.on('connection', (ws) => {
 
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
-        const { sessionId, food, effectType } = data.payload;
+        const { sessionId, food } = data.payload;
         if (sessions[sessionId]) {
-          console.log(`WSS Food selected in session ${sessionId}:`, food, effectType);
+          console.log(`WSS Food selected in session ${sessionId}:`, food);
 
           // Gets 2 decoys
           const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
