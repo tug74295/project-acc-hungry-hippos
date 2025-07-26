@@ -153,7 +153,7 @@ const PhaserPage: React.FC = () => {
   }, []);
 
   // If GAME_OVER navigate to victory route.
-  // Pass the scores and colors of connected users to the Victory page.
+  // Also, pass the scores and colors of connected users to the Victory page.
   // If sessionId is not present, navigate to home.
   useEffect(() => {
     const handleGameOver = () => {
