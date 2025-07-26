@@ -25,6 +25,7 @@ const PhaserPage: React.FC = () => {
   const [scores, setScores] = useState<Record<string, number>>({});
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
   const navigate = useNavigate(); 
+  const [secondsLeft, setSecondsLeft] = useState<number>(60);
 
   // Defensive: what if no state? Fallback to false.
   const isSpectator = location.state?.role === 'Spectator';
@@ -157,6 +158,17 @@ const PhaserPage: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleTimerUpdate = (time: number) => {
+      setSecondsLeft(time);
+    };
+    EventBus.on('TIMER_UPDATE', handleTimerUpdate);
+    return () => {
+      EventBus.off('TIMER_UPDATE', handleTimerUpdate);
+    };
+  }, []);
+
+
   // If GAME_OVER navigate to victory route.
   // Also, pass the scores and colors of connected users to the Victory page.
   // If sessionId is not present, navigate to home.
@@ -238,27 +250,36 @@ return (
     </div>
 
     {/* Sidebar */}
-    <div className={styles.sidebar}>
-      {isSpectator && (
-        <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
-          <span className={styles.spectatorText}>
-           <span className={styles.spectatorHighlight}>Spectator Mode</span>
-          </span>
-        </div>
-      )}
-      <div className={styles.currentFood}>
-        <h3>Current Food to Eat:</h3>
-        {currentFood ? (
-          <>
-            <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
-            <p>{currentFood.name}</p>
-          </>
-        ) : (
-          <p>No Food Selected</p>
+    <div className={styles.sidebarWrapper}>
+      <div className={styles.sidebar}>
+        {isSpectator && (
+          <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
+            <span className={styles.spectatorText}>
+            <span className={styles.spectatorHighlight}>Spectator Mode</span>
+            </span>
+          </div>
         )}
-      </div>
-      <div className={styles.leaderboardBox}>
-      <Leaderboard scores={scores} colors={colors} userId={userId ?? ''} />
+
+        <div className={styles.timerBox}>
+          <h3 className={styles.timerTitle}>Time Left:</h3>
+          <div className={styles.timerValue}>{secondsLeft} sec</div>
+        </div>
+
+        <div className={styles.currentFood}>
+          <h3>Current Food to Eat:</h3>
+          {currentFood ? (
+            <>
+              <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
+              <p>{currentFood.name}</p>
+            </>
+          ) : (
+            <p>No Food Selected</p>
+          )}
+        </div>
+
+        <div className={styles.leaderboardBox}>
+        <Leaderboard scores={scores} colors={colors} userId={userId ?? ''} />
+        </div>
       </div>
     </div>
   </div>
