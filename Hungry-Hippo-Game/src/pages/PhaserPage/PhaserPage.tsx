@@ -183,6 +183,32 @@ const PhaserPage: React.FC = () => {
     };
   }, [navigate, sessionId, scores, connectedUsers]);
 
+  useEffect(() => {
+    const handleEdgesReady = (edges: Record<string, string>) => {
+      if (
+        sessionId &&
+        userId &&
+        location.state?.role !== 'Spectator' &&
+        edges?.[userId]
+      ) {
+        sendMessage({
+          type: 'SET_EDGE',
+          payload: {
+            sessionId,
+            userId,
+            edge: edges[userId],
+          },
+        });
+      }
+    };
+
+    EventBus.on('edges-ready', handleEdgesReady);
+
+    return () => {
+      EventBus.off('edges-ready', handleEdgesReady);
+    };
+  }, [sendMessage, sessionId, userId, location.state?.role]);
+
 
   // ---- RENDER ----
 return (
@@ -206,21 +232,6 @@ return (
               modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined,
               role: location.state?.role,
             });
-
-            // Only non-spectators need edges assigned
-            if (location.state?.role !== 'Spectator') {
-              const edges = (scene as any).getEdgeAssignments?.();
-              if (edges && edges[userId]) {
-                sendMessage({
-                  type: 'SET_EDGE',
-                  payload: {
-                    sessionId,
-                    userId,
-                    edge: edges[userId],
-                  },
-                });
-              }
-            }
           }
         }}
       />

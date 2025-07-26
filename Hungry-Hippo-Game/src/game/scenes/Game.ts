@@ -182,7 +182,8 @@ export class Game extends Scene {
       console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
       this.updateTimerUI(secondsLeft);
     });
-      
+
+    EventBus.emit('edges-ready', this.edgeAssignments); 
   }
 
   update() {

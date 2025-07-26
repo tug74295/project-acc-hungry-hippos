@@ -272,6 +272,12 @@ wss.on('connection', (ws) => {
         }
 
         fruitIntervals[sessionId] = setInterval(() => {
+          if (!sessions[sessionId]) {
+            console.log(`[WSS DEBUG] Session ${sessionId} ended, stopping fruit launch interval.`);
+            clearInterval(fruitIntervals[sessionId]);
+            delete fruitIntervals[sessionId];
+            return;
+          }
           if (!fruitQueues[sessionId] || fruitQueues[sessionId].length === 0) return;
 
           const nextFood = fruitQueues[sessionId].shift();
@@ -285,9 +291,13 @@ wss.on('connection', (ws) => {
           const launches = [];
 
           hippoClients.forEach(client => {
+            if (!client.edge) {
+              console.warn(`[WSS WARNING] No edge assigned to user ${client.userId}, defaulting to bottom`);
+            }
             const edge = client.edge || 'bottom';
             const angleRange = getAngleRangeForEdge(edge);
             const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
+            console.log(`[WSS DEBUG] Launching food for ${client.userId} from edge: ${edge} @ angle ${angle.toFixed(2)}`);
             launches.push({ foodId: nextFood, angle });
           });
 
@@ -340,6 +350,9 @@ wss.on('connection', (ws) => {
             break;
           }
         }
+
+        const assignedEdges = [...sessions[sessionId]].map(c => `${c.userId}: ${c.edge}`);
+        console.log(`[WSS DEBUG] Current edge map for session ${sessionId}:`, assignedEdges);
       }
 
       // When an AAC user selects a food, broadcast it to the session
@@ -362,11 +375,11 @@ wss.on('connection', (ws) => {
       // Defines angle ranges in radians
       function getAngleRangeForEdge(edge) {
         switch (edge) {
-          case 'top': return { min: -Math.PI * 3/4, max: -Math.PI / 4 };   // upward cone
-          case 'bottom': return { min: Math.PI / 4, max: Math.PI * 3/4 };  // downward cone
-          case 'left': return { min: Math.PI * 5/8, max: Math.PI * 11/8 }; // leftward cone
-          case 'right': return { min: -Math.PI / 8, max: Math.PI / 8 };    // rightward cone
-          default: return { min: 0, max: 2 * Math.PI }; // fallback (full circle)
+          case 'top': return { min: -Math.PI * 3/4, max: -Math.PI / 4 };     // Up: -135° to -45°
+          case 'bottom': return { min: Math.PI / 4, max: Math.PI * 3/4 };    // Down: +45° to +135°
+          case 'left': return { min: Math.PI * 7/8, max: Math.PI * 9/8 };    // Left: 157.5° to 202.5°
+          case 'right': return { min: -Math.PI / 4, max: Math.PI / 4 };      // Right: -45° to +45°
+          default: return { min: 0, max: 2 * Math.PI };
         }
       }
 
