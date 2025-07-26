@@ -70,7 +70,8 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
   const handleFoodClick = (food: AacFood) => {
     setSelectedItem(food);
 
-    if (activeVerb) {
+    // If a verb is active, send the verb and food selection
+    if (activeVerb && sessionId) {
       sendMessage({
         type: "AAC_VERB_SELECTED",
         payload: {
@@ -82,15 +83,15 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         }
       });
       setActiveVerb(null);
-    }
-
-    if (sessionId) {
-      sendMessage({
-        type: "AAC_FOOD_SELECTED",
-        payload: {
-          sessionId, userId, role, food
-        }
-      });
+    } else {
+      if (sessionId) {
+        sendMessage({
+          type: "AAC_FOOD_SELECTED",
+          payload: {
+            sessionId, userId, role, food
+          }
+        });
+      }
     }
     playAudioWithDelay(food.audioPath);
   };
@@ -129,15 +130,8 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
     setSelectedItem(verb);
     playAudioWithoutDelay(verb.audioPath);
     setActiveVerb(prev => {
-      // No verbs selected, return the clicked verb
-      if (!prev) {
-        return verb;
-      }
-
-      // If the verb is already active, do not change it
-      if (prev.id === verb.id) {
-        return prev;
-      }
+      // If the same verb is clicked, do nothing, otherwise replace
+      if (prev?.id === verb.id) return prev;
 
       return verb;
     })
