@@ -91,28 +91,33 @@ const PhaserPage: React.FC = () => {
 
   // --- FOOD LAUNCH & FRUIT EATEN BROADCAST ---
   useEffect(() => {
-    if (lastMessage?.type === 'FOOD_SELECTED_BROADCAST') {
-      const { launches, targetFoodId, targetFoodData } = lastMessage.payload as {
-        launches: { foodId: string; angle: number }[];
-        targetFoodId: string;
-        targetFoodData: AacFood;
-      };
+    if (lastMessage?.type === 'FOOD_STREAM_LAUNCH') {
+      const { launches } = lastMessage.payload;
       const scene = phaserRef.current?.scene as any;
-      if (Array.isArray(launches)) {
-        const launchesPerSet = 3;
-        launches.forEach(({ foodId, angle }, index) => {
-          const setIndex = index % launchesPerSet;
-          setTimeout(() => {
-            if (scene && typeof scene.addFoodManually === 'function') {
-              scene.addFoodManually(foodId, angle);
-            }
-          }, setIndex * 1000); // delay
-        });
-      }
+
+      launches.forEach(({ foodId, angle }: { foodId: string; angle: number }, index: number) => {
+        setTimeout(() => {
+          if (scene && typeof scene.addFoodManually === 'function') {
+            scene.addFoodManually(foodId, angle);
+          }
+        }, index );
+      });
+
+      clearLastMessage?.();
+    }
+
+    if (lastMessage?.type === 'AAC_TARGET_FOOD') {
+      const { targetFoodId, targetFoodData } = lastMessage.payload;
+
+      const scene = phaserRef.current?.scene as any;
       if (typeof scene.setTargetFood === 'function') {
         scene.setTargetFood(targetFoodId);
       }
-      if (targetFoodData) setCurrentFood(targetFoodData);
+
+      if (targetFoodData) {
+        setCurrentFood(targetFoodData);
+      }
+
       clearLastMessage?.();
     }
 
