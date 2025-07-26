@@ -271,6 +271,7 @@ wss.on('connection', (ws) => {
           }
         }
 
+        sessions[sessionId].initialTargetSent = false;
         fruitIntervals[sessionId] = setInterval(() => {
           if (!sessions[sessionId]) {
             console.log(`[WSS DEBUG] Session ${sessionId} ended, stopping fruit launch interval.`);
@@ -283,6 +284,17 @@ wss.on('connection', (ws) => {
           const nextFood = fruitQueues[sessionId].shift();
           const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
           const targetFood = allFoods.find(f => f.id === nextFood);
+
+          if (!sessions[sessionId].initialTargetSent) {
+            broadcast(sessionId, {
+              type: 'AAC_TARGET_FOOD',
+              payload: {
+                targetFoodId: nextFood,
+                targetFoodData: targetFood,
+              },
+            });
+            sessions[sessionId].initialTargetSent = true;
+          }
 
           const randomFood = allFoods[Math.floor(Math.random() * allFoods.length)];
           fruitQueues[sessionId].push(randomFood.id);
