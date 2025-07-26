@@ -153,18 +153,7 @@ export class Game extends Scene {
       }
     });
 
-
     EventBus.emit('current-scene-ready', this);
-    
-   
-    this.timerText = this.add.text(32, 80, 'Time: 60', {
-    fontSize: '28px',
-    color: '#ffffff',
-    backgroundColor: '#000000',
-    padding: { x: 8, y: 4 }
-   }).setScrollFactor(0);
-
-
    
     EventBus.on('external-message', (data: any) => {
       if(data.type == 'gameOver')
@@ -182,7 +171,8 @@ export class Game extends Scene {
       console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
       this.updateTimerUI(secondsLeft);
     });
-      
+
+    EventBus.emit('edges-ready', this.edgeAssignments); 
   }
 
   update() {
