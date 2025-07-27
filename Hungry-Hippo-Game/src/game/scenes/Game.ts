@@ -38,7 +38,7 @@ export class Game extends Scene {
   private lastSentX: number | null = null;
   private lastSentY: number | null = null;
   private lastMoveSentAt: number = 0;
-  private modeSettings: ModeSettings = { fruitSpeed: 100, allowPenalty: true }; // fallback
+  private modeSettings: ModeSettings = { fruitSpeed: 100, allowPenalty: true, allowEffect: true }; // fallback
   //private pendingHippoPlayers: string[] = [];
 
   // Variable to track if user has interacted with the game
@@ -84,8 +84,6 @@ export class Game extends Scene {
     console.log('[Game] Preload called');
     this.load.image('background', '/assets/presenterBg.png');
     this.load.image('swipeHand', '/assets/swipeHand.png');
-    this.load.image('glowCircle', '/assets/effects/glowCircle.png');
-    this.load.image('sparkle', '/assets/effects/sparkle.png');
 
     AAC_DATA.categories.forEach(category => {
       category.foods.forEach(food => {
@@ -179,10 +177,7 @@ export class Game extends Scene {
 
     this.hippo.setTargetPosition(x, y);
   }
-
-   
 }
-
 
   create() {
     const bg = this.add.image(512, 512, 'background');
@@ -252,6 +247,12 @@ export class Game extends Scene {
 
 
     EventBus.emit('current-scene-ready', this);
+
+    EventBus.on('apply-player-effect', (data: { targetUserId: string, effect: AacVerb }) => {
+      if (data.targetUserId !== this.localPlayerId) {
+        this.applyEffectToPlayer(data.targetUserId, data.effect);
+      }
+    });
    
     EventBus.on('external-message', (data: any) => {
       if(data.type == 'gameOver')
@@ -290,43 +291,67 @@ export class Game extends Scene {
       }
     });
 
-  if (this.hippo && this.role !== 'Spectator') {
-    if (this.usePointerControl) {
-      this.hippo.update(); // <-- no cursors, triggers lerp to target
-    } else if (this.cursors) {
-      this.hippo.update(this.cursors); // keyboard
-    }
-    // ... rest unchanged
-    const newX = this.hippo.x;
-    const newY = this.hippo.y;
-    if (this.lastSentX !== newX || this.lastSentY !== newY) {
-      const now = Date.now();
-      if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 30) {
-        this.lastSentX = newX;
-        this.lastSentY = newY;
-        this.lastMoveSentAt = now;
-        try {
-          this.sendMessage?.({
-            type: 'PLAYER_MOVE',
-            payload: {
-              sessionId: this.sessionId,
-              userId: this.localPlayerId,
-              x: newX,
-              y: newY
-            }
-          });
-        } catch (e) {
-          console.error('[Game.update] Failed to send player movement:', e);
+    if (this.hippo && this.role !== 'Spectator') {
+      if (this.usePointerControl) {
+        this.hippo.update(); // <-- no cursors, triggers lerp to target
+      } else if (this.cursors) {
+        this.hippo.update(this.cursors); // keyboard
+      }
+      // ... rest unchanged
+      const newX = this.hippo.x;
+      const newY = this.hippo.y;
+      if (this.lastSentX !== newX || this.lastSentY !== newY) {
+        const now = Date.now();
+        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 30) {
+          this.lastSentX = newX;
+          this.lastSentY = newY;
+          this.lastMoveSentAt = now;
+          try {
+            this.sendMessage?.({
+              type: 'PLAYER_MOVE',
+              payload: {
+                sessionId: this.sessionId,
+                userId: this.localPlayerId,
+                x: newX,
+                y: newY
+              }
+            });
+          } catch (e) {
+            console.error('[Game.update] Failed to send player movement:', e);
+          }
         }
       }
     }
-  }
-  for (const [id, hippo] of Object.entries(this.players)) {
-    if (id !== this.localPlayerId) {
-      hippo.update();
+    for (const [id, hippo] of Object.entries(this.players)) {
+      if (id !== this.localPlayerId) {
+        hippo.update();
+      }
     }
   }
-}
+
+  private applyEffectToPlayer(targetUserId: string, effect: AacVerb) {
+    const targetHippo = this.players[targetUserId];
+    if (!targetHippo) return;
+    switch(effect.id) {
+      case 'freeze':
+        targetHippo.freeze(2000);
+        break;
+      case 'burn':
+        targetHippo.setTint(0xff0000);
+        this.time.delayedCall(1000, () => {
+          targetHippo.clearTint();
+        });
+        break;
+      case 'grow':
+        targetHippo.setTint(0x00FF00);
+        targetHippo.setScale(0.4);
+        this.time.delayedCall(5000, () => {
+          targetHippo.clearTint();
+          targetHippo.setScale(0.25);
+        });
+        break;
+    }
+  }
 
 
   private handleFruitCollision(playerId: string, fruit: Phaser.GameObjects.GameObject) {
@@ -344,6 +369,17 @@ export class Game extends Scene {
         const sprite = fruit as Phaser.GameObjects.Sprite;
         const foodId = sprite.texture.key;
         const isCorrect = foodId === this.currentTargetFoodId;
+        if (isCorrect && this.currentTargetFoodEffect && this.modeSettings.allowEffect) {
+          this.applyEffectToPlayer(playerId, this.currentTargetFoodEffect);
+          this.sendMessage({
+            type: 'PLAYER_EFFECT_APPLIED',
+            payload: {
+              sessionId: this.sessionId,
+              targetUserId: playerId,
+              effect: this.currentTargetFoodEffect
+            }
+          });
+        }
 
         try {
           this.sendMessage({
@@ -352,11 +388,15 @@ export class Game extends Scene {
               sessionId: this.sessionId,
               userId: playerId,
               isCorrect,
-              allowPenalty: this.modeSettings.allowPenalty
+              allowPenalty: this.modeSettings.allowPenalty,
+              effect: this.modeSettings.allowEffect ? this.currentTargetFoodEffect?.id : null
             },
           });
         } catch (e) {
           console.error('[Game.handleFruitCollision] Error sending score update:', e);
+        }
+        if (isCorrect) {
+          this.currentTargetFoodEffect = null;
         }
         EventBus.emit('fruit-eaten', { foodId, x: fruit.x, y: fruit.y });
       }
@@ -384,7 +424,8 @@ export class Game extends Scene {
     if (
       foodId === this.currentTargetFoodId &&
       this.currentTargetFoodEffect &&
-      typeof this.currentTargetFoodEffect.color === 'string'
+      typeof this.currentTargetFoodEffect.color === 'string' &&
+      this.modeSettings.allowEffect
     ) {
       const tintColor = parseInt(this.currentTargetFoodEffect.color.replace('#', '0x'));
       food.setTint(tintColor);

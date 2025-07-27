@@ -355,7 +355,7 @@ wss.on('connection', (ws) => {
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
         const { sessionId, food, effect } = data.payload;
-        console.log(`WSS Food selected in session ${sessionId}:`, food);
+        console.log(`WSS Food selected in session ${sessionId}:`, food, effect);
 
         if (fruitQueues[sessionId]) {
           // Pushes AAC-selected food to the front of the queue
@@ -373,6 +373,15 @@ wss.on('connection', (ws) => {
             targetFoodData: food,
             effect: effect || null // Include effect if provided
           }
+        });
+      }
+
+      // When a player eats a target food with an effect, broadcast it to the session
+      if (data.type === 'PLAYER_EFFECT_APPLIED') {
+        const { sessionId, targetUserId, effect } = data.payload;
+        broadcast(sessionId, {
+          type: 'PLAYER_EFFECT_BROADCAST',
+          payload: { targetUserId, effect }
         });
       }
 
@@ -398,13 +407,21 @@ wss.on('connection', (ws) => {
 
       // Broadcast updated scores
       if (data.type === 'FRUIT_EATEN_BY_PLAYER') {
-        const { sessionId, userId, isCorrect, allowPenalty } = data.payload;
+        const { sessionId, userId, isCorrect, allowPenalty, effect } = data.payload;
 
         if (!scoresBySession[sessionId]) scoresBySession[sessionId] = {};
         const prev = scoresBySession[sessionId][userId] || 0;
 
         if (isCorrect) {
-          scoresBySession[sessionId][userId] = prev + 1;
+          if (effect === 'burn') {
+            scoresBySession[sessionId][userId] = Math.max(0, prev - 2);
+            console.log(`[WSS] Player ${userId} burned, score reduced by 2 from ${prev} to ${scoresBySession[sessionId][userId]}`);
+          } else if (effect === 'grow') {
+            scoresBySession[sessionId][userId] = prev + 2;
+            console.log(`[WSS] Player ${userId} grew, score increased by 2 from ${prev} to ${scoresBySession[sessionId][userId]}`);
+          } else {
+            scoresBySession[sessionId][userId] = prev + 1;
+          }
         } else if (allowPenalty) {
           scoresBySession[sessionId][userId] = Math.max(0, prev - 1);
         }
