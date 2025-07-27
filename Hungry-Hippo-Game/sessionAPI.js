@@ -22,7 +22,7 @@ const allowedOrigins = [
   'http://localhost:3003',
   'http://localhost:3004',
   'http://localhost:3005',
-  'https://www.draexico.com'
+  'https://project-acc-hungry-hippos.vercel.app'
 ];
 
 server.on('upgrade', (request, socket, head) => {
