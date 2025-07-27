@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { PhaserGame, IRefPhaserGame } from '../../PhaserGame';
 import { useWebSocket } from '../../contexts/WebSocketContext';
-import { AacFood } from '../../Foods';
+import { AacFood, AacVerb } from '../../Foods';
 import { EventBus } from '../../game/EventBus';
 import Leaderboard from '../../components/Leaderboard/Leaderboard';
 import styles from './PhaserPage.module.css';
@@ -132,6 +132,12 @@ const PhaserPage: React.FC = () => {
       if (scene && typeof scene.removeFruitAt === 'function') {
         scene.removeFruitAt(foodId, x, y);
       }
+    }
+
+    if (lastMessage?.type === 'PLAYER_EFFECT_BROADCAST') {
+      const { targetUserId, effect } = lastMessage.payload as { targetUserId: string, effect: AacVerb };
+      EventBus.emit('apply-player-effect', { targetUserId, effect });
+      clearLastMessage?.();
     }
   }, [lastMessage, clearLastMessage]);
 

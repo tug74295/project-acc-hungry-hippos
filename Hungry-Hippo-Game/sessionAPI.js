@@ -359,6 +359,15 @@ wss.on('connection', (ws) => {
         });
       }
 
+      // When a player eats a target food with an effect, broadcast it to the session
+      if (data.type === 'PLAYER_EFFECT_APPLIED') {
+        const { sessionId, targetUserId, effect } = data.payload;
+        broadcast(sessionId, {
+          type: 'PLAYER_EFFECT_BROADCAST',
+          payload: { targetUserId, effect }
+        });
+      }
+
       // Defines angle ranges in radians
       function getAngleRangeForEdge(edge) {
         switch (edge) {
@@ -382,7 +391,6 @@ wss.on('connection', (ws) => {
       // Broadcast updated scores
       if (data.type === 'FRUIT_EATEN_BY_PLAYER') {
         const { sessionId, userId, isCorrect, allowPenalty, effect } = data.payload;
-        console.log(`[WSS] Player ${userId} ate fruit in session ${sessionId}, isCorrect: ${isCorrect}, allowPenalty: ${allowPenalty}, effect: ${effect}`);
 
         if (!scoresBySession[sessionId]) scoresBySession[sessionId] = {};
         const prev = scoresBySession[sessionId][userId] || 0;

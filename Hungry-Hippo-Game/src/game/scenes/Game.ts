@@ -301,7 +301,7 @@ export class Game extends Scene {
       case 'grow':
         targetHippo.setTint(0x00FF00);
         targetHippo.setScale(0.4);
-        this.time.delayedCall(1500, () => {
+        this.time.delayedCall(5000, () => {
           targetHippo.clearTint();
           targetHippo.setScale(0.25);
         });
@@ -325,7 +325,6 @@ export class Game extends Scene {
         const sprite = fruit as Phaser.GameObjects.Sprite;
         const foodId = sprite.texture.key;
         const isCorrect = foodId === this.currentTargetFoodId;
-        console.log(`[Game.handleFruitCollision] Player ${playerId} ate fruit ${foodId}, isCorrect: ${isCorrect} with effect: ${this.currentTargetFoodEffect?.id} `);
         if (isCorrect && this.currentTargetFoodEffect) {
           this.applyEffectToPlayer(playerId, this.currentTargetFoodEffect);
           this.sendMessage({
