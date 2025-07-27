@@ -9,12 +9,14 @@ import { AAC_DATA, AacVerb } from '../../Foods';
 import { Hippo } from '../Hippo';
 import { Edge, EdgeSlideStrategy } from '../EdgeSlideStrategy';
 import { movementStore } from './MovementStore';
+import { foodMovementStore } from './FoodMovementStore';
 import { ModeSettings } from '../../config/gameModes';
 
 export class Game extends Scene {
   private sessionId!: string;
   private hippo: Hippo | null = null;
   private foods!: Phaser.Physics.Arcade.Group;
+  private foodIdCounter = 0;
   private foodSpawnTimer?: Phaser.Time.TimerEvent;
   private currentTargetFoodId: string | null = null;
   private currentTargetFoodEffect: AacVerb | null = null;
@@ -38,6 +40,7 @@ export class Game extends Scene {
   private lastSentX: number | null = null;
   private lastSentY: number | null = null;
   private lastMoveSentAt: number = 0;
+  private lastFoodSentAt: number = 0;
   private modeSettings: ModeSettings = { fruitSpeed: 100, allowPenalty: true, allowEffect: true }; // fallback
   //private pendingHippoPlayers: string[] = [];
 
@@ -245,6 +248,14 @@ export class Game extends Scene {
       }
     });
 
+    foodMovementStore.subscribe(({ fruitId, x, y }) => {
+      const fruit = this.foods.getChildren().find(f => (f as any).getData('fruitId') === fruitId) as Phaser.Physics.Arcade.Image | undefined;
+      if (fruit) {
+        fruit.setData('targetX', x);
+        fruit.setData('targetY', y);
+      }
+    });
+
 
     EventBus.emit('current-scene-ready', this);
 
@@ -321,12 +332,42 @@ export class Game extends Scene {
           }
         }
       }
+
+      const now = Date.now();
+      if (!this.lastFoodSentAt || now - this.lastFoodSentAt > 50) {
+        this.lastFoodSentAt = now;
+        this.foods.getChildren().forEach(f => {
+          const fruit = f as Phaser.Physics.Arcade.Image;
+          const id = fruit.getData('fruitId');
+          if (id) {
+            this.sendMessage?.({
+              type: 'FOOD_MOVE',
+              payload: {
+                sessionId: this.sessionId,
+                fruitId: id,
+                x: fruit.x,
+                y: fruit.y
+              }
+            });
+          }
+        });
+      }
     }
     for (const [id, hippo] of Object.entries(this.players)) {
       if (id !== this.localPlayerId) {
         hippo.update();
       }
     }
+
+    this.foods.getChildren().forEach(f => {
+      const fruit = f as Phaser.Physics.Arcade.Image;
+      const tx = fruit.getData('targetX');
+      const ty = fruit.getData('targetY');
+      if (typeof tx === 'number' && typeof ty === 'number') {
+        fruit.x += (tx - fruit.x) * 0.2;
+        fruit.y += (ty - fruit.y) * 0.2;
+      }
+    });
   }
 
   private applyEffectToPlayer(targetUserId: string, effect: AacVerb) {
@@ -409,12 +450,14 @@ export class Game extends Scene {
   }
 
 
-  public addFoodManually(foodId: string, angle: number) {
+  public addFoodManually(foodId: string, angle: number, fruitId?: string) {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
     let speed = this.modeSettings.fruitSpeed;
 
     const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
+    const id = fruitId || `fruit-${this.foodIdCounter++}`;
+    food.setData('fruitId', id);
     food.setScale(0.15);
     food.setBounce(0);
     food.setCollideWorldBounds(false);
@@ -456,6 +499,16 @@ export class Game extends Scene {
     const velocityX = Math.cos(angle) * speed;
     const velocityY = Math.sin(angle) * speed;
     food.setVelocity(velocityX, velocityY);
+
+    this.sendMessage?.({
+      type: 'FOOD_MOVE',
+      payload: {
+        sessionId: this.sessionId,
+        fruitId: id,
+        x: centerX,
+        y: centerY
+      }
+    });
   }
 
 

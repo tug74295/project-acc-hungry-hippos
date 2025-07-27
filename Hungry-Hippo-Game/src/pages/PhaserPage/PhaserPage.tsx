@@ -96,10 +96,10 @@ const PhaserPage: React.FC = () => {
       const { launches } = lastMessage.payload;
       const scene = phaserRef.current?.scene as any;
 
-      launches.forEach(({ foodId, angle }: { foodId: string; angle: number }, index: number) => {
+      launches.forEach(({ foodId, angle, fruitId }: { foodId: string; angle: number; fruitId: string }, index: number) => {
         setTimeout(() => {
           if (scene && typeof scene.addFoodManually === 'function') {
-            scene.addFoodManually(foodId, angle);
+            scene.addFoodManually(foodId, angle, fruitId);
           }
         }, index );
       });

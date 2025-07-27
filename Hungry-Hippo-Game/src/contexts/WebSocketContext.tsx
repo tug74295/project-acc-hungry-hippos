@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { movementStore } from '../game/scenes/MovementStore';
+import { foodMovementStore } from '../game/scenes/FoodMovementStore';
 import { EventBus } from '../game/EventBus';
 
 interface IWebSocketContext {
@@ -63,6 +64,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       //update playermovement on socket
      if (data.type === 'PLAYER_MOVE_BROADCAST') {
        movementStore.notifyMove(data.payload);
+       return;
+      }
+
+     if (data.type === 'FOOD_MOVE_BROADCAST') {
+       foodMovementStore.notifyMove(data.payload);
        return;
       }
 

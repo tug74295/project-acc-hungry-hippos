@@ -10,8 +10,9 @@ const wss = new WebSocket.Server({ noServer: true });
 const sessions = {};
 const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 const scoresBySession = {};
-const fruitQueues = {};      
-const fruitIntervals = {}; 
+const fruitQueues = {};
+const fruitIntervals = {};
+let fruitIdCounter = 0;
 const TARGET_FOOD_WEIGHT = 6; // Increase or decrease how many times more the target food appears than other food
 
 // Reject connections from unauthorized origins
@@ -161,6 +162,14 @@ wss.on('connection', (ws) => {
           payload: { userId, x, y }
          });
         }
+
+      if (data.type === 'FOOD_MOVE') {
+        const { sessionId, fruitId, x, y } = data.payload;
+        broadcast(sessionId, {
+          type: 'FOOD_MOVE_BROADCAST',
+          payload: { fruitId, x, y }
+        });
+      }
         
       // When a player joins, store their WebSocket connection in the correct session room
       if (data.type === 'PLAYER_JOIN') {
@@ -294,7 +303,8 @@ wss.on('connection', (ws) => {
             const angleRange = getAngleRangeForEdge(edge);
             const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
             //console.log(`[WSS DEBUG] Launching food for ${client.userId} from edge: ${edge} @ angle ${angle.toFixed(2)}`);
-            launches.push({ foodId: nextFood, angle });
+            const fid = `fruit-${fruitIdCounter++}`;
+            launches.push({ foodId: nextFood, angle, fruitId: fid });
           });
 
           broadcast(sessionId, {
