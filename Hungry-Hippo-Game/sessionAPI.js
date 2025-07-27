@@ -7,6 +7,13 @@ const { Pool } = require('pg');
 const server = http.createServer();
 const wss = new WebSocket.Server({ noServer: true });
 
+const sessions = {};
+const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
+const scoresBySession = {};
+const fruitQueues = {};      
+const fruitIntervals = {}; 
+const TARGET_FOOD_WEIGHT = 6; // Increase or decrease how many times more the target food appears than other food
+
 // Reject connections from unauthorized origins
 const allowedOrigins = [
   'http://localhost:3000',
@@ -31,14 +38,6 @@ server.on('upgrade', (request, socket, head) => {
     wss.emit('connection', ws, request);
   });
 });
-
-const sessions = {};
-const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
-
-const scoresBySession = {};
-
-const fruitQueues = {};      
-const fruitIntervals = {}; 
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 let pool;
@@ -242,6 +241,7 @@ wss.on('connection', (ws) => {
         }
 
         sessions[sessionId].initialTargetSent = false;
+        sessions[sessionId].currentTargetFoodId = null;
         fruitIntervals[sessionId] = setInterval(() => {
           if (!sessions[sessionId]) {
             console.log(`[WSS DEBUG] Session ${sessionId} ended, stopping fruit launch interval.`);
@@ -264,10 +264,24 @@ wss.on('connection', (ws) => {
               },
             });
             sessions[sessionId].initialTargetSent = true;
+            sessions[sessionId].currentTargetFoodId = nextFood;
           }
 
-          const randomFood = allFoods[Math.floor(Math.random() * allFoods.length)];
-          fruitQueues[sessionId].push(randomFood.id);
+          function getWeightedRandomFood(allFoods, targetId) {
+            const weightedList = [];
+
+            for (const food of allFoods) {
+              const weight = food.id === targetId ? TARGET_FOOD_WEIGHT : 1;
+              for (let i = 0; i < weight; i++) {
+                weightedList.push(food);
+              }
+            }
+
+            return weightedList[Math.floor(Math.random() * weightedList.length)];
+          }
+
+          const weightedFood = getWeightedRandomFood(allFoods, sessions[sessionId].currentTargetFoodId);
+          fruitQueues[sessionId].push(weightedFood.id);
 
           const hippoClients = [...sessions[sessionId]].filter(c => c.role === 'Hippo Player');
           const launches = [];
@@ -347,6 +361,9 @@ wss.on('connection', (ws) => {
           // Pushes AAC-selected food to the front of the queue
           fruitQueues[sessionId].unshift(food.id);
         }
+
+        // Updates the session's current weighted target
+        sessions[sessionId].currentTargetFoodId = food.id;
 
         // Broadcasts the selected food as the official target
         broadcast(sessionId, {
