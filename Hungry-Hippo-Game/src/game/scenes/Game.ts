@@ -256,7 +256,7 @@ export class Game extends Scene {
   public addFoodManually(foodId: string, angle: number) {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
-    const speed = this.modeSettings.fruitSpeed;
+    let speed = this.modeSettings.fruitSpeed;
 
     const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
     food.setScale(0.15);
@@ -265,10 +265,6 @@ export class Game extends Scene {
     food.setDamping(false);
     food.setDrag(0);
 
-    const velocityX = Math.cos(angle) * speed;
-    const velocityY = Math.sin(angle) * speed;
-    food.setVelocity(velocityX, velocityY);
-
     if (
       foodId === this.currentTargetFoodId &&
       this.currentTargetFoodEffect &&
@@ -276,16 +272,33 @@ export class Game extends Scene {
     ) {
       const tintColor = parseInt(this.currentTargetFoodEffect.color.replace('#', '0x'));
       food.setTint(tintColor);
+      const effect = this.currentTargetFoodEffect;
 
-      // Pulse animation
-      this.tweens.add({
-        targets: food,
-        scale: { from: 0.15, to: 0.2 },
-        yoyo: true,
-        repeat: -1,
-        duration: 400
-      });
+      // Handle each effect type
+      switch (effect.id) {
+        case 'freeze':
+          speed *= 0.6;
+          break;
+        case 'burn':
+          speed *= 1.4;
+          break;
+        case 'grow':
+          food.setScale(0.40);
+          // Pulse animation
+          this.tweens.add({
+            targets: food,
+            scale: { from: 0.15, to: 0.2 },
+            yoyo: true,
+            repeat: -1,
+            duration: 400
+          });
+          break;
+      }
     }
+
+    const velocityX = Math.cos(angle) * speed;
+    const velocityY = Math.sin(angle) * speed;
+    food.setVelocity(velocityX, velocityY);
   }
 
 
