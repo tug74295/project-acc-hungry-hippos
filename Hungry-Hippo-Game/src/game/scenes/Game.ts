@@ -41,6 +41,12 @@ export class Game extends Scene {
   private modeSettings: ModeSettings = { fruitSpeed: 100, allowPenalty: true, allowEffect: true }; // fallback
   //private pendingHippoPlayers: string[] = [];
 
+  // Variable to track if user has interacted with the game
+  private hasUserInteracted = false;
+  // Variable to track if swipe hint is shown
+  private swipeHint?: Phaser.GameObjects.Image;
+
+
   constructor() {
     super('Game');
   }
@@ -77,6 +83,7 @@ export class Game extends Scene {
   preload() {
     console.log('[Game] Preload called');
     this.load.image('background', '/assets/presenterBg.png');
+    this.load.image('swipeHand', '/assets/swipeHand.png');
 
     AAC_DATA.categories.forEach(category => {
       category.foods.forEach(food => {
@@ -203,6 +210,29 @@ export class Game extends Scene {
     this.foods = this.physics.add.group();
     this.cursors = this.input!.keyboard!.createCursorKeys();
 
+    // Delay animation for swipe hand
+    this.time.delayedCall(100, () => {
+      // Play animation only for the hippo users, not on spectator
+      if (this.role === 'Hippo Player') {
+        this.swipeHint = this.add.image(this.scale.width / 2, this.scale.height * 0.7, 'swipeHand')
+          .setOrigin(0.5)
+          .setDepth(1000)
+          .setScale(0.6);
+
+        // Add swipe hint animation
+        this.tweens.add({
+          targets: this.swipeHint,
+          x: {
+            from: this.scale.width / 2 - 60,
+            to: this.scale.width / 2 + 60
+          },
+          duration: 800,
+          ease: 'Sine.easeInOut',
+          yoyo: true,
+          repeat: -1
+        });
+      }
+    });
 
    movementStore.subscribe(({ userId, x, y }) => {
       const player = this.players[userId];
@@ -247,6 +277,20 @@ export class Game extends Scene {
   
     
   update() {
+    // Check if user has interacted with the game on mobile
+    this.input.once('pointerdown', () => {
+      this.hasUserInteracted = true;
+      this.swipeHint?.destroy();
+    });
+
+    // Check if user has interacted with the game on keyboard
+    this.input.keyboard?.on('keydown', () => {
+      if (!this.hasUserInteracted) {
+        this.hasUserInteracted = true;
+        this.swipeHint?.destroy();
+      }
+    });
+
     if (this.hippo && this.role !== 'Spectator') {
       if (this.usePointerControl) {
         this.hippo.update(); // <-- no cursors, triggers lerp to target
