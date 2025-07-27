@@ -5,7 +5,7 @@
 
 import { Scene } from 'phaser';
 import { EventBus } from '../EventBus';
-import { AAC_DATA } from '../../Foods';
+import { AAC_DATA, AacVerb } from '../../Foods';
 import { Hippo } from '../Hippo';
 import { Edge, EdgeSlideStrategy } from '../EdgeSlideStrategy';
 import { movementStore } from './MovementStore';
@@ -17,6 +17,7 @@ export class Game extends Scene {
   private foods!: Phaser.Physics.Arcade.Group;
   private foodSpawnTimer?: Phaser.Time.TimerEvent;
   private currentTargetFoodId: string | null = null;
+  private currentTargetFoodEffect: AacVerb | null = null;
   private playerScores: Record<string, number> = {};
   private players: Record<string, Hippo> = {};
   private edgeAssignments: Record<string, string> = {};
@@ -264,14 +265,28 @@ export class Game extends Scene {
     const velocityY = Math.sin(angle) * speed;
 
     food.setVelocity(velocityX, velocityY);
-    console.log(
-    `[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)} | speed: ${speed} | velocity: (${velocityX.toFixed(2)}, ${velocityY.toFixed(2)})`
-  );
-    //console.log(`[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)}`);
+    if (foodId === this.currentTargetFoodId && this.currentTargetFoodEffect) {
+      if (this.currentTargetFoodEffect && this.currentTargetFoodEffect.color) {
+        food.setTint(parseInt(this.currentTargetFoodEffect.color.replace('#', '0x')));
+      }
+      food.setData('isSpecial', true);
+    }
+    //console.log(`[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)} | speed: ${speed} | velocity: (${velocityX.toFixed(2)}, ${velocityY.toFixed(2)})`);
   }
 
-  public setTargetFood(foodId: string) {
+  public setTargetFood(foodId: string, effect: AacVerb | null = null) {
     this.currentTargetFoodId = foodId;
+    this.currentTargetFoodEffect = effect;
+    this.foods.children.each((foodSprite: any) => {
+      if (foodSprite.texture.key === foodId && effect && effect.color) {
+        foodSprite.setTint(parseInt(effect.color.replace('#', '0x')));
+        foodSprite.setData('isSpecial', true);
+      } else {
+        foodSprite.clearTint();
+        foodSprite.setData('isSpecial', false);
+      }
+      return true;
+    });
   }
 
   public removeFruitAt(foodId: string, x: number, y: number) {

@@ -279,7 +279,7 @@ wss.on('connection', (ws) => {
             const edge = client.edge || 'bottom';
             const angleRange = getAngleRangeForEdge(edge);
             const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
-            console.log(`[WSS DEBUG] Launching food for ${client.userId} from edge: ${edge} @ angle ${angle.toFixed(2)}`);
+            //console.log(`[WSS DEBUG] Launching food for ${client.userId} from edge: ${edge} @ angle ${angle.toFixed(2)}`);
             launches.push({ foodId: nextFood, angle });
           });
 
@@ -353,7 +353,7 @@ wss.on('connection', (ws) => {
           payload: { 
             targetFoodId: food.id, 
             targetFoodData: food,
-            effectType
+            effect: effect || null // Include effect if provided
           }
         });
       }

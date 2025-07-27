@@ -108,11 +108,15 @@ const PhaserPage: React.FC = () => {
     }
 
     if (lastMessage?.type === 'AAC_TARGET_FOOD') {
-      const { targetFoodId, targetFoodData } = lastMessage.payload;
+      const { targetFoodId, targetFoodData, effect } = lastMessage.payload;
 
       const scene = phaserRef.current?.scene as any;
       if (typeof scene.setTargetFood === 'function') {
-        scene.setTargetFood(targetFoodId);
+        if (effect) {
+          scene.setTargetFood(targetFoodId, effect);
+        } else {
+          scene.setTargetFood(targetFoodId);
+        }
       }
 
       if (targetFoodData) {
