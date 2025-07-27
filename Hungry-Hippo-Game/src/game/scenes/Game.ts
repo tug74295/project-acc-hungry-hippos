@@ -297,17 +297,30 @@ export class Game extends Scene {
         const sprite = fruit as Phaser.GameObjects.Sprite;
         const foodId = sprite.texture.key;
         const isCorrect = foodId === this.currentTargetFoodId;
-
+        console.log(`[Game.handleFruitCollision] Player ${playerId} ate fruit ${foodId}, isCorrect: ${isCorrect} with effect: ${this.currentTargetFoodEffect?.id} `);
         if (isCorrect && this.currentTargetFoodEffect) {
           switch(this.currentTargetFoodEffect.id) {
+            // Freeze the hippo for 2 seconds
             case 'freeze':
               const hippo = this.players[playerId];
               if (hippo) {
                 hippo.freeze(2000);
               }
               break;
-            }
-            this.currentTargetFoodEffect = null;
+            // Decrease the hippo's score by 2
+            case 'burn':
+              this.hippo?.setTint(0xff0000);
+              this.time.delayedCall(1000, () => {
+                this.hippo?.clearTint();
+              });
+              break;
+            case 'grow':
+              this.hippo?.setTint(0x00FF00);
+              this.time.delayedCall(1000, () => {
+                this.hippo?.clearTint();
+              });
+              break;
+          }
         }
 
         try {
@@ -317,11 +330,15 @@ export class Game extends Scene {
               sessionId: this.sessionId,
               userId: playerId,
               isCorrect,
-              allowPenalty: this.modeSettings.allowPenalty
+              allowPenalty: this.modeSettings.allowPenalty,
+              effect: this.currentTargetFoodEffect?.id
             },
           });
         } catch (e) {
           console.error('[Game.handleFruitCollision] Error sending score update:', e);
+        }
+        if (isCorrect) {
+          this.currentTargetFoodEffect = null;
         }
         EventBus.emit('fruit-eaten', { foodId, x: fruit.x, y: fruit.y });
       }
