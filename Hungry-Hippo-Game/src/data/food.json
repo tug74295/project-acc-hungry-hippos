@@ -18,58 +18,16 @@
                     "audioPath": "/audio/fruits/banana.mp3"
                 },
                 {
-                    "id": "blueberry",
-                    "name": "Blueberry",
-                    "imagePath": "/assets/fruits/blueberry.png",
-                    "audioPath": "/audio/fruits/blueberry.mp3"
-                },
-                {
-                    "id": "cantaloupe",
-                    "name": "Cantaloupe",
-                    "imagePath": "/assets/fruits/cantaloupe.png",
-                    "audioPath": "/audio/fruits/cantaloupe.mp3"
-                },
-                {
                     "id": "cherry",
                     "name": "Cherry",
                     "imagePath": "/assets/fruits/cherry.png",
                     "audioPath": "/audio/fruits/cherry.mp3"
                 },
                 {
-                    "id": "fig",
-                    "name": "Fig",
-                    "imagePath": "/assets/fruits/fig.png",
-                    "audioPath": "/audio/fruits/fig.mp3"
-                },
-                {
                     "id": "grape",
                     "name": "Grape",
                     "imagePath": "/assets/fruits/grape.png",
                     "audioPath": "/audio/fruits/grape.mp3"
-                },
-                {
-                    "id": "kiwi",
-                    "name": "Kiwi",
-                    "imagePath": "/assets/fruits/kiwi.png",
-                    "audioPath": "/audio/fruits/kiwi.mp3"
-                },
-                {
-                    "id": "lemon",
-                    "name": "Lemon",
-                    "imagePath": "/assets/fruits/lemon.png",
-                    "audioPath": "/audio/fruits/lemon.mp3"
-                },
-                {
-                    "id": "mango",
-                    "name": "Mango",
-                    "imagePath": "/assets/fruits/mango.png",
-                    "audioPath": "/audio/fruits/mango.mp3"
-                },
-                {
-                    "id": "orange",
-                    "name": "Orange",
-                    "imagePath": "/assets/fruits/orange.png",
-                    "audioPath": "/audio/fruits/orange.mp3"
                 },
                 {
                     "id": "peach",
@@ -90,28 +48,10 @@
                     "audioPath": "/audio/fruits/pineapple.mp3"
                 },
                 {
-                    "id": "pomegranate",
-                    "name": "Pomegranate",
-                    "imagePath": "/assets/fruits/pomegranate.png",
-                    "audioPath": "/audio/fruits/pomegranate.mp3"
-                },
-                {
-                    "id": "raspberry",
-                    "name": "Raspberry",
-                    "imagePath": "/assets/fruits/raspberry.png",
-                    "audioPath": "/audio/fruits/raspberry.mp3"
-                },
-                {
                     "id": "strawberry",
                     "name": "Strawberry",
                     "imagePath": "/assets/fruits/strawberry.png",
                     "audioPath": "/audio/fruits/strawberry.mp3"
-                },
-                {
-                    "id": "watermelon",
-                    "name": "Watermelon",
-                    "imagePath": "/assets/fruits/watermelon.png",
-                    "audioPath": "/audio/fruits/watermelon.mp3"
                 }
             ]
         },
@@ -127,22 +67,10 @@
                     "audioPath": "/audio/vegetables/avocado.mp3"
                 },
                 {
-                    "id": "beetroot",
-                    "name": "Beetroot",
-                    "imagePath": "/assets/vegetables/beetroot.png",
-                    "audioPath": "/audio/vegetables/beetroot.mp3"
-                },
-                {
                     "id": "broccoli",
                     "name": "Broccoli",
                     "imagePath": "/assets/vegetables/broccoli.png",
                     "audioPath": "/audio/vegetables/broccoli.mp3"
-                },
-                {
-                    "id": "cabbage",
-                    "name": "Cabbage",
-                    "imagePath": "/assets/vegetables/cabbage.png",
-                    "audioPath": "/audio/vegetables/cabbage.mp3"
                 },
                 {
                     "id": "carrot",
@@ -151,40 +79,10 @@
                     "audioPath": "/audio/vegetables/carrot.mp3"
                 },
                 {
-                    "id": "chili-pepper",
-                    "name": "Chili Pepper",
-                    "imagePath": "/assets/vegetables/chili-pepper.png",
-                    "audioPath": "/audio/vegetables/chili-pepper.mp3"
-                },
-                {
-                    "id": "corn",
-                    "name": "Corn",
-                    "imagePath": "/assets/vegetables/corn.png",
-                    "audioPath": "/audio/vegetables/corn.mp3"
-                },
-                {
-                    "id": "cucumber",
-                    "name": "Cucumber",
-                    "imagePath": "/assets/vegetables/cucumber.png",
-                    "audioPath": "/audio/vegetables/cucumber.mp3"
-                },
-                {
                     "id": "eggplant",
                     "name": "Eggplant",
                     "imagePath": "/assets/vegetables/eggplant.png",
                     "audioPath": "/audio/vegetables/eggplant.mp3"
-                },
-                {
-                    "id": "garlic",
-                    "name": "Garlic",
-                    "imagePath": "/assets/vegetables/garlic.png",
-                    "audioPath": "/audio/vegetables/garlic.mp3"
-                },
-                {
-                    "id": "green-beans",
-                    "name": "Green Beans",
-                    "imagePath": "/assets/vegetables/green-beans.png",
-                    "audioPath": "/audio/vegetables/green-beans.mp3"
                 },
                 {
                     "id": "leek",
@@ -209,24 +107,6 @@
                     "name": "Onion",
                     "imagePath": "/assets/vegetables/onion.png",
                     "audioPath": "/audio/vegetables/onion.mp3"
-                },
-                {
-                    "id": "pea",
-                    "name": "Pea",
-                    "imagePath": "/assets/vegetables/pea.png",
-                    "audioPath": "/audio/vegetables/pea.mp3"
-                },
-                {
-                    "id": "potato",
-                    "name": "Potato",
-                    "imagePath": "/assets/vegetables/potato.png",
-                    "audioPath": "/audio/vegetables/potato.mp3"
-                },
-                {
-                    "id": "spinach",
-                    "name": "Spinach",
-                    "imagePath": "/assets/vegetables/spinach.png",
-                    "audioPath": "/audio/vegetables/spinach.mp3"
                 }
             ]
         },
@@ -248,12 +128,6 @@
                     "audioPath": "/audio/fast-foods/burger.mp3"
                 },
                 {
-                    "id": "burrito",
-                    "name": "Burrito",
-                    "imagePath": "/assets/fast-foods/burrito.png",
-                    "audioPath": "/audio/fast-foods/burrito.mp3"
-                },
-                {
                     "id": "corn-dog",
                     "name": "Corn Dog",
                     "imagePath": "/assets/fast-foods/corn-dog.png",
@@ -264,12 +138,6 @@
                     "name": "Donut",
                     "imagePath": "/assets/fast-foods/donut.png",
                     "audioPath": "/audio/fast-foods/donut.mp3"
-                },
-                {
-                    "id": "fried-chicken",
-                    "name": "Fried Chicken",
-                    "imagePath": "/assets/fast-foods/fried-chicken.png",
-                    "audioPath": "/audio/fast-foods/fried-chicken.mp3"
                 },
                 {
                     "id": "fries",
@@ -284,24 +152,6 @@
                     "audioPath": "/audio/fast-foods/hot-dog.mp3"
                 },
                 {
-                    "id": "milkshake",
-                    "name": "Milkshake",
-                    "imagePath": "/assets/fast-foods/milkshake.png",
-                    "audioPath": "/audio/fast-foods/milkshake.mp3"
-                },
-                {
-                    "id": "nachos",
-                    "name": "Nachos",
-                    "imagePath": "/assets/fast-foods/nachos.png",
-                    "audioPath": "/audio/fast-foods/nachos.mp3"
-                },
-                {
-                    "id": "onion-ring",
-                    "name": "Onion Ring",
-                    "imagePath": "/assets/fast-foods/onion-ring.png",
-                    "audioPath": "/audio/fast-foods/onion-ring.mp3"
-                },
-                {
                     "id": "pizza",
                     "name": "Pizza",
                     "imagePath": "/assets/fast-foods/pizza.png",
@@ -312,12 +162,6 @@
                     "name": "Sandwich",
                     "imagePath": "/assets/fast-foods/sandwich.png",
                     "audioPath": "/audio/fast-foods/sandwich.mp3"
-                },
-                {
-                    "id": "taco",
-                    "name": "Taco",
-                    "imagePath": "/assets/fast-foods/taco.png",
-                    "audioPath": "/audio/fast-foods/taco.mp3"
                 }
             ]
         }

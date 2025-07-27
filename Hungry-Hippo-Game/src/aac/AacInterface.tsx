@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { AacFood, AAC_DATA } from "../Foods";
+import { AacFood, AAC_DATA, AacVerb, AAC_VERBS } from "../Foods";
 import { useWebSocket } from "../contexts/WebSocketContext";
 
 /**
@@ -17,8 +17,9 @@ interface AacInterfaceProps {
  * @returns {JSX.Element} The rendered component.
  */
 const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }) => {
-  const [selectedFood, setSelectedFood] = React.useState<AacFood | null>(null);
+  const [selectedItem, setSelectedItem] = React.useState<AacFood | null>(null);
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+  const [activeVerb, setActiveVerb] = React.useState<AacVerb | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = React.useState(false);
   const { sendMessage } = useWebSocket();
 
@@ -42,14 +43,14 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
       setIsAudioPlaying(true);
       audio.onended = () => setIsAudioPlaying(false);
       audio.onerror = () => {
-        console.error(`Error playing audio for ${selectedFood?.name}`);
+        console.error(`Error playing audio for ${selectedItem?.name}`);
         setIsAudioPlaying(false);
       };
       audio.play()
     }
   };
 
-  const playNavigationAudio = (audioPath: string | undefined) => {
+  const playAudioWithoutDelay = (audioPath: string | undefined) => {
     if (audioPath) {
       const audio = new Audio(audioPath);
       audio.onerror = () => {
@@ -67,16 +68,22 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
    * @returns {void}
    */
   const handleFoodClick = (food: AacFood) => {
-    setSelectedFood(food);
+    setSelectedItem(food);
 
+    // If a verb is active, send the verb and food selection
     if (sessionId) {
       sendMessage({
         type: "AAC_FOOD_SELECTED",
         payload: {
-          sessionId, userId, role, food
+          sessionId,
+          userId,
+          role,
+          food,
+          effect: activeVerb ? activeVerb : null
         }
       });
     }
+    setActiveVerb(null);
     playAudioWithDelay(food.audioPath);
   };
 
@@ -89,16 +96,36 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
    */
   const handleCategoryClick = (category: typeof AAC_DATA.categories[0]) => {
     setSelectedCategory(category.categoryName);
-    playNavigationAudio(category.categoryAudioPath);
+    playAudioWithoutDelay(category.categoryAudioPath);
   };
 
   /**
    * Handles the click event for the back button.
+   * @precondition The user must be in a category view.
+   * @postcondition The selected category is reset to null, and the back navigation audio is played.
    * @returns {void}
    */
   const handleBackClick = () => {
     setSelectedCategory(null);
-    playNavigationAudio("/audio/back.mp3");
+    playAudioWithoutDelay("/audio/back.mp3");
+  };
+
+  /**
+   * Handles the click event for a verb button.
+   * @param {AacVerb} verb - The verb that was clicked.
+   * @precondition The verb must be part of the AAC_VERBS.
+   * @postcondition The selected verb is set, and the audio for the verb is played if available.
+   * @returns {void}
+   */
+  const handleVerbClick = (verb: AacVerb) => {
+    setSelectedItem(verb);
+    playAudioWithoutDelay(verb.audioPath);
+    setActiveVerb(prev => {
+      // If the same verb is clicked, do nothing, otherwise replace
+      if (prev?.id === verb.id) return prev;
+
+      return verb;
+    })
   };
 
   /**
@@ -149,6 +176,23 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
           />
           Back
         </button>
+
+        {/* Verb Buttons */}
+        {AAC_VERBS.map((verb) => (
+          <button
+            key={verb.name}
+            onClick={() => handleVerbClick(verb)}
+            disabled={isAudioPlaying}
+            className='aac-food-button'
+            style={{ backgroundColor: verb.color || '#0ea5e9' }}
+          >
+            <img
+              src={verb.imagePath}
+              alt={verb.name}
+              className="aac-food-image" />
+            {verb.name}
+          </button>
+        ))}
         
         {/* Food items for the selected category */}
         {category.foods.map((food) => (
@@ -156,7 +200,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
             key={food.id}
             onClick={() => handleFoodClick(food)}
             disabled={isAudioPlaying}
-            className={`aac-food-button ${selectedFood && selectedFood.id === food.id ? 'aac-food-selected' : ''}`}
+            className={`aac-food-button ${selectedItem && selectedItem.id === food.id ? 'aac-food-selected' : ''}`}
           >
             <img
               src={food.imagePath}
@@ -177,15 +221,14 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
   return (
     <div className="aac-container">
       <div className="aac-device">
-        <h1> AAC Device </h1>
 
         {/* Display the selected fruit */}
         <div className="aac-foods">
-          {selectedFood ? (
-            <p className="aac-selected-food"> You selected: {selectedFood.name} {selectedFood.imagePath && (
+          {selectedItem ? (
+            <p className="aac-selected-food"> You selected: {selectedItem.name} {selectedItem.imagePath && (
                 <img
-                  src={selectedFood.imagePath}
-                  alt={selectedFood.name}
+                  src={selectedItem.imagePath}
+                  alt={selectedItem.name}
                   className="aac-selected-food-image-display"
                 />
               )}

@@ -66,8 +66,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
        return;
       }
 
-      //
-
       if (data.type === 'USERS_LIST_UPDATE') {
         setConnectedUsers(data.payload.users);
         return; 

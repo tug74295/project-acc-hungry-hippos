@@ -1,4 +1,6 @@
 import { MoveStrategy } from "./moveStrategy/MoveStrategy";
+import type { Edge } from "../game/EdgeSlideStrategy"; // update path if needed
+
 
 /**
  * Represents a Hippo character in the game, extending Phaser's Arcade Sprite for physics capabilities.
@@ -17,8 +19,8 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
      */
     private mouthOpen = true;
 
-    private targetX: number = 0;
-    private targetY: number = 0;
+    public targetX: number = 0;
+    public targetY: number = 0;
 
     public setTargetPosition(x: number, y: number) {
     this.targetX = x;
@@ -50,7 +52,7 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
         // Configure physics properties
         this.setCollideWorldBounds(true);
         // Play the 'walking' animation (assuming it's preloaded)
-        this.play('walking');
+       // this.play('walking');
         // Assign the movement strategy
         this.moveStrategy = moveStrategy;
     }
@@ -71,6 +73,27 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
             this.y += (this.targetY - this.y) * lerp;
         }
     }
+
+    public updatePointerFlip(prevX: number, prevY: number, edge: Edge, newX: number, newY: number) {
+    if (edge === "top" || edge === "bottom") {
+        if (newX < prevX) {
+        // Moving left
+        this.setFlipX(edge === "top" ? false : true);
+        } else if (newX > prevX) {
+        // Moving right
+        this.setFlipX(edge === "top" ? true : false);
+        }
+    } else if (edge === "left" || edge === "right") {
+        if (newY < prevY) {
+        // Moving up
+        this.setFlipX(edge === "left");
+        } else if (newY > prevY) {
+        // Moving down
+        this.setFlipX(edge === "right");
+        }
+    }
+}
+
 
     /**
      * Sets a new movement strategy for the Hippo. This allows dynamic changes in behavior.

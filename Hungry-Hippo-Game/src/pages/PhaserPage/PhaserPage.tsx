@@ -25,6 +25,7 @@ const PhaserPage: React.FC = () => {
   const [scores, setScores] = useState<Record<string, number>>({});
   const [gameMode, setGameMode] = useState<GameMode | null>(null);
   const navigate = useNavigate(); 
+  const [secondsLeft, setSecondsLeft] = useState<number>(60);
 
   // Defensive: what if no state? Fallback to false.
   const isSpectator = location.state?.role === 'Spectator';
@@ -91,28 +92,37 @@ const PhaserPage: React.FC = () => {
 
   // --- FOOD LAUNCH & FRUIT EATEN BROADCAST ---
   useEffect(() => {
-    if (lastMessage?.type === 'FOOD_SELECTED_BROADCAST') {
-      const { launches, targetFoodId, targetFoodData } = lastMessage.payload as {
-        launches: { foodId: string; angle: number }[];
-        targetFoodId: string;
-        targetFoodData: AacFood;
-      };
+    if (lastMessage?.type === 'FOOD_STREAM_LAUNCH') {
+      const { launches } = lastMessage.payload;
       const scene = phaserRef.current?.scene as any;
-      if (Array.isArray(launches)) {
-        const launchesPerSet = 3;
-        launches.forEach(({ foodId, angle }, index) => {
-          const setIndex = index % launchesPerSet;
-          setTimeout(() => {
-            if (scene && typeof scene.addFoodManually === 'function') {
-              scene.addFoodManually(foodId, angle);
-            }
-          }, setIndex * 1000); // delay
-        });
-      }
+
+      launches.forEach(({ foodId, angle }: { foodId: string; angle: number }, index: number) => {
+        setTimeout(() => {
+          if (scene && typeof scene.addFoodManually === 'function') {
+            scene.addFoodManually(foodId, angle);
+          }
+        }, index );
+      });
+
+      clearLastMessage?.();
+    }
+
+    if (lastMessage?.type === 'AAC_TARGET_FOOD') {
+      const { targetFoodId, targetFoodData, effect } = lastMessage.payload;
+
+      const scene = phaserRef.current?.scene as any;
       if (typeof scene.setTargetFood === 'function') {
-        scene.setTargetFood(targetFoodId);
+        if (effect) {
+          scene.setTargetFood(targetFoodId, effect);
+        } else {
+          scene.setTargetFood(targetFoodId);
+        }
       }
-      if (targetFoodData) setCurrentFood(targetFoodData);
+
+      if (targetFoodData) {
+        setCurrentFood(targetFoodData);
+      }
+
       clearLastMessage?.();
     }
 
@@ -152,6 +162,17 @@ const PhaserPage: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleTimerUpdate = (time: number) => {
+      setSecondsLeft(time);
+    };
+    EventBus.on('TIMER_UPDATE', handleTimerUpdate);
+    return () => {
+      EventBus.off('TIMER_UPDATE', handleTimerUpdate);
+    };
+  }, []);
+
+
   // If GAME_OVER navigate to victory route.
   // Also, pass the scores and colors of connected users to the Victory page.
   // If sessionId is not present, navigate to home.
@@ -178,6 +199,32 @@ const PhaserPage: React.FC = () => {
     };
   }, [navigate, sessionId, scores, connectedUsers]);
 
+  useEffect(() => {
+    const handleEdgesReady = (edges: Record<string, string>) => {
+      if (
+        sessionId &&
+        userId &&
+        location.state?.role !== 'Spectator' &&
+        edges?.[userId]
+      ) {
+        sendMessage({
+          type: 'SET_EDGE',
+          payload: {
+            sessionId,
+            userId,
+            edge: edges[userId],
+          },
+        });
+      }
+    };
+
+    EventBus.on('edges-ready', handleEdgesReady);
+
+    return () => {
+      EventBus.off('edges-ready', handleEdgesReady);
+    };
+  }, [sendMessage, sessionId, userId, location.state?.role]);
+
 
   // ---- RENDER ----
 return (
@@ -201,48 +248,42 @@ return (
               modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined,
               role: location.state?.role,
             });
-
-            // Only non-spectators need edges assigned
-            if (location.state?.role !== 'Spectator') {
-              const edges = (scene as any).getEdgeAssignments?.();
-              if (edges && edges[userId]) {
-                sendMessage({
-                  type: 'SET_EDGE',
-                  payload: {
-                    sessionId,
-                    userId,
-                    edge: edges[userId],
-                  },
-                });
-              }
-            }
           }
         }}
       />
     </div>
 
     {/* Sidebar */}
-    <div className={styles.sidebar}>
-      {isSpectator && (
-        <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
-          <span className={styles.spectatorText}>
-           <span className={styles.spectatorHighlight}>Spectator Mode</span>
-          </span>
-        </div>
-      )}
-      <div className={styles.currentFood}>
-        <h3>Current Food to Eat:</h3>
-        {currentFood ? (
-          <>
-            <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
-            <p>{currentFood.name}</p>
-          </>
-        ) : (
-          <p>No Food Selected</p>
+    <div className={styles.sidebarWrapper}>
+      <div className={styles.sidebar}>
+        {isSpectator && (
+          <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
+            <span className={styles.spectatorText}>
+            <span className={styles.spectatorHighlight}>Spectator Mode</span>
+            </span>
+          </div>
         )}
-      </div>
-      <div className={styles.leaderboardBox}>
-      <Leaderboard scores={scores} colors={colors} userId={userId ?? ''} />
+
+        <div className={styles.timerBox}>
+          <h3 className={styles.timerTitle}>Time Left:</h3>
+          <div className={styles.timerValue}>{secondsLeft} sec</div>
+        </div>
+
+        <div className={styles.currentFood}>
+          <h3>Current Food to Eat:</h3>
+          {currentFood ? (
+            <>
+              <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
+              <p>{currentFood.name}</p>
+            </>
+          ) : (
+            <p>No Food Selected</p>
+          )}
+        </div>
+
+        <div className={styles.leaderboardBox}>
+        <Leaderboard scores={scores} colors={colors} userId={userId ?? ''} />
+        </div>
       </div>
     </div>
   </div>

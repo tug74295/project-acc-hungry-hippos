@@ -31,3 +31,35 @@ export interface AacData {
  * Exports the AAC data, which includes categories and their respective foods. This data is imported from a JSON file.
  */
 export const AAC_DATA: AacData = aacData as AacData;
+
+export interface AacVerb {
+    id: string;
+    name: string;
+    imagePath: string;
+    audioPath: string;
+    color?: string;
+}
+
+export const AAC_VERBS: AacVerb[] = [
+    {
+        id: "freeze",
+        name: "Freeze",
+        imagePath: "/assets/verbs/freeze.png",
+        audioPath: "/audio/verbs/freeze.mp3",
+        color: "#52869eff"
+    },
+    {
+        id: "grow",
+        name: "Grow",
+        imagePath: "/assets/verbs/grow.png",
+        audioPath: "/audio/verbs/grow.mp3",
+        color: "#38a169"
+    },
+    {
+        id: "burn",
+        name: "Burn",
+        imagePath: "/assets/verbs/burn.png",
+        audioPath: "/audio/verbs/burn.mp3",
+        color: "#f35236ff"
+    }
+];

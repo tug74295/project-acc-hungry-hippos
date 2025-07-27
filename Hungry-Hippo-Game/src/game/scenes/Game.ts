@@ -5,7 +5,7 @@
 
 import { Scene } from 'phaser';
 import { EventBus } from '../EventBus';
-import { AAC_DATA } from '../../Foods';
+import { AAC_DATA, AacVerb } from '../../Foods';
 import { Hippo } from '../Hippo';
 import { Edge, EdgeSlideStrategy } from '../EdgeSlideStrategy';
 import { movementStore } from './MovementStore';
@@ -17,6 +17,7 @@ export class Game extends Scene {
   private foods!: Phaser.Physics.Arcade.Group;
   private foodSpawnTimer?: Phaser.Time.TimerEvent;
   private currentTargetFoodId: string | null = null;
+  private currentTargetFoodEffect: AacVerb | null = null;
   private playerScores: Record<string, number> = {};
   private players: Record<string, Hippo> = {};
   private edgeAssignments: Record<string, string> = {};
@@ -24,6 +25,9 @@ export class Game extends Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private sendMessage!: (msg: any) => void;
   private localPlayerId!: string;
+  private usePointerControl = false;
+  private isKeyboardActive = false;
+
   /**
    * Variable to track time left
    */
@@ -80,6 +84,9 @@ export class Game extends Scene {
     console.log('[Game] Preload called');
     this.load.image('background', '/assets/presenterBg.png');
     this.load.image('swipeHand', '/assets/swipeHand.png');
+    this.load.image('glowCircle', '/assets/effects/glowCircle.png');
+    this.load.image('sparkle', '/assets/effects/sparkle.png');
+
     AAC_DATA.categories.forEach(category => {
       category.foods.forEach(food => {
         if (food.imagePath) {
@@ -142,13 +149,68 @@ export class Game extends Scene {
     }
   }
 
+
+  private handlePointer(pointer: Phaser.Input.Pointer) {
+  // Only allow local hippo and if not spectator
+  if (!this.hippo || this.role === 'Spectator') return;
+  this.usePointerControl = true;
+
+  // Determine which edge this hippo is assigned to
+  const edge = this.edgeAssignments[this.localPlayerId] as Edge;
+  const prevX = this.hippo.targetX;
+  const prevY = this.hippo.targetY;
+  
+  if (edge === 'top' || edge === 'bottom') {
+    // Allow sliding left/right only; y stays fixed
+    // Clamp to play area if needed
+    const minX = this.hippo.displayWidth/2;
+    const maxX = this.scale.width - this.hippo.displayWidth/2;
+    const x = Phaser.Math.Clamp(pointer.x, minX, maxX);
+    const y = this.hippo.y;
+    this.hippo.updatePointerFlip(prevX, prevY, edge, x, y);
+    this.hippo.setTargetPosition(x, y);
+  } else if (edge === 'left' || edge === 'right') {
+    // Allow sliding up/down only; x stays fixed
+    const minY = this.hippo.displayHeight/2;
+    const maxY = this.scale.height - this.hippo.displayHeight/2;
+    const x = this.hippo.x;
+    const y = Phaser.Math.Clamp(pointer.y, minY, maxY);
+    this.hippo.updatePointerFlip(prevX, prevY, edge, x, y);
+
+    this.hippo.setTargetPosition(x, y);
+  }
+
+   
+}
+
+
   create() {
     const bg = this.add.image(512, 512, 'background');
     bg.setOrigin(0.5, 0.5);
     bg.setDisplaySize(this.scale.width, this.scale.height);
 
     if (this.role === 'Spectator'){this.physics.pause();}
+        this.input.keyboard!.on('keydown', () => {
+      this.isKeyboardActive = true;
+      this.usePointerControl = false;
+    });
+    this.input.keyboard!.on('keyup', () => {
+      this.isKeyboardActive = false;
+    });
 
+
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        if (!this.isKeyboardActive) this.usePointerControl = true;
+        this.handlePointer(pointer);
+      });
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+        if (pointer.isDown && !this.isKeyboardActive) {
+          this.usePointerControl = true;
+          this.handlePointer(pointer);
+        }
+      });
+
+  
     
     this.foods = this.physics.add.group();
     this.cursors = this.input!.keyboard!.createCursorKeys();
@@ -177,26 +239,19 @@ export class Game extends Scene {
       }
     });
 
-
-    movementStore.subscribe(({ userId, x, y }) => {
+   movementStore.subscribe(({ userId, x, y }) => {
       const player = this.players[userId];
       if (player && userId !== this.localPlayerId) {
+        const edge = this.edgeAssignments[userId] as Edge;
+        const prevX = player.targetX;
+        const prevY = player.targetY;
+        player.updatePointerFlip(prevX, prevY, edge, x, y);
         player.setTargetPosition(x, y);
       }
     });
 
 
     EventBus.emit('current-scene-ready', this);
-    
-   
-    this.timerText = this.add.text(32, 80, 'Time: 60', {
-    fontSize: '28px',
-    color: '#ffffff',
-    backgroundColor: '#000000',
-    padding: { x: 8, y: 4 }
-   }).setScrollFactor(0);
-
-
    
     EventBus.on('external-message', (data: any) => {
       if(data.type == 'gameOver')
@@ -214,9 +269,12 @@ export class Game extends Scene {
       console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
       this.updateTimerUI(secondsLeft);
     });
-      
+
+    EventBus.emit('edges-ready', this.edgeAssignments); 
   }
 
+  
+    
   update() {
     // Check if user has interacted with the game on mobile
     this.input.once('pointerdown', () => {
@@ -232,38 +290,44 @@ export class Game extends Scene {
       }
     });
 
-    if (this.hippo && this.cursors && this.role !== 'Spectator') {
-      this.hippo.update(this.cursors);
-      const newX = this.hippo.x;
-      const newY = this.hippo.y;
-      if (this.lastSentX !== newX || this.lastSentY !== newY) {
-        const now = Date.now();
-        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 30) {
-          this.lastSentX = newX;
-          this.lastSentY = newY;
-          this.lastMoveSentAt = now;
-          try {
-            this.sendMessage?.({
-              type: 'PLAYER_MOVE',
-              payload: {
-                sessionId: this.sessionId,
-                userId: this.localPlayerId,
-                x: newX,
-                y: newY
-              }
-            });
-          } catch (e) {
-            console.error('[Game.update] Failed to send player movement:', e);
-          }
+  if (this.hippo && this.role !== 'Spectator') {
+    if (this.usePointerControl) {
+      this.hippo.update(); // <-- no cursors, triggers lerp to target
+    } else if (this.cursors) {
+      this.hippo.update(this.cursors); // keyboard
+    }
+    // ... rest unchanged
+    const newX = this.hippo.x;
+    const newY = this.hippo.y;
+    if (this.lastSentX !== newX || this.lastSentY !== newY) {
+      const now = Date.now();
+      if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 30) {
+        this.lastSentX = newX;
+        this.lastSentY = newY;
+        this.lastMoveSentAt = now;
+        try {
+          this.sendMessage?.({
+            type: 'PLAYER_MOVE',
+            payload: {
+              sessionId: this.sessionId,
+              userId: this.localPlayerId,
+              x: newX,
+              y: newY
+            }
+          });
+        } catch (e) {
+          console.error('[Game.update] Failed to send player movement:', e);
         }
       }
     }
-    for (const [id, hippo] of Object.entries(this.players)) {
-      if (id !== this.localPlayerId) {
-        hippo.update();
-      }
+  }
+  for (const [id, hippo] of Object.entries(this.players)) {
+    if (id !== this.localPlayerId) {
+      hippo.update();
     }
   }
+}
+
 
   private handleFruitCollision(playerId: string, fruit: Phaser.GameObjects.GameObject) {
     if (!fruit.active || fruit.getData('eatenBy')) return;
@@ -308,7 +372,8 @@ export class Game extends Scene {
   public addFoodManually(foodId: string, angle: number) {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
-    const speed = this.modeSettings.fruitSpeed;
+    let speed = this.modeSettings.fruitSpeed;
+
     const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
     food.setScale(0.15);
     food.setBounce(0);
@@ -316,18 +381,46 @@ export class Game extends Scene {
     food.setDamping(false);
     food.setDrag(0);
 
+    if (
+      foodId === this.currentTargetFoodId &&
+      this.currentTargetFoodEffect &&
+      typeof this.currentTargetFoodEffect.color === 'string'
+    ) {
+      const tintColor = parseInt(this.currentTargetFoodEffect.color.replace('#', '0x'));
+      food.setTint(tintColor);
+      const effect = this.currentTargetFoodEffect;
+
+      // Handle each effect type
+      switch (effect.id) {
+        case 'freeze':
+          speed *= 0.6;
+          break;
+        case 'burn':
+          speed *= 1.4;
+          break;
+        case 'grow':
+          food.setScale(0.40);
+          // Pulse animation
+          this.tweens.add({
+            targets: food,
+            scale: { from: 0.15, to: 0.2 },
+            yoyo: true,
+            repeat: -1,
+            duration: 400
+          });
+          break;
+      }
+    }
+
     const velocityX = Math.cos(angle) * speed;
     const velocityY = Math.sin(angle) * speed;
-
     food.setVelocity(velocityX, velocityY);
-    console.log(
-    `[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)} | speed: ${speed} | velocity: (${velocityX.toFixed(2)}, ${velocityY.toFixed(2)})`
-  );
-    //console.log(`[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)}`);
   }
 
-  public setTargetFood(foodId: string) {
+
+  public setTargetFood(foodId: string, effect: AacVerb | null = null) {
     this.currentTargetFoodId = foodId;
+    this.currentTargetFoodEffect = effect;
   }
 
   public removeFruitAt(foodId: string, x: number, y: number) {
