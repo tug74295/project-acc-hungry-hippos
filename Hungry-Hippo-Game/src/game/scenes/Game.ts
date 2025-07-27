@@ -382,11 +382,13 @@ export class Game extends Scene {
         }
 
         try {
+          const instanceId = sprite.getData('instanceId');
           this.sendMessage({
             type: 'FRUIT_EATEN_BY_PLAYER',
             payload: {
               sessionId: this.sessionId,
               userId: playerId,
+              instanceId,
               isCorrect,
               allowPenalty: this.modeSettings.allowPenalty,
               effect: this.modeSettings.allowEffect ? this.currentTargetFoodEffect?.id : null
@@ -398,7 +400,7 @@ export class Game extends Scene {
         if (isCorrect) {
           this.currentTargetFoodEffect = null;
         }
-        EventBus.emit('fruit-eaten', { foodId, x: fruit.x, y: fruit.y });
+        // local fruit eaten event no longer needed for spawning; removal handled via instanceId
       }
     }
   }
@@ -409,12 +411,14 @@ export class Game extends Scene {
   }
 
 
-  public addFoodManually(foodId: string, angle: number) {
+  public addFoodManually(data: { instanceId: string; foodId: string; speed: number; angle: number }) {
+    const { instanceId, foodId, speed, angle } = data;
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
-    let speed = this.modeSettings.fruitSpeed;
+    let finalSpeed = speed;
 
     const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
+    food.setData('instanceId', instanceId);
     food.setScale(0.15);
     food.setBounce(0);
     food.setCollideWorldBounds(false);
@@ -434,10 +438,10 @@ export class Game extends Scene {
       // Handle each effect type
       switch (effect.id) {
         case 'freeze':
-          speed *= 0.6;
+          finalSpeed *= 0.6;
           break;
         case 'burn':
-          speed *= 1.4;
+          finalSpeed *= 1.4;
           break;
         case 'grow':
           food.setScale(0.40);
@@ -453,8 +457,8 @@ export class Game extends Scene {
       }
     }
 
-    const velocityX = Math.cos(angle) * speed;
-    const velocityY = Math.sin(angle) * speed;
+    const velocityX = Math.cos(angle) * finalSpeed;
+    const velocityY = Math.sin(angle) * finalSpeed;
     food.setVelocity(velocityX, velocityY);
   }
 
@@ -464,10 +468,9 @@ export class Game extends Scene {
     this.currentTargetFoodEffect = effect;
   }
 
-  public removeFruitAt(foodId: string, x: number, y: number) {
-    const radius = 20;
+  public removeFruitById(instanceId: string) {
     this.foods.children.each((child: any) => {
-      if (child.texture.key === foodId && Phaser.Math.Distance.Between(child.x, child.y, x, y) < radius) {
+      if (child.getData('instanceId') === instanceId) {
         child.destroy();
         return false;
       }

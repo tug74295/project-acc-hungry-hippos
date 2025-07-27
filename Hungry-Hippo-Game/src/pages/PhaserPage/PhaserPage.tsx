@@ -90,20 +90,14 @@ const PhaserPage: React.FC = () => {
     }
   }, [lastMessage, clearLastMessage]);
 
-  // --- FOOD LAUNCH & FRUIT EATEN BROADCAST ---
+  // --- FOOD SPAWN & FRUIT EATEN BROADCAST ---
   useEffect(() => {
-    if (lastMessage?.type === 'FOOD_STREAM_LAUNCH') {
-      const { launches } = lastMessage.payload;
+    if (lastMessage?.type === 'SPAWN_FOOD') {
+      const spawn = lastMessage.payload as { instanceId: string; foodId: string; speed: number; angle: number };
       const scene = phaserRef.current?.scene as any;
-
-      launches.forEach(({ foodId, angle }: { foodId: string; angle: number }, index: number) => {
-        setTimeout(() => {
-          if (scene && typeof scene.addFoodManually === 'function') {
-            scene.addFoodManually(foodId, angle);
-          }
-        }, index );
-      });
-
+      if (scene && typeof scene.addFoodManually === 'function') {
+        scene.addFoodManually(spawn);
+      }
       clearLastMessage?.();
     }
 
@@ -127,10 +121,10 @@ const PhaserPage: React.FC = () => {
     }
 
     if (lastMessage?.type === 'FRUIT_EATEN_BROADCAST') {
-      const { foodId, x, y } = lastMessage.payload;
+      const { instanceId } = lastMessage.payload as { instanceId: string };
       const scene = phaserRef.current?.scene as any;
-      if (scene && typeof scene.removeFruitAt === 'function') {
-        scene.removeFruitAt(foodId, x, y);
+      if (scene && typeof scene.removeFruitById === 'function') {
+        scene.removeFruitById(instanceId);
       }
     }
 
@@ -141,21 +135,7 @@ const PhaserPage: React.FC = () => {
     }
   }, [lastMessage, clearLastMessage]);
 
-  // --- FRUIT EATEN LOCAL (EMITTED FROM PHASER) ---
-  useEffect(() => {
-    const handleFruitEaten = ({ foodId, x, y }: { foodId: string; x: number; y: number }) => {
-      if (sessionId) {
-        sendMessage({
-          type: 'FRUIT_EATEN',
-          payload: { sessionId, foodId, x, y }
-        });
-      }
-    };
-    EventBus.on('fruit-eaten', handleFruitEaten);
-    return () => {
-      EventBus.off('fruit-eaten', handleFruitEaten);
-    };
-  }, [sendMessage, sessionId]);
+  // No local timer-based food spawn; all spawns come from server
 
   // --- SCORE UPDATE BROADCAST (EVENTBUS) ---
   useEffect(() => {

@@ -10,9 +10,22 @@ const wss = new WebSocket.Server({ noServer: true });
 const sessions = {};
 const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 const scoresBySession = {};
-const fruitQueues = {};      
-const fruitIntervals = {}; 
+const fruitQueues = {};
+const fruitIntervals = {};
 const TARGET_FOOD_WEIGHT = 6; // Increase or decrease how many times more the target food appears than other food
+
+// Base fruit speed for each game mode. Used when spawning food server-side.
+const MODE_SPEED = {
+  Easy: 100,
+  Medium: 125,
+  Hard: 150
+};
+
+let foodInstanceCounter = 0;
+function generateFoodInstanceId() {
+  foodInstanceCounter += 1;
+  return `food-${Date.now()}-${foodInstanceCounter}`;
+}
 
 // Reject connections from unauthorized origins
 const allowedOrigins = [
@@ -229,6 +242,8 @@ wss.on('connection', (ws) => {
       if (data.type === 'START_GAME') {
         const { sessionId, mode } = data.payload;
         console.log(`[WSS] Start game received for session ${sessionId} with mode ${mode}`);
+        if (!sessions[sessionId]) sessions[sessionId] = new Set();
+        sessions[sessionId].gameMode = mode;
 
         if (!fruitQueues[sessionId]) {
           const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
@@ -284,8 +299,6 @@ wss.on('connection', (ws) => {
           fruitQueues[sessionId].push(weightedFood.id);
 
           const hippoClients = [...sessions[sessionId]].filter(c => c.role === 'Hippo Player');
-          const launches = [];
-
           hippoClients.forEach(client => {
             if (!client.edge) {
               console.warn(`[WSS WARNING] No edge assigned to user ${client.userId}, defaulting to bottom`);
@@ -293,17 +306,17 @@ wss.on('connection', (ws) => {
             const edge = client.edge || 'bottom';
             const angleRange = getAngleRangeForEdge(edge);
             const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
-            //console.log(`[WSS DEBUG] Launching food for ${client.userId} from edge: ${edge} @ angle ${angle.toFixed(2)}`);
-            launches.push({ foodId: nextFood, angle });
-          });
-
-          broadcast(sessionId, {
-            type: 'FOOD_STREAM_LAUNCH',
-            payload: {
-              launches,
-              targetFoodId: nextFood,
-              targetFoodData: targetFood
-            }
+            const instanceId = generateFoodInstanceId();
+            const speed = MODE_SPEED[sessions[sessionId].gameMode] || 100;
+            broadcast(sessionId, {
+              type: 'SPAWN_FOOD',
+              payload: {
+                instanceId,
+                foodId: nextFood,
+                speed,
+                angle
+              }
+            });
           });
         }, 2000);
 
@@ -396,7 +409,7 @@ wss.on('connection', (ws) => {
         }
       }
 
-      // Notify all players in the session to remove the fruit
+      // Notify all players in the session to remove the fruit (legacy support)
       if (data.type === 'FRUIT_EATEN') {
         const { sessionId, foodId, x, y } = data.payload;
         broadcast(sessionId, {
@@ -407,7 +420,7 @@ wss.on('connection', (ws) => {
 
       // Broadcast updated scores
       if (data.type === 'FRUIT_EATEN_BY_PLAYER') {
-        const { sessionId, userId, isCorrect, allowPenalty, effect } = data.payload;
+        const { sessionId, userId, instanceId, isCorrect, allowPenalty, effect } = data.payload;
 
         if (!scoresBySession[sessionId]) scoresBySession[sessionId] = {};
         const prev = scoresBySession[sessionId][userId] || 0;
@@ -425,6 +438,11 @@ wss.on('connection', (ws) => {
         } else if (allowPenalty) {
           scoresBySession[sessionId][userId] = Math.max(0, prev - 1);
         }
+
+        broadcast(sessionId, {
+          type: 'FRUIT_EATEN_BROADCAST',
+          payload: { instanceId }
+        });
 
         broadcast(sessionId, {
           type: 'SCORE_UPDATE_BROADCAST',
