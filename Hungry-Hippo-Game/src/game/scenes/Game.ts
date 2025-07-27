@@ -74,6 +74,9 @@ export class Game extends Scene {
   preload() {
     console.log('[Game] Preload called');
     this.load.image('background', '/assets/presenterBg.png');
+    this.load.image('glowCircle', '/assets/effects/glowCircle.png');
+    this.load.image('sparkle', '/assets/effects/sparkle.png');
+
     AAC_DATA.categories.forEach(category => {
       category.foods.forEach(food => {
         if (food.imagePath) {
@@ -254,6 +257,7 @@ export class Game extends Scene {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
     const speed = this.modeSettings.fruitSpeed;
+
     const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
     food.setScale(0.15);
     food.setBounce(0);
@@ -263,30 +267,31 @@ export class Game extends Scene {
 
     const velocityX = Math.cos(angle) * speed;
     const velocityY = Math.sin(angle) * speed;
-
     food.setVelocity(velocityX, velocityY);
-    if (foodId === this.currentTargetFoodId && this.currentTargetFoodEffect) {
-      if (this.currentTargetFoodEffect && this.currentTargetFoodEffect.color) {
-        food.setTint(parseInt(this.currentTargetFoodEffect.color.replace('#', '0x')));
-      }
-      food.setData('isSpecial', true);
+
+    if (
+      foodId === this.currentTargetFoodId &&
+      this.currentTargetFoodEffect &&
+      typeof this.currentTargetFoodEffect.color === 'string'
+    ) {
+      const tintColor = parseInt(this.currentTargetFoodEffect.color.replace('#', '0x'));
+      food.setTint(tintColor);
+
+      // Pulse animation
+      this.tweens.add({
+        targets: food,
+        scale: { from: 0.15, to: 0.2 },
+        yoyo: true,
+        repeat: -1,
+        duration: 400
+      });
     }
-    //console.log(`[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)} | speed: ${speed} | velocity: (${velocityX.toFixed(2)}, ${velocityY.toFixed(2)})`);
   }
+
 
   public setTargetFood(foodId: string, effect: AacVerb | null = null) {
     this.currentTargetFoodId = foodId;
     this.currentTargetFoodEffect = effect;
-    this.foods.children.each((foodSprite: any) => {
-      if (foodSprite.texture.key === foodId && effect && effect.color) {
-        foodSprite.setTint(parseInt(effect.color.replace('#', '0x')));
-        foodSprite.setData('isSpecial', true);
-      } else {
-        foodSprite.clearTint();
-        foodSprite.setData('isSpecial', false);
-      }
-      return true;
-    });
   }
 
   public removeFruitAt(foodId: string, x: number, y: number) {
