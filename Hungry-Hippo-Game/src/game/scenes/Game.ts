@@ -172,10 +172,7 @@ export class Game extends Scene {
 
     this.hippo.setTargetPosition(x, y);
   }
-
-   
 }
-
 
   create() {
     const bg = this.add.image(512, 512, 'background');
@@ -246,43 +243,43 @@ export class Game extends Scene {
   
     
   update() {
-  if (this.hippo && this.role !== 'Spectator') {
-    if (this.usePointerControl) {
-      this.hippo.update(); // <-- no cursors, triggers lerp to target
-    } else if (this.cursors) {
-      this.hippo.update(this.cursors); // keyboard
-    }
-    // ... rest unchanged
-    const newX = this.hippo.x;
-    const newY = this.hippo.y;
-    if (this.lastSentX !== newX || this.lastSentY !== newY) {
-      const now = Date.now();
-      if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 30) {
-        this.lastSentX = newX;
-        this.lastSentY = newY;
-        this.lastMoveSentAt = now;
-        try {
-          this.sendMessage?.({
-            type: 'PLAYER_MOVE',
-            payload: {
-              sessionId: this.sessionId,
-              userId: this.localPlayerId,
-              x: newX,
-              y: newY
-            }
-          });
-        } catch (e) {
-          console.error('[Game.update] Failed to send player movement:', e);
+    if (this.hippo && this.role !== 'Spectator') {
+      if (this.usePointerControl) {
+        this.hippo.update(); // <-- no cursors, triggers lerp to target
+      } else if (this.cursors) {
+        this.hippo.update(this.cursors); // keyboard
+      }
+      // ... rest unchanged
+      const newX = this.hippo.x;
+      const newY = this.hippo.y;
+      if (this.lastSentX !== newX || this.lastSentY !== newY) {
+        const now = Date.now();
+        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 30) {
+          this.lastSentX = newX;
+          this.lastSentY = newY;
+          this.lastMoveSentAt = now;
+          try {
+            this.sendMessage?.({
+              type: 'PLAYER_MOVE',
+              payload: {
+                sessionId: this.sessionId,
+                userId: this.localPlayerId,
+                x: newX,
+                y: newY
+              }
+            });
+          } catch (e) {
+            console.error('[Game.update] Failed to send player movement:', e);
+          }
         }
       }
     }
-  }
-  for (const [id, hippo] of Object.entries(this.players)) {
-    if (id !== this.localPlayerId) {
-      hippo.update();
+    for (const [id, hippo] of Object.entries(this.players)) {
+      if (id !== this.localPlayerId) {
+        hippo.update();
+      }
     }
   }
-}
 
 
   private handleFruitCollision(playerId: string, fruit: Phaser.GameObjects.GameObject) {
@@ -300,6 +297,18 @@ export class Game extends Scene {
         const sprite = fruit as Phaser.GameObjects.Sprite;
         const foodId = sprite.texture.key;
         const isCorrect = foodId === this.currentTargetFoodId;
+
+        if (isCorrect && this.currentTargetFoodEffect) {
+          switch(this.currentTargetFoodEffect.id) {
+            case 'freeze':
+              const hippo = this.players[playerId];
+              if (hippo) {
+                hippo.freeze(2000);
+              }
+              break;
+            }
+            this.currentTargetFoodEffect = null;
+        }
 
         try {
           this.sendMessage({

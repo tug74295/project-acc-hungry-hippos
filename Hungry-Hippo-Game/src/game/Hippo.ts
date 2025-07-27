@@ -1,5 +1,5 @@
 import { MoveStrategy } from "./moveStrategy/MoveStrategy";
-import type { Edge } from "../game/EdgeSlideStrategy"; // update path if needed
+import type { Edge } from "../game/EdgeSlideStrategy";
 
 
 /**
@@ -22,9 +22,20 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
     public targetX: number = 0;
     public targetY: number = 0;
 
+    private isFrozen = false;
+
+    public freeze(duration: number) {
+        this.isFrozen = true;
+        this.setTint(0x00aaff);
+        this.scene.time.delayedCall(duration, () => {
+            this.isFrozen = false;
+            this.clearTint();
+        });
+    }
+
     public setTargetPosition(x: number, y: number) {
-    this.targetX = x;
-    this.targetY = y;
+        this.targetX = x;
+        this.targetY = y;
     }
 
     /**
@@ -63,6 +74,10 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
      * @param cursors An object containing the current state of cursor keys (up, down, left, right).
      */
     public update(cursors?: Phaser.Types.Input.Keyboard.CursorKeys) {
+        if (this.isFrozen) {
+            this.setVelocity(0, 0);
+            return;
+        }
         if (cursors) {
             // local player – respond to keyboard input
             this.moveStrategy.update(this, cursors);
@@ -75,24 +90,24 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
     }
 
     public updatePointerFlip(prevX: number, prevY: number, edge: Edge, newX: number, newY: number) {
-    if (edge === "top" || edge === "bottom") {
-        if (newX < prevX) {
-        // Moving left
-        this.setFlipX(edge === "top" ? false : true);
-        } else if (newX > prevX) {
-        // Moving right
-        this.setFlipX(edge === "top" ? true : false);
-        }
-    } else if (edge === "left" || edge === "right") {
-        if (newY < prevY) {
-        // Moving up
-        this.setFlipX(edge === "left");
-        } else if (newY > prevY) {
-        // Moving down
-        this.setFlipX(edge === "right");
+        if (edge === "top" || edge === "bottom") {
+            if (newX < prevX) {
+            // Moving left
+            this.setFlipX(edge === "top" ? false : true);
+            } else if (newX > prevX) {
+            // Moving right
+            this.setFlipX(edge === "top" ? true : false);
+            }
+        } else if (edge === "left" || edge === "right") {
+            if (newY < prevY) {
+            // Moving up
+            this.setFlipX(edge === "left");
+            } else if (newY > prevY) {
+            // Moving down
+            this.setFlipX(edge === "right");
+            }
         }
     }
-}
 
 
     /**
