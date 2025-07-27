@@ -79,7 +79,7 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
           userId,
           role,
           food,
-          effectType: activeVerb ? activeVerb.id : null,
+          effect: activeVerb ? activeVerb : null
         }
       });
     }

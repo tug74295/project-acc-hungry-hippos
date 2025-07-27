@@ -5,7 +5,7 @@
 
 import { Scene } from 'phaser';
 import { EventBus } from '../EventBus';
-import { AAC_DATA } from '../../Foods';
+import { AAC_DATA, AacVerb } from '../../Foods';
 import { Hippo } from '../Hippo';
 import { Edge, EdgeSlideStrategy } from '../EdgeSlideStrategy';
 import { movementStore } from './MovementStore';
@@ -17,6 +17,7 @@ export class Game extends Scene {
   private foods!: Phaser.Physics.Arcade.Group;
   private foodSpawnTimer?: Phaser.Time.TimerEvent;
   private currentTargetFoodId: string | null = null;
+  private currentTargetFoodEffect: AacVerb | null = null;
   private playerScores: Record<string, number> = {};
   private players: Record<string, Hippo> = {};
   private edgeAssignments: Record<string, string> = {};
@@ -76,6 +77,9 @@ export class Game extends Scene {
   preload() {
     console.log('[Game] Preload called');
     this.load.image('background', '/assets/presenterBg.png');
+    this.load.image('glowCircle', '/assets/effects/glowCircle.png');
+    this.load.image('sparkle', '/assets/effects/sparkle.png');
+
     AAC_DATA.categories.forEach(category => {
       category.foods.forEach(food => {
         if (food.imagePath) {
@@ -324,7 +328,8 @@ export class Game extends Scene {
   public addFoodManually(foodId: string, angle: number) {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
-    const speed = this.modeSettings.fruitSpeed;
+    let speed = this.modeSettings.fruitSpeed;
+
     const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
     food.setScale(0.15);
     food.setBounce(0);
@@ -332,18 +337,46 @@ export class Game extends Scene {
     food.setDamping(false);
     food.setDrag(0);
 
+    if (
+      foodId === this.currentTargetFoodId &&
+      this.currentTargetFoodEffect &&
+      typeof this.currentTargetFoodEffect.color === 'string'
+    ) {
+      const tintColor = parseInt(this.currentTargetFoodEffect.color.replace('#', '0x'));
+      food.setTint(tintColor);
+      const effect = this.currentTargetFoodEffect;
+
+      // Handle each effect type
+      switch (effect.id) {
+        case 'freeze':
+          speed *= 0.6;
+          break;
+        case 'burn':
+          speed *= 1.4;
+          break;
+        case 'grow':
+          food.setScale(0.40);
+          // Pulse animation
+          this.tweens.add({
+            targets: food,
+            scale: { from: 0.15, to: 0.2 },
+            yoyo: true,
+            repeat: -1,
+            duration: 400
+          });
+          break;
+      }
+    }
+
     const velocityX = Math.cos(angle) * speed;
     const velocityY = Math.sin(angle) * speed;
-
     food.setVelocity(velocityX, velocityY);
-    console.log(
-    `[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)} | speed: ${speed} | velocity: (${velocityX.toFixed(2)}, ${velocityY.toFixed(2)})`
-  );
-    //console.log(`[SYNC LAUNCH] ${foodId} @ angle ${angle.toFixed(2)}`);
   }
 
-  public setTargetFood(foodId: string) {
+
+  public setTargetFood(foodId: string, effect: AacVerb | null = null) {
     this.currentTargetFoodId = foodId;
+    this.currentTargetFoodEffect = effect;
   }
 
   public removeFruitAt(foodId: string, x: number, y: number) {
