@@ -162,36 +162,6 @@ wss.on('connection', (ws) => {
           payload: { userId, x, y }
          });
         }
-
-
-      /*
-      // When a player selects a role, update their role in the session
-      if (data.type === 'UPDATE_ROLE') {
-        const { sessionId, userId, role } = data.payload;
-        try {
-          let sessionsData = { sessions: {} };
-          if (fs.existsSync(sessionFilePath)) {
-            sessionsData = JSON.parse(fs.readFileSync(sessionFilePath, 'utf-8'));
-          }
-
-          const session = sessionsData.sessions[sessionId];
-          if (session) {
-            const user = session.find(u => u.userId === userId);
-            if (user) {
-              user.role = role;
-              fs.writeFileSync(sessionFilePath, JSON.stringify(sessionsData, null, 2), 'utf-8');
-
-              broadcast(sessionId, {
-                type: 'ROLE_UPDATED_BROADCAST',
-                payload: { userId, role }
-              });
-            }
-          }
-        } catch (err) {
-          console.error('Error updating role:', err);
-        }
-      }
-      */
         
       // When a player joins, store their WebSocket connection in the correct session room
       if (data.type === 'PLAYER_JOIN') {
@@ -332,7 +302,7 @@ wss.on('connection', (ws) => {
         const { sessionId } = data.payload;
         console.log(`[WSS] Starting timer for session ${sessionId}`);
 
-        let secondsLeft = 60;
+        let secondsLeft = 60000;
         const interval = setInterval(() => {
           if(secondsLeft <= 0) {
             console.log(`[WSS] Timer ended for session ${sessionId}`);
@@ -369,7 +339,7 @@ wss.on('connection', (ws) => {
 
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
-        const { sessionId, food } = data.payload;
+        const { sessionId, food, effect } = data.payload;
         console.log(`WSS Food selected in session ${sessionId}:`, food);
 
         if (fruitQueues[sessionId]) {
@@ -380,7 +350,11 @@ wss.on('connection', (ws) => {
         // Broadcasts the selected food as the official target
         broadcast(sessionId, {
           type: 'AAC_TARGET_FOOD',
-          payload: { targetFoodId: food.id, targetFoodData: food }
+          payload: { 
+            targetFoodId: food.id, 
+            targetFoodData: food,
+            effectType
+          }
         });
       }
 
