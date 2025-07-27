@@ -38,7 +38,7 @@ export class Game extends Scene {
   private lastSentX: number | null = null;
   private lastSentY: number | null = null;
   private lastMoveSentAt: number = 0;
-  private modeSettings: ModeSettings = { fruitSpeed: 100, allowPenalty: true }; // fallback
+  private modeSettings: ModeSettings = { fruitSpeed: 100, allowPenalty: true, allowEffect: true }; // fallback
   //private pendingHippoPlayers: string[] = [];
 
   constructor() {
@@ -325,7 +325,7 @@ export class Game extends Scene {
         const sprite = fruit as Phaser.GameObjects.Sprite;
         const foodId = sprite.texture.key;
         const isCorrect = foodId === this.currentTargetFoodId;
-        if (isCorrect && this.currentTargetFoodEffect) {
+        if (isCorrect && this.currentTargetFoodEffect && this.modeSettings.allowEffect) {
           this.applyEffectToPlayer(playerId, this.currentTargetFoodEffect);
           this.sendMessage({
             type: 'PLAYER_EFFECT_APPLIED',
@@ -345,7 +345,7 @@ export class Game extends Scene {
               userId: playerId,
               isCorrect,
               allowPenalty: this.modeSettings.allowPenalty,
-              effect: this.currentTargetFoodEffect?.id
+              effect: this.modeSettings.allowEffect ? this.currentTargetFoodEffect?.id : null
             },
           });
         } catch (e) {
@@ -380,7 +380,8 @@ export class Game extends Scene {
     if (
       foodId === this.currentTargetFoodId &&
       this.currentTargetFoodEffect &&
-      typeof this.currentTargetFoodEffect.color === 'string'
+      typeof this.currentTargetFoodEffect.color === 'string' &&
+      this.modeSettings.allowEffect
     ) {
       const tintColor = parseInt(this.currentTargetFoodEffect.color.replace('#', '0x'));
       food.setTint(tintColor);
