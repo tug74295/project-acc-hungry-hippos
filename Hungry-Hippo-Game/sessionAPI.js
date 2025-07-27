@@ -302,7 +302,8 @@ wss.on('connection', (ws) => {
         const { sessionId } = data.payload;
         console.log(`[WSS] Starting timer for session ${sessionId}`);
 
-        let secondsLeft = 60000;
+        let secondsLeft = 180;
+        console.log('[WSS] SECONDSLEFT INIT:', secondsLeft); 
         const interval = setInterval(() => {
           if(secondsLeft <= 0) {
             console.log(`[WSS] Timer ended for session ${sessionId}`);
