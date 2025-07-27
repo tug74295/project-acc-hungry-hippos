@@ -77,8 +77,6 @@ export class Game extends Scene {
   preload() {
     console.log('[Game] Preload called');
     this.load.image('background', '/assets/presenterBg.png');
-    this.load.image('glowCircle', '/assets/effects/glowCircle.png');
-    this.load.image('sparkle', '/assets/effects/sparkle.png');
 
     AAC_DATA.categories.forEach(category => {
       category.foods.forEach(food => {
@@ -219,6 +217,12 @@ export class Game extends Scene {
 
 
     EventBus.emit('current-scene-ready', this);
+
+    EventBus.on('apply-player-effect', (data: { targetUserId: string, effect: AacVerb }) => {
+      if (data.targetUserId !== this.localPlayerId) {
+        this.applyEffectToPlayer(data.targetUserId, data.effect);
+      }
+    });
    
     EventBus.on('external-message', (data: any) => {
       if(data.type == 'gameOver')
@@ -281,6 +285,30 @@ export class Game extends Scene {
     }
   }
 
+  private applyEffectToPlayer(targetUserId: string, effect: AacVerb) {
+    const targetHippo = this.players[targetUserId];
+    if (!targetHippo) return;
+    switch(effect.id) {
+      case 'freeze':
+        targetHippo.freeze(2000);
+        break;
+      case 'burn':
+        targetHippo.setTint(0xff0000);
+        this.time.delayedCall(1000, () => {
+          targetHippo.clearTint();
+        });
+        break;
+      case 'grow':
+        targetHippo.setTint(0x00FF00);
+        targetHippo.setScale(0.4);
+        this.time.delayedCall(1500, () => {
+          targetHippo.clearTint();
+          targetHippo.setScale(0.25);
+        });
+        break;
+    }
+  }
+
 
   private handleFruitCollision(playerId: string, fruit: Phaser.GameObjects.GameObject) {
     if (!fruit.active || fruit.getData('eatenBy')) return;
@@ -299,28 +327,15 @@ export class Game extends Scene {
         const isCorrect = foodId === this.currentTargetFoodId;
         console.log(`[Game.handleFruitCollision] Player ${playerId} ate fruit ${foodId}, isCorrect: ${isCorrect} with effect: ${this.currentTargetFoodEffect?.id} `);
         if (isCorrect && this.currentTargetFoodEffect) {
-          switch(this.currentTargetFoodEffect.id) {
-            // Freeze the hippo for 2 seconds
-            case 'freeze':
-              const hippo = this.players[playerId];
-              if (hippo) {
-                hippo.freeze(2000);
-              }
-              break;
-            // Decrease the hippo's score by 2
-            case 'burn':
-              this.hippo?.setTint(0xff0000);
-              this.time.delayedCall(1000, () => {
-                this.hippo?.clearTint();
-              });
-              break;
-            case 'grow':
-              this.hippo?.setTint(0x00FF00);
-              this.time.delayedCall(1000, () => {
-                this.hippo?.clearTint();
-              });
-              break;
-          }
+          this.applyEffectToPlayer(playerId, this.currentTargetFoodEffect);
+          this.sendMessage({
+            type: 'PLAYER_EFFECT_APPLIED',
+            payload: {
+              sessionId: this.sessionId,
+              targetUserId: playerId,
+              effect: this.currentTargetFoodEffect
+            }
+          });
         }
 
         try {
