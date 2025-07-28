@@ -291,7 +291,7 @@ wss.on('connection', (ws) => {
         const SCREEN_WIDTH = 1024;
         const SCREEN_HEIGHT = 768;
 
-        // spawn cadence mark (first spawn after 2s)
+        // spawn mark (first spawn after 2s)
         lastSpawnAt[sessionId] = Date.now();
 
         // 50ms game loop; spawns happen every 2000ms
@@ -332,6 +332,8 @@ wss.on('connection', (ws) => {
                 const hippoClients = [...sessions[sessionId]].filter(c => c.role === 'Hippo Player');
 
                 hippoClients.forEach(client => {
+                  // Assign a random angle based on the edge they selected
+                  // Each hippo will spawn from their selected edge
                   const edge = client.edge || 'bottom';
                   const angleRange = getAngleRangeForEdge(edge);
                   const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
@@ -350,7 +352,7 @@ wss.on('connection', (ws) => {
                   });
                 });
 
-                // optional immediate state push after spawn
+                // Broadcast the new food state to all clients in the session
                 broadcast(sessionId, {
                   type: 'FOOD_STATE_UPDATE',
                   payload: { foods: activeFoods[sessionId] }
