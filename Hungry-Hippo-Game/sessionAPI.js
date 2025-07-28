@@ -289,7 +289,7 @@ wss.on('connection', (ws) => {
         sessions[sessionId].initialTargetSent = false;
         sessions[sessionId].currentTargetFoodId = null;
         const SCREEN_WIDTH = 1024;
-        const SCREEN_HEIGHT = 768;
+        const SCREEN_HEIGHT = 1024;
 
         // spawn mark (first spawn after 2s)
         lastSpawnAt[sessionId] = Date.now();
