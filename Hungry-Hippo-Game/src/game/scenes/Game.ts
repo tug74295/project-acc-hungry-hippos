@@ -27,7 +27,7 @@ export class Game extends Scene {
   private localPlayerId!: string;
   private usePointerControl = false;
   private isKeyboardActive = false;
-
+ 
   /**
    * Variable to track time left
    */
@@ -143,10 +143,91 @@ export class Game extends Scene {
       this.players[playerId] = playerSprite;
       if (playerId === this.localPlayerId && this.role !== 'Spectator') {
         this.hippo = playerSprite;
+
+         const camera = this.cameras.main;
+      switch (edge) {
+        case 'bottom':
+          camera.setRotation(0);
+          break;
+        case 'right':
+          camera.setRotation(Math.PI / 2);
+          break;
+        case 'top':
+          camera.setRotation(Math.PI);
+          break;
+        case 'left':
+          camera.setRotation(-Math.PI / 2);
+          break;
+      }
       }
     }
   }
 
+
+
+  /**
+   * Maps standard arrow key inputs (cursors) to the correct direction
+   * for the player's edge of the screen, so "up" is always "toward the center."
+   * 
+   * @param edge   The edge ('top', 'bottom', 'right', 'left') where this player is located.
+   * @param cursors Phaser's cursor key object (from createCursorKeys()).
+   * @returns A virtual cursors object where isDown for left/right/up/down is remapped appropriately.
+   *
+   * Example Usage:
+   * ```
+   * const edge = this.edgeAssignments[this.localPlayerId] as Edge;
+   * const mappedCursors = this.getEdgeCursors(edge, this.cursors);
+   * this.hippo.update(mappedCursors);
+   * ```
+   */
+
+private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
+  switch (edge) {
+    case 'bottom':
+      return cursors;
+    case 'top':
+      return {
+        left:  { isDown: cursors.right.isDown },
+        right: { isDown: cursors.left.isDown },
+        up:    { isDown: cursors.down.isDown },
+        down:  { isDown: cursors.up.isDown }
+      } as Phaser.Types.Input.Keyboard.CursorKeys;
+    case 'right':
+      // For right edge, up is right, down is left
+      return {
+        left:  { isDown: cursors.down.isDown },
+        right: { isDown: cursors.up.isDown },
+        up:    { isDown: cursors.right.isDown },
+        down:  { isDown: cursors.left.isDown }
+      } as Phaser.Types.Input.Keyboard.CursorKeys;
+    case 'left':
+      // For left edge, up is left, down is right
+      return {
+        left:  { isDown: cursors.up.isDown },
+        right: { isDown: cursors.down.isDown },
+        up:    { isDown: cursors.left.isDown },
+        down:  { isDown: cursors.right.isDown }
+      } as Phaser.Types.Input.Keyboard.CursorKeys;
+    default:
+      return cursors;
+  }
+}
+
+
+/**
+ * Handles pointer (touch or mouse) movement for the local Hippo player.
+ *
+ * Determines the world coordinates based on the main camera rotation,
+ * clamps the movement along the allowed edge (horizontal for top/bottom, vertical for left/right),
+ * updates the Hippo's facing direction, and sends the new target position.
+ *
+ * This method is only active for the local (non-spectator) Hippo and enables pointer control mode.
+ *
+ * @param {Phaser.Input.Pointer} pointer - The Phaser pointer event with screen (and derived world) coordinates.
+ *
+ * Usage:
+ * Called in response to 'pointerdown' and 'pointermove' events for player control.
+ */
 
   private handlePointer(pointer: Phaser.Input.Pointer) {
   // Only allow local hippo and if not spectator
@@ -157,13 +238,18 @@ export class Game extends Scene {
   const edge = this.edgeAssignments[this.localPlayerId] as Edge;
   const prevX = this.hippo.targetX;
   const prevY = this.hippo.targetY;
+
+  const camera = this.cameras.main;
+  const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
+
   
   if (edge === 'top' || edge === 'bottom') {
     // Allow sliding left/right only; y stays fixed
     // Clamp to play area if needed
-    const minX = this.hippo.displayWidth/2;
-    const maxX = this.scale.width - this.hippo.displayWidth/2;
-    const x = Phaser.Math.Clamp(pointer.x, minX, maxX);
+    const minX = this.hippo.displayWidth / 2;
+    const maxX = this.scale.width - this.hippo.displayWidth / 2;
+
+    const x = Phaser.Math.Clamp(worldPoint.x, minX, maxX);
     const y = this.hippo.y;
     this.hippo.updatePointerFlip(prevX, prevY, edge, x, y);
     this.hippo.setTargetPosition(x, y);
@@ -172,12 +258,31 @@ export class Game extends Scene {
     const minY = this.hippo.displayHeight/2;
     const maxY = this.scale.height - this.hippo.displayHeight/2;
     const x = this.hippo.x;
-    const y = Phaser.Math.Clamp(pointer.y, minY, maxY);
+
+    const y = Phaser.Math.Clamp(worldPoint.y, minY, maxY);
     this.hippo.updatePointerFlip(prevX, prevY, edge, x, y);
 
     this.hippo.setTargetPosition(x, y);
   }
 }
+
+
+/**
+ * Phaser's built-in scene creation method.
+ *
+ * Initializes the background, input handlers (keyboard and pointer),
+ * foods physics group, and swipe hint animation.
+ * Also sets up all movement and game event subscriptions, camera orientation for the player,
+ * and registers custom event listeners (effects, game over, timer, etc.).
+ *
+ * This is the main method where the scene is brought to life after assets are loaded.
+ * 
+ * Usage:
+ * Called automatically by Phaser after preload.
+ * Sets up everything for the current player/role.
+ */
+
+
 
   create() {
     const bg = this.add.image(512, 512, 'background');
@@ -295,7 +400,15 @@ export class Game extends Scene {
       if (this.usePointerControl) {
         this.hippo.update(); // <-- no cursors, triggers lerp to target
       } else if (this.cursors) {
-        this.hippo.update(this.cursors); // keyboard
+
+
+        /** 
+         * Keyboard arrow keys, remapped to match the player's edge view.
+         * This ensures that 'up' always means 'toward the center of the board' from the player's perspective.
+         */
+       const edge = this.edgeAssignments[this.localPlayerId] as Edge;
+        this.hippo.update(this.getEdgeCursors(edge, this.cursors)); 
+        
       }
       // ... rest unchanged
       const newX = this.hippo.x;
