@@ -56,7 +56,7 @@ export class Game extends Scene {
   private swipeHint?: Phaser.GameObjects.Image;
 
 
-  private hippoGroup!: Phaser.Physics.Arcade.Group;
+  //private hippoGroup!: Phaser.Physics.Arcade.Group;
 
 
 
@@ -151,7 +151,7 @@ export class Game extends Scene {
 
       const playerSprite = new Hippo(this, x, y, spriteKey, strategy);
 
-      this.hippoGroup.add(playerSprite);
+      //this.hippoGroup.add(playerSprite);
 
 
       playerSprite.setScale(0.12);
@@ -331,7 +331,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     });
 
 
-    this.hippoGroup = this.physics.add.group();
+   // this.hippoGroup = this.physics.add.group();
 
 
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -350,7 +350,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     this.foods = this.physics.add.group();
     this.cursors = this.input!.keyboard!.createCursorKeys();
 
-    this.physics.add.collider(this.hippoGroup, this.hippoGroup);
+    //this.physics.add.collider(this.hippoGroup, this.hippoGroup);
 
 
     // // Delay animation for swipe hand
