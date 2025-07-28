@@ -9,7 +9,7 @@
   background-size: cover;
   background-repeat: no-repeat;
   padding: 1rem;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .canvasWrapper {
@@ -23,28 +23,20 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.5rem;
   justify-content: flex-start;
   align-items: center;
 }
 
-.currentFood, .leaderboardBox {
-  padding: 1rem;
-  border: 2px solid white;
-  border-radius: 0.75rem;
-  background-color: #1e293b;
-  color: white;
-  text-align: center;
-  width: clamp(160px, 18vw, 220px);
-  font-size: clamp(0.8rem, 2vw, 1rem); 
+.currentFood, .leaderboardBox, .timerBox, .spectatorBanner {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.7em;
   margin: 0 auto 1.2rem auto;
   padding: 0.7em 1.5em;
-  width: clamp(160px, 18vw, 280px);
+  width: 100%;
+  max-width: 220px;
   border-radius: 20px;
   background: linear-gradient(90deg, #fffae3 0%, #b3e4ff 100%);
   box-shadow: 0 4px 24px 0 rgba(0, 30, 100, 0.12), 0 2px 8px rgba(190, 230, 255, 0.09);
@@ -54,39 +46,14 @@
   color: #163153;
   user-select: none;
   transition: box-shadow 0.2s;
+  text-align: center;
 }
+
 
 .foodImage {
   width: clamp(48px, 10vw, 80px);
   height: clamp(48px, 10vw, 80px);
   object-fit: contain;
-}
-
-.timerBox {
-  padding: 1rem;
-  border: 2px solid white;
-  border-radius: 0.75rem;
-  background-color: #1e293b;
-  color: white;
-  text-align: center;
-  width: clamp(160px, 18vw, 220px);
-  font-size: clamp(0.8rem, 2vw, 1rem); 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.7em;
-  margin: 0 auto 1.2rem auto;
-  padding: 0.7em 1.5em;
-  width: clamp(160px, 18vw, 280px);
-  border-radius: 20px;
-  background: linear-gradient(90deg, #fffae3 0%, #b3e4ff 100%);
-  box-shadow: 0 4px 24px 0 rgba(0, 30, 100, 0.12), 0 2px 8px rgba(190, 230, 255, 0.09);
-  border: 2.5px solid #f8f8f7;
-  font-family: 'Baloo 2', 'Comic Sans MS', 'Arial Rounded MT Bold', Arial, sans-serif;
-  color: #163153;
-  user-select: none;
-  transition: box-shadow 0.2s;
 }
 
 .timerTitle {
@@ -99,49 +66,6 @@
   font-weight: 700;
 }
 
-@media (max-width: 512px) {
-  .pageWrapper {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 1rem;
-    gap: 1rem;
-  }
-
-  .canvasWrapper {
-    width: 100%;
-    max-width: 95vw;
-  }
-}
-
-@media (max-width: 480px) {
-  .currentFood,
-  .leaderboardBox {
-    width: clamp(120px, 40vw, 160px);
-    font-size: clamp(0.7rem, 1.5vw, 0.9rem);
-    padding: 0.6rem;
-  }
-
-  .leaderboardBox ul {
-  padding-left: 0;
-  font-size: 0.75rem;
-  }
-
-  .leaderboardBox li {
-    margin: 0.25rem 0;
-  }
-
-  .foodImage {
-    width: 40px;
-    height: 40px;
-  }
-}
-
 .leftPanel {
   display: flex;
   flex-direction: column;
@@ -149,30 +73,6 @@
   max-width: 90vmin; /* Or match your canvasWrapper max-width */
   width: 100%;
   min-width: 240px;
-}
-
-
-.spectatorBanner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.7em;
-  margin: 0 auto 1.2rem auto;
-  padding: 0.7em 1.5em;
-  width: clamp(160px, 18vw, 220px);
-  min-width: unset;
-  max-width: unset;
-  border-radius: 20px;
-  background: linear-gradient(90deg, #fffae3 0%, #b3e4ff 100%);
-  box-shadow: 0 4px 24px 0 rgba(0, 30, 100, 0.12), 0 2px 8px rgba(190, 230, 255, 0.09);
-  border: 2.5px solid #f8f8f7;
-  font-family: 'Baloo 2', 'Comic Sans MS', 'Arial Rounded MT Bold', Arial, sans-serif;
-  font-size: 1.7rem;
-  font-weight: 600;
-  letter-spacing: 1.2px;
-  color: #163153;
-  user-select: none;
-  transition: box-shadow 0.2s;
 }
 
 .spectatorIcon {
@@ -193,15 +93,131 @@
   border-radius: 8px;
 } */
 
-/* Responsive for small screens */
-@media (max-width: 600px) {
+
+@media screen and (max-width: 512px) {
+  .pageWrapper {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .sidebarWrapper {
+    width: 90vw;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .currentFood,
+  .leaderboardBox,
+  .timerBox,
+  .spectatorBanner {
+    font-size: 0.8rem;
+    padding: 0.5em 0.9em;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .timerTitle {
+    font-size: 0.9rem;
+  }
+
+  .timerValue {
+    font-size: 1.2rem;
+  }
+
+  .foodImage {
+    width: clamp(40px, 9vw, 60px);
+    height: clamp(40px, 9vw, 60px);
+  }
+}
+
+@media screen and (min-width: 513px) and (max-width: 699px) {
+  .sidebar {
+    gap: 0rem;
+  }
+
+  .currentFood,
+  .leaderboardBox,
+  .timerBox,
+  .spectatorBanner {
+    font-size: 0.95rem;
+    padding: 0.55em 1em;
+    max-width: 180px;
+  }
+
+  .timerTitle {
+    font-size: 1rem;
+  }
+
+  .timerValue {
+    font-size: 1.4rem;
+  }
+
+  .foodImage {
+    width: clamp(40px, 8vw, 70px);
+    height: clamp(40px, 8vw, 70px);
+  }
+}
+
+@media screen and (min-width: 700px) and (max-width: 1024px) {
+  .sidebar {
+    gap: 0rem;
+  }
+
+  .currentFood,
+  .leaderboardBox,
+  .timerBox,
   .spectatorBanner {
     font-size: 1rem;
-    padding: 0.5em 0.6em;
-    border-radius: 0 0 10px 10px;
-    max-width: 99vw;
+    padding: 0.6em 1em;
+    max-width: 200px;
   }
-  .spectatorIcon {
-    font-size: 1.3rem;
+
+  .timerTitle {
+    font-size: 1.05rem;
+  }
+
+  .timerValue {
+    font-size: 1.5rem;
+  }
+
+  .foodImage {
+    width: clamp(42px, 7vw, 64px);
+    height: clamp(42px, 7vw, 64px);
+  }
+}
+
+@media screen and (max-height: 512px) and (min-width: 700px) and (max-width: 1024px) {
+  .sidebar {
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0rem;
+  }
+
+  .currentFood,
+  .leaderboardBox,
+  .timerBox,
+  .spectatorBanner {
+    font-size: 0.75rem !important;
+    padding: 0.4em 0.7em !important;
+    max-width: 140px !important;
+    width: 40vw !important;
+  }
+
+  .timerTitle {
+    font-size: 0.9rem !important;
+  }
+
+  .timerValue {
+    font-size: 1.1rem !important;
+  }
+
+  .foodImage {
+    width: 36px !important;
+    height: 36px !important;
   }
 }
