@@ -113,12 +113,16 @@ const PhaserPage: React.FC = () => {
       const { targetFoodId, targetFoodData, effect } = lastMessage.payload;
       const scene = phaserRef.current?.scene as any;
       if (scene && typeof scene.setTargetFood === 'function') {
-  if (effect) {
-    scene.setTargetFood(targetFoodId, effect);
-  } else {
-    scene.setTargetFood(targetFoodId);
+    if (effect) {
+      scene.setTargetFood(targetFoodId, effect);
+    } else {
+      scene.setTargetFood(targetFoodId);
+    }
   }
-}
+    if (targetFoodData){
+      setCurrentFood(targetFoodData);
+    }
+    clearLastMessage?.();
 }
 
     // When a food has been eaten, remove it from the scene
