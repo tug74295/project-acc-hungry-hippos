@@ -33,6 +33,29 @@ Players are divided into two roles:
 
 Fruits and traps bounce around the arena with physics-based behavior, creating an exciting and dynamic environment. The goal is to collect as many correct fruits as possible while avoiding traps. This game emphasizes **inclusivity, real-time decision-making**, and **competitive play** in a fun, accessible format.
 
+## How to Run Locally
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos
+cd project-acc-hungry-hippos/Hungry-hippo-game
+```
+
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Start the backend API server (WebSocket)
+```bash
+npm run api
+```
+
+### 4. Run the frontend (open three terminals and run this in each)
+```bash
+npm run dev
+```
+
 ## High Level Requirement
 
 ### Functional Requirements (User-Facing)
@@ -81,30 +104,6 @@ Fruits and traps bounce around the arena with physics-based behavior, creating a
 Many existing web games are designed primarily for able-bodied users, leaving out players who rely on AAC devices. This project was inspired by the desire to **merge play, inclusivity, and technology**, ensuring children and individuals with communication challenges can participate in social, fast-paced gameplay.
 
 The original *Hungry Hungry Hippos* was a turn-based, tactile game, but modernizing it with bouncing physics, interactive traps, and digital control unlocks a new level of engagement. Integrating accessible design principles and playful interaction can foster **joyful shared experiences**, especially in educational or therapeutic settings.
-
----
-## :tools: How to Run Locally
-
-### 1. Clone the repo
-```bash
-git clone https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos
-cd project-acc-hungry-hippos/Hungry-hippo-game
-```
-
-### 2. Install dependencies
-```bash
-npm install
-```
-
-### 3. Start the backend API server (WebSocket)
-```bash
-npm run api
-```
-
-### 4. Run the frontend (open three terminals and run this in each)
-```bash
-npm run dev
-```
 
 ## Required Resources
 
