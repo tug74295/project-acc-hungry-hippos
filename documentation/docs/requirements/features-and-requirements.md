@@ -9,9 +9,8 @@ sidebar_position: 4
 
 ### 🎮 Core Gameplay
 - The game must allow up to **4 Hippo players**, each positioned at one edge of the screen (top, bottom, left, right).
-- Hippos must be able to **slide left-right (horizontal edges)** or **up-down (vertical edges)** only along their edge.
-- Hippos can **catch or deflect Food and traps** launched from the center.
-- Food must **bounce with physics**, possibly off edges, and expire after some time.
+- Hippos must be able to **slide left-right (horizontal edges)**
+- Hippos can **catch Food and traps** launched from the center.
 - Food and traps should have **clear visual distinction**.
 
 ### 🎯 AAC Game Conductor Role
@@ -19,13 +18,11 @@ sidebar_position: 4
 - The Conductor must be able to:
   - Choose the **type of food or trap**.
   - **Launch** the selected object from the center outward.
-  - **Set difficulty** (speed, quantity, randomness).
   - Influence round dynamics (e.g., super food, freeze mode, etc.).
 
 ### 🍓 Object Types
 - **Food** (normal, super food, etc.) are catchable for points.
 - **Traps** (e.g., poison, freeze, confusion) have **negative effects** on Hippos.
-- **Food expiration** removes it from play after a short time.
 
 ### 🧠 Scoring & Feedback
 - Hippos earn points for **successfully catching Food**.
