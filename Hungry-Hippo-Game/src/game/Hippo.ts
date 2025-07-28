@@ -102,21 +102,25 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
     }
 
    public updatePointerFlip(prevX: number, prevY: number, edge: Edge, newX: number, newY: number) {
-    if ((edge === "top" || edge === "bottom") && newX !== prevX) {
-        // Only flip when actual X movement happened
-        if (edge === "top") {
-            this.setFlipX(newX > prevX); // right is true (flip), left is false
-        } else { // bottom
-            this.setFlipX(newX < prevX); // left is true (flip), right is false
-        }
-    } else if ((edge === "left" || edge === "right") && newY !== prevY) {
-        // Only flip when actual Y movement happened
+       if ((edge === "top" || edge === "bottom") && newX !== prevX) {
+                if (edge === "top") {
+                    // INVERT for top: right should be flipX=false, left flipX=true
+                    this.setFlipX(newX < prevX); // right: false, left: true
+                } else {
+                    // bottom stays as before: right flipX=true, left flipX=false
+                    this.setFlipX(newX > prevX);
+                }
+                
+
+
+
+        } else if ((edge === "left" || edge === "right") && newY !== prevY) {
         if (edge === "left") {
-            this.setFlipX(newY < prevY); // up is true (flip), down is false
+            this.setFlipX(newY > prevY); // down: true, up: false
         } else { // right
-            this.setFlipX(newY > prevY); // down is true (flip), up is false
-        }
-    }
+            this.setFlipX(newY < prevY); // up: true, down: false
+  }
+}
 }
 
 
