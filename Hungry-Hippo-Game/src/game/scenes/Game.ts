@@ -10,6 +10,7 @@ import { Hippo } from '../Hippo';
 import { Edge, EdgeSlideStrategy } from '../EdgeSlideStrategy';
 import { movementStore } from './MovementStore';
 import { ModeSettings } from '../../config/gameModes';
+import { HIPPO_COLORS } from '../../config/hippoColors';
 
 export class Game extends Scene {
   private sessionId!: string;
@@ -47,6 +48,10 @@ export class Game extends Scene {
   private swipeHint?: Phaser.GameObjects.Image;
 
 
+  private hippoGroup!: Phaser.Physics.Arcade.Group;
+
+
+
   constructor() {
     super('Game');
   }
@@ -60,7 +65,9 @@ export class Game extends Scene {
   localPlayerId: string; 
   sessionId: string;
   role: string;
-  connectedUsers?: { userId: string; role: string }[]; 
+  connectedUsers?: {
+    color: string | undefined; userId: string; role: string 
+}[]; 
   modeSettings?: ModeSettings;
 }) {
   this.sendMessage = data.sendMessage;
@@ -74,7 +81,7 @@ export class Game extends Scene {
   if (data.connectedUsers) {
     data.connectedUsers
     .filter(u => u.role === 'Hippo Player')
-    .forEach(u => this.addPlayer(u.userId));
+    .forEach(u => this.addPlayer(u.userId, u.color));
   }
   this.role = data.role;
 }
@@ -92,10 +99,16 @@ export class Game extends Scene {
         }
       });
     });
-    this.load.spritesheet('character', '/assets/spritesheet.png', {
-      frameWidth: 350,
-      frameHeight: 425
-    });
+    // this.load.spritesheet('character', '/assets/spritesheet.png', {
+    //   frameWidth: 350,
+    //   frameHeight: 425
+    // });
+
+
+    HIPPO_COLORS.forEach(h => {
+      this.load.image(h.color + 'Hippo', h.imgSrc);
+      });
+
   }
 
 
@@ -113,17 +126,28 @@ export class Game extends Scene {
     }
   }
 
-  public addPlayer(playerId: string) {
+  public addPlayer(playerId: string, color?: string) {
     if (!(playerId in this.playerScores)) this.playerScores[playerId] = 0;
     if (!(playerId in this.players)) {
       const edge = (this.availableEdges.shift() || 'bottom') as Edge;
       this.edgeAssignments[playerId] = edge;
       const { x, y } = this.getEdgePosition(edge);
       const slideDistance = (edge === 'top' || edge === 'bottom') ? this.scale.width * 0.8 : this.scale.height * 0.8;
+
+      let spriteKey = 'character';
       const strategy = new EdgeSlideStrategy(edge, slideDistance);
-      const playerSprite = new Hippo(this, x, y, 'character', strategy);
-      playerSprite.displayWidth = 85;
-      playerSprite.displayHeight = 100;
+      if (color) {
+      spriteKey = color + 'Hippo';
+      }
+      console.log(`[addPlayer] ${playerId} -> color: ${color}, spriteKey: ${spriteKey}`);
+
+      const playerSprite = new Hippo(this, x, y, spriteKey, strategy);
+
+      this.hippoGroup.add(playerSprite);
+
+
+      playerSprite.setScale(0.12);
+     
       playerSprite.setCollideWorldBounds(true);
       playerSprite.setImmovable(true);
       switch (edge) {
@@ -299,6 +323,9 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     });
 
 
+    this.hippoGroup = this.physics.add.group();
+
+
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
         if (!this.isKeyboardActive) this.usePointerControl = true;
         this.handlePointer(pointer);
@@ -315,29 +342,32 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     this.foods = this.physics.add.group();
     this.cursors = this.input!.keyboard!.createCursorKeys();
 
-    // Delay animation for swipe hand
-    this.time.delayedCall(100, () => {
-      // Play animation only for the hippo users, not on spectator
-      if (this.role === 'Hippo Player') {
-        this.swipeHint = this.add.image(this.scale.width / 2, this.scale.height * 0.7, 'swipeHand')
-          .setOrigin(0.5)
-          .setDepth(1000)
-          .setScale(0.6);
+    this.physics.add.collider(this.hippoGroup, this.hippoGroup);
 
-        // Add swipe hint animation
-        this.tweens.add({
-          targets: this.swipeHint,
-          x: {
-            from: this.scale.width / 2 - 60,
-            to: this.scale.width / 2 + 60
-          },
-          duration: 800,
-          ease: 'Sine.easeInOut',
-          yoyo: true,
-          repeat: -1
-        });
-      }
-    });
+
+    // // Delay animation for swipe hand
+    // this.time.delayedCall(100, () => {
+    //   // Play animation only for the hippo users, not on spectator
+    //   if (this.role === 'Hippo Player') {
+    //     this.swipeHint = this.add.image(this.scale.width / 2, this.scale.height * 0.7, 'swipeHand')
+    //       .setOrigin(0.5)
+    //       .setDepth(1000)
+    //       .setScale(0.6);
+
+    //     // Add swipe hint animation
+    //     this.tweens.add({
+    //       targets: this.swipeHint,
+    //       x: {
+    //         from: this.scale.width / 2 - 60,
+    //         to: this.scale.width / 2 + 60
+    //       },
+    //       duration: 800,
+    //       ease: 'Sine.easeInOut',
+    //       yoyo: true,
+    //       repeat: -1
+    //     });
+    //   }
+    // });
 
    movementStore.subscribe(({ userId, x, y }) => {
       const player = this.players[userId];

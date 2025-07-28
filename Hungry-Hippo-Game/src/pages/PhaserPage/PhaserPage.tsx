@@ -111,13 +111,14 @@ const PhaserPage: React.FC = () => {
       const { targetFoodId, targetFoodData, effect } = lastMessage.payload;
 
       const scene = phaserRef.current?.scene as any;
-      if (typeof scene.setTargetFood === 'function') {
-        if (effect) {
-          scene.setTargetFood(targetFoodId, effect);
-        } else {
-          scene.setTargetFood(targetFoodId);
+        if (scene && typeof scene.setTargetFood === 'function') {
+          if (effect) {
+            scene.setTargetFood(targetFoodId, effect);
+          } else {
+            scene.setTargetFood(targetFoodId);
+          }
         }
-      }
+
 
       if (targetFoodData) {
         setCurrentFood(targetFoodData);

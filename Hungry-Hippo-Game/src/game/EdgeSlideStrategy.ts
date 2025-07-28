@@ -59,16 +59,14 @@ export class EdgeSlideStrategy implements MoveStrategy {
 ) {
   if (cursors.left.isDown) {
     sprite.setVelocityX(-this.speed);
-    // Top edge: hippo art is reversed, so flipX(false) to face left
-    // Other edges: flipX(true) to face left
     sprite.setFlipX(this.edge === 'top' ? false : true);
   }
   else if (cursors.right.isDown) {
     sprite.setVelocityX(this.speed);
-    // Top: flipX(true) to face right, others flipX(false)
     sprite.setFlipX(this.edge === 'top' ? true : false);
   }
   else {
+    // No input, keep current flip
     sprite.setVelocityX(0);
   }
 }
