@@ -36,7 +36,7 @@ const TARGET_FOOD_WEIGHT = 12; // Weight for the target food in the queue
 const sessionGameModes = {};
 let foodInstanceCounter = 0
 const activeFoods = {};
-const spawnTimers = {}; 
+const lastSpawnAt = {};
 
 // Reject connections from unauthorized origins
 const allowedOrigins = [
@@ -271,95 +271,130 @@ wss.on('connection', (ws) => {
         const { sessionId, mode } = data.payload;
         console.log(`[WSS] Start game received for session ${sessionId} with mode ${mode}`);
 
-        // Store the game mode for the session, empty array for active foods, and initialize spawn timers
+        // Store mode and reset per-session state
         sessionGameModes[sessionId] = mode;
         activeFoods[sessionId] = [];
-        spawnTimers[sessionId] = { ticksUntilNextSpawn: 0 };
 
-        // Select a random food from the food.json file as the initial target
-        const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
-        const initialTarget = allFoods[Math.floor(Math.random() * allFoods.length)];
-        sessions[sessionId].currentTargetFoodId = initialTarget.id;
+        // Seed queue with objects
+        if (!fruitQueues[sessionId]) {
+          const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
+          fruitQueues[sessionId] = [];
+          for (let i = 0; i < 10; i++) {
+            const food = allFoods[Math.floor(Math.random() * allFoods.length)];
+            fruitQueues[sessionId].push(food);
+          }
+        }
 
-        // Broadcast the initial target
-        broadcast(sessionId, {
-          type: 'AAC_TARGET_FOOD',
-          payload: {
-            targetFoodId: initialTarget.id,
-            targetFoodData: initialTarget,
-            effect: null
-          },
-        });
+        // Target tracking
+        sessions[sessionId].initialTargetSent = false;
+        sessions[sessionId].currentTargetFoodId = null;
 
-        // This setInterval is the main server-side game loop 
+        // spawn cadence mark (first spawn after 2s)
+        lastSpawnAt[sessionId] = Date.now();
+
+        // 50ms game loop; spawns happen every 2000ms
         fruitIntervals[sessionId] = setInterval(() => {
           if (!sessions[sessionId]) {
             clearInterval(fruitIntervals[sessionId]);
             delete fruitIntervals[sessionId];
             return;
           }
-
-          // Get the speed based on the game mode
+          const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
           const gameMode = sessionGameModes[sessionId] || 'Easy';
           const speed = MODE_CONFIG[gameMode].fruitSpeed;
 
-          // Countdown the spawn timer on every tick of the game loop (50ms)
-          spawnTimers[sessionId].ticksUntilNextSpawn --;
-          if (spawnTimers[sessionId].ticksUntilNextSpawn <= 0) {
-            spawnTimers[sessionId].ticksUntilNextSpawn = 40; // Reset the spawn timer to 2 seconds (40 ticks of 50ms)
+          // spawn every 2s
+          const now = Date.now();
+          if (now - lastSpawnAt[sessionId] >= 2000) {
+            lastSpawnAt[sessionId] = now;
 
-            const foodToSpawn = getWeightedRandomFood(allFoods, sessions[sessionId].currentTargetFoodId);
-            foodInstanceCounter++;
-            const instanceId = `food-${foodInstanceCounter}`;
+            if (fruitQueues[sessionId] && fruitQueues[sessionId].length > 0) {
+              const dequeued = fruitQueues[sessionId].shift();
+              const nextFoodId = typeof dequeued === 'string' ? dequeued : dequeued.id;
+              const targetFood = allFoods.find(f => f.id === nextFoodId);
+              if (nextFoodId && targetFood) {
+                if (!sessions[sessionId].initialTargetSent) {
+                  sessions[sessionId].currentTargetFoodId = nextFoodId;
+                  sessions[sessionId].initialTargetSent = true;
+                  broadcast(sessionId, {
+                    type: 'AAC_TARGET_FOOD',
+                    payload: { targetFoodId: nextFoodId, targetFoodData: targetFood, effect: null },
+                  });
+                }
 
-            const hippoClients = [...sessions[sessionId]].filter(c => c.role === 'Hippo Player');
-            hippoClients.forEach(client => {
-              const edge = client.edge || 'bottom';
-              const angleRange = getAngleRangeForEdge(edge);
-              const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
+                const weightedFood = getWeightedRandomFood(allFoods, sessions[sessionId].currentTargetFoodId);
+                fruitQueues[sessionId].push(weightedFood); // keep objects
 
-              // Add the new food to the activeFoods array for this session
-              activeFoods[sessionId].push({
-                instanceId: `${instanceId}-${client.userId}`,
-                foodId: foodToSpawn.id,
-                x: 1024 / 2,
-                y: 768 / 2,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-              });
-            });
+                foodInstanceCounter++;
+                const instanceId = `food-${foodInstanceCounter}`;
+                const hippoClients = [...sessions[sessionId]].filter(c => c.role === 'Hippo Player');
+
+                hippoClients.forEach(client => {
+                  const edge = client.edge || 'bottom';
+                  const angleRange = getAngleRangeForEdge(edge);
+                  const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
+
+                  activeFoods[sessionId].push({
+                    instanceId: `${instanceId}-${client.userId}`,
+                    foodId: nextFoodId,
+                    x: 1024 / 2,
+                    y: 768 / 2,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    effect: (nextFoodId === sessions[sessionId].currentTargetFoodId) ? sessions[sessionId].currentTargetEffect : null,
+                  });
+                });
+
+                // optional immediate state push after spawn
+                broadcast(sessionId, {
+                  type: 'FOOD_STATE_UPDATE',
+                  payload: { foods: activeFoods[sessionId] }
+                });
+
+                console.log('[WSS] Spawned', nextFoodId, 'queueLen=', fruitQueues[sessionId].length);
+              } else {
+                console.warn('[WSS] Unknown food in queue, skipping spawn:', dequeued);
+              }
+            }
           }
 
-          // On every tick, update the position of all active foods
-          const timeStep = 0.05; // 50ms time step
+          // physics tick @ 50ms
+          const timeStep = 0.05;
           activeFoods[sessionId].forEach(food => {
             food.x += food.vx * timeStep;
             food.y += food.vy * timeStep;
           });
 
-          // Broadcast the updated food positions to all clients in the session
+          // broadcast motion
           broadcast(sessionId, {
             type: 'FOOD_STATE_UPDATE',
-            payload: {
-              foods: activeFoods[sessionId]
-            }
+            payload: { foods: activeFoods[sessionId] }
           });
 
-          // Check if any food has gone off-screen and remove it
-          const BOUNDARY_BUFFER = 300; 
-          activeFoods[sessionId] = activeFoods[sessionId].filter(food => 
-            food.x > (0 - BOUNDARY_BUFFER) && 
-            food.x < (1024 + BOUNDARY_BUFFER) && 
-            food.y > (0 - BOUNDARY_BUFFER) && 
-            food.y < (768 + BOUNDARY_BUFFER)
+          // cull off-screen
+          const BOUNDARY_BUFFER = 300;
+          activeFoods[sessionId] = activeFoods[sessionId].filter(food =>
+            food.x > -BOUNDARY_BUFFER &&
+            food.x < 1024 + BOUNDARY_BUFFER &&
+            food.y > -BOUNDARY_BUFFER &&
+            food.y < 768 + BOUNDARY_BUFFER
           );
-        }, 50); // 50ms game loop interval
+        }, 50);
 
         broadcast(sessionId, {
           type: 'START_GAME_BROADCAST',
-          payload: { sessionId, mode }, 
+          payload: { sessionId, mode },
         });
       }
+
+
+
+
+
+
+
+
+
 
 
       if (data.type === 'START_TIMER') {
@@ -405,40 +440,26 @@ wss.on('connection', (ws) => {
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
         const { sessionId, food, effect } = data.payload;
+        console.log(`WSS Food selected in session ${sessionId}:`, food, effect);
+
         const gameMode = sessionGameModes[sessionId] || 'Easy';
-        const modeSettings = MODE_CONFIG[gameMode];
-        // Check if the current game mode allows effects
-        const finalEffect = modeSettings.allowEffect ? effect : null;
+        const finalEffect = MODE_CONFIG[gameMode].allowEffect ? effect : null;
 
-        // Update the session's current target food
-        if (sessions[sessionId]) {
-          sessions[sessionId].currentTargetFoodId = food.id;
+        if (fruitQueues[sessionId]) {
+          // Pushes AAC-selected food to the front of the queue
+          // Keep queue entries as full objects, not ids
+          const head = fruitQueues[sessionId][0];
+          const headId = head && (head.id || head); // tolerate any stray ids
+          if (headId !== food.id) {
+            fruitQueues[sessionId].unshift(food);
+          }
         }
 
-        // If the session has active foods, spawn the selected food for all Hippo Players
-        if (activeFoods[sessionId]) {
-          const hippoClients = [...sessions[sessionId]].filter(c => c.role === 'Hippo Player');
-          const speed = MODE_CONFIG[gameMode].fruitSpeed;
+        // Updates the session's current weighted target
+        sessions[sessionId].currentTargetFoodId = food.id;
+        sessions[sessionId].currentTargetEffect = finalEffect;
 
-          hippoClients.forEach(client => {
-            foodInstanceCounter++;
-            const edge = client.edge || 'bottom';
-            const angleRange = getAngleRangeForEdge(edge);
-            const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
-            
-            activeFoods[sessionId].push({
-              instanceId: `food-${foodInstanceCounter}-${client.userId}`,
-              foodId: food.id,
-              x: 1024 / 2,
-              y: 768 / 2,
-              vx: Math.cos(angle) * speed,
-              vy: Math.sin(angle) * speed,
-              effect: finalEffect
-            });
-          });
-        }
-
-        // Broadcasts the new target food to all clients in the session
+        // Broadcasts the selected food as the official target
         broadcast(sessionId, {
           type: 'AAC_TARGET_FOOD',
           payload: { 
@@ -489,6 +510,7 @@ wss.on('connection', (ws) => {
         const prev = scoresBySession[sessionId][userId] || 0;
 
         if (isCorrect) {
+          sessions[sessionId].currentTargetEffect = null;
           if (effect === 'burn') {
             scoresBySession[sessionId][userId] = Math.max(0, prev - 2);
             console.log(`[WSS] Player ${userId} burned, score reduced by 2 from ${prev} to ${scoresBySession[sessionId][userId]}`);
