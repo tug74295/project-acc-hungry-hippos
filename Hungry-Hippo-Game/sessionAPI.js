@@ -288,6 +288,8 @@ wss.on('connection', (ws) => {
         // Target tracking
         sessions[sessionId].initialTargetSent = false;
         sessions[sessionId].currentTargetFoodId = null;
+        const SCREEN_WIDTH = 1024;
+        const SCREEN_HEIGHT = 768;
 
         // spawn cadence mark (first spawn after 2s)
         lastSpawnAt[sessionId] = Date.now();
@@ -334,13 +336,16 @@ wss.on('connection', (ws) => {
                   const angleRange = getAngleRangeForEdge(edge);
                   const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
 
+                  const vx = (Math.cos(angle) * speed) / SCREEN_WIDTH;
+                  const vy = (Math.sin(angle) * speed) / SCREEN_HEIGHT;
+
                   activeFoods[sessionId].push({
                     instanceId: `${instanceId}-${client.userId}`,
                     foodId: nextFoodId,
-                    x: 1024 / 2,
-                    y: 768 / 2,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
+                    x: 0.5,
+                    y: 0.5,
+                    vx,
+                    vy,
                     effect: (nextFoodId === sessions[sessionId].currentTargetFoodId) ? sessions[sessionId].currentTargetEffect : null,
                   });
                 });

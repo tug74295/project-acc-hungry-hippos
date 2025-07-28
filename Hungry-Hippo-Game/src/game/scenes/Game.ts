@@ -440,14 +440,16 @@ export class Game extends Scene {
       if (existingSprite) {
         this.tweens.add({
           targets: existingSprite,
-          x: foodState.x,
-          y: foodState.y,
+          x: foodState.x * this.scale.width,
+          y: foodState.y * this.scale.height,
           duration: 50,
           ease: 'Linear'
         });
       } else {
         // If it doesn't exist, create it on the client side
-        const newFood = this.foods.create(foodState.x, foodState.y, foodState.foodId) as Phaser.Physics.Arcade.Image;
+        const spawnX = foodState.x * this.scale.width;
+        const spawnY = foodState.y * this.scale.height;
+        const newFood = this.foods.create(spawnX, spawnY, foodState.foodId) as Phaser.Physics.Arcade.Image;
         newFood.setData('instanceId', foodState.instanceId);
         newFood.setScale(0.15);
         newFood.body?.setCircle(newFood.width * 0.5);
