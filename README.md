@@ -83,7 +83,7 @@ Many existing web games are designed primarily for able-bodied users, leaving ou
 The original *Hungry Hungry Hippos* was a turn-based, tactile game, but modernizing it with bouncing physics, interactive traps, and digital control unlocks a new level of engagement. Integrating accessible design principles and playful interaction can foster **joyful shared experiences**, especially in educational or therapeutic settings.
 
 ---
-## :tools: How to Run Locally
+## How to Run Locally
 
 ### 1. Clone the repo
 ```bash
