@@ -3,7 +3,6 @@ const path = require('path');
 const http = require('http');
 const WebSocket = require('ws');
 const { Pool } = require('pg');
-const { spawn } = require('child_process');
 
 // Constants for game modes and their configurations
 const MODE_CONFIG = {
@@ -472,10 +471,13 @@ wss.on('connection', (ws) => {
 
       // Notify all players in the session to remove the fruit
       if (data.type === 'FRUIT_EATEN') {
-        const { sessionId, foodId, x, y } = data.payload;
+        const { sessionId, instanceId } = data.payload;
+        if (activeFoods[sessionId]) {
+          activeFoods[sessionId] = activeFoods[sessionId].filter(f => f.instanceId !== instanceId);
+        }
         broadcast(sessionId, {
-          type: 'FRUIT_EATEN_BROADCAST',
-          payload: { foodId, x, y }
+          type: 'REMOVE_FOOD',
+          payload: { instanceId }
         });
       }
 
