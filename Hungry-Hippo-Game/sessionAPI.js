@@ -406,23 +406,46 @@ wss.on('connection', (ws) => {
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
         const { sessionId, food, effect } = data.payload;
-        console.log(`WSS Food selected in session ${sessionId}:`, food, effect);
+        const gameMode = sessionGameModes[sessionId] || 'Easy';
+        const modeSettings = MODE_CONFIG[gameMode];
+        // Check if the current game mode allows effects
+        const finalEffect = modeSettings.allowEffect ? effect : null;
 
-        if (fruitQueues[sessionId]) {
-          // Pushes AAC-selected food to the front of the queue
-          fruitQueues[sessionId].unshift(food.id);
+        // Update the session's current target food
+        if (sessions[sessionId]) {
+          sessions[sessionId].currentTargetFoodId = food.id;
         }
 
-        // Updates the session's current weighted target
-        sessions[sessionId].currentTargetFoodId = food.id;
+        // If the session has active foods, spawn the selected food for all Hippo Players
+        if (activeFoods[sessionId]) {
+          const hippoClients = [...sessions[sessionId]].filter(c => c.role === 'Hippo Player');
+          const speed = MODE_CONFIG[gameMode].fruitSpeed;
 
-        // Broadcasts the selected food as the official target
+          hippoClients.forEach(client => {
+            foodInstanceCounter++;
+            const edge = client.edge || 'bottom';
+            const angleRange = getAngleRangeForEdge(edge);
+            const angle = Math.random() * (angleRange.max - angleRange.min) + angleRange.min;
+            
+            activeFoods[sessionId].push({
+              instanceId: `food-${foodInstanceCounter}-${client.userId}`,
+              foodId: food.id,
+              x: 1024 / 2,
+              y: 768 / 2,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              effect: finalEffect
+            });
+          });
+        }
+
+        // Broadcasts the new target food to all clients in the session
         broadcast(sessionId, {
           type: 'AAC_TARGET_FOOD',
           payload: { 
             targetFoodId: food.id, 
             targetFoodData: food,
-            effect: effect || null // Include effect if provided
+            effect: finalEffect
           }
         });
       }
