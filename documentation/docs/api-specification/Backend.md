@@ -20,7 +20,7 @@ description: Backend API
 
 ## Overview
 
-The backend is an **authoritative, real-time game server** built with **Node.js** and the `ws` WebSocket library. It manages the entire lifecycle of a game session.
+The backend is a **central, real-time game server** built with **Node.js** and the `ws` WebSocket library. It manages the entire lifecycle of a game session.
 
 Instead of traditional REST endpoints, the server communicates with clients **exclusively through WebSocket messages**. It maintains the game state for each session — including player positions, scores, and the state of all active food items — and runs a central `setInterval` game loop to handle physics and spawning.
 
