@@ -13,24 +13,28 @@ sidebar_position: 6
  * npm
 
 ### Programming Languages & Core Libraries
- * TypeScript ~5.7.2
- * React & ReactDOM ^19.1.0
- * Phaser ^3.90.0
- * React Router DOM ^7.6.2
+ * Frontend
+    * TypeScript
+    * React & ReactDOM
+    * Phaser
+ * Backend
+    * Node.js
+    * WebSockets
+    * PostgreSQL
 
 ### Build Tool
- * Vite ^6.3.1
+ * Vite
 
 ### Hosting & Real-time Sync
  * Vercel - Frontend deployment
  * Railway - WebSockets
 
 ### Session Data
- * Firebase Realtime Database
+ * Production - PostgreSQL
+ * Development - JSON file
 
 ### Testing
  * React Testing Library
-
 
 ## Hardware
 
@@ -53,3 +57,4 @@ sidebar_position: 6
 | HHP-4  | Clone repository (`git clone`)       | Done        |
 | HHP-5  | Run `npm install`                    | Done        |
 | HHP-6  | Verify dev server (`npm run dev`)    | Done        |
+| HHP-7  | Run server (`npm run api`)           | Done        |

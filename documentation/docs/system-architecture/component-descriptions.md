@@ -18,6 +18,7 @@ This page describes the different components and technologies that will be used 
 ## TypeScript
 `A superset of JavaScript that adds static typing. We will use TypeScript for all frontend code (React and Phaser) to improve code quality, and make the application easier to maintain.`
 
+---
 # Backend
 
 ## Node.js
@@ -26,6 +27,7 @@ This page describes the different components and technologies that will be used 
 ## WebSocket
 `A library for Node.js that enables two-way, real-time communication between the client and server. This is the core technology that allows us to synchronize game state, player movements, and actions across all connected devices.`
 
+---
 # Deployment & Hosting
 
 ## PostgreSQL
