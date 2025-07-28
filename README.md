@@ -12,11 +12,12 @@
 ## Table of Contents
 ### 1. [Keywords](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#keywords)
 ### 2. [Project Abstract](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#project-abstract)
-### 3. [High Level Requirement](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#high-level-requirement)
-### 4. [Conceptual Design](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#conceptual-design)
-### 5. [Background](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#background)
-### 6. [Required Resources](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#required-resources)
-### 7. [Collaborators](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#collaborators)
+### 3. [How to Run Locally](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#how-to-run-locally)
+### 4. [High Level Requirement](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#high-level-requirement)
+### 5. [Conceptual Design](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#conceptual-design)
+### 6. [Background](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#background)
+### 7. [Required Resources](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#required-resources)
+### 8. [Collaborators](https://github.com/Capstone-Projects-2025-Spring/project-acc-hungry-hippos#collaborators)
 
 ## Keywords
 Section #701
