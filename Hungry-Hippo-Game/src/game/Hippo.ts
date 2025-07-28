@@ -22,6 +22,8 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
     public targetX: number = 0;
     public targetY: number = 0;
 
+    private pointerSpeed: number = 10;
+
     private isFrozen = false;
 
     public freeze(duration: number) {
@@ -36,6 +38,10 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
     public setTargetPosition(x: number, y: number) {
         this.targetX = x;
         this.targetY = y;
+    }
+
+      public setPointerSpeed(speed: number) {
+        this.pointerSpeed = speed;
     }
 
     /**
@@ -83,9 +89,15 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
             this.moveStrategy.update(this, cursors);
         } else {
             // remote player – interpolate to target position
-            const lerp = 0.2;
-            this.x += (this.targetX - this.x) * lerp;
-            this.y += (this.targetY - this.y) * lerp;
+            const dx = this.targetX - this.x;
+            const dy = this.targetY - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 1) {
+                const move = Math.min(this.pointerSpeed, distance);
+                this.x += (dx / distance) * move;
+                this.y += (dy / distance) * move;
+            }
         }
     }
 
