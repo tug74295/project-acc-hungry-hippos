@@ -4,8 +4,6 @@ sidebar_position: 5
 
 # Class Diagrams
 
-**Note this project still being completed so parts of front and backend documentation are not completely finished**
-
 ## Backend
 
 ```mermaid
@@ -13,55 +11,82 @@ classDiagram
     direction RL
 
     class WebSocketServer {
-        +List~GameSession~ activeSessions
-        +handleNewConnection()
-        +routeMessage(message)
+        +httpServer: http.Server
+        +wss: WebSocket.Server
+        +sessions: Map~string, Session~
+        +setupDatabase()
+        +broadcast(sessionId, data)
+        +onConnection(ws)
+        +handleUpgrade(request, socket, head)
+        +listen(port)
     }
 
-    class GameSession {
-        +string sessionId
-        +Map~string, Player~ players
-        +addPlayer(player)
-        +removePlayer(playerId)
+    class Session {
+        +sessionId: string
+        +clients: Set~Client~
+        +scores: Map~string, number~
+        +fruitQueue: Food[]
+        +activeFoods: FoodInstance[]
+        +gameMode: string
+        +currentTargetFoodId: string
+        +currentTargetEffect: string
+        +fruitInterval: Interval
+        +startGame(mode)
+        +enqueueFood(food)
         +handlePlayerAction(action)
         +broadcastState()
     }
 
-    class GameState {
-        +object scores
-        +object playerPositions
-        +object fruitPositions
+    class Client {
+        +userId: string
+        +role: string
+        +color: string
+        +edge: string
+        +ws: WebSocket
+        +send(data)
     }
 
-    class Player {
-        +string playerId
-        +WebSocket webSocketConnection
+    class Food {
+        +id: string
+        +name: string
     }
 
-    class FirebaseDB {
-        <<Service>>
-        +saveGameState(gameState)
-        +loadGameState(sessionId)
+    class FoodInstance {
+        +instanceId: string
+        +foodId: string
+        +x: number
+        +y: number
+        +vx: number
+        +vy: number
+        +effect: string
     }
 
-    class AuthValidator {
-        <<Service>>
-        +validateToken(token)
+    class DatabaseService {
+        <<PostgreSQL>>
+        +pool: Pool
+        +setupTables()
+        +saveSession(sessionId)
+        +addPlayer(sessionId, userId, role)
+        +removePlayer(sessionId, userId)
+        +sessionExists(sessionId)
     }
 
-    WebSocketServer "1" *-- "0..*" GameSession : manages
-    GameSession "1" *-- "1..*" Player : contains
-    GameSession "1" *-- "1" GameState : has
-    WebSocketServer ..> AuthValidator : uses
-    GameSession ..> FirebaseDB : uses
+    WebSocketServer "1" *-- "*" Session : manages
+    Session "1" *-- "*" Client : tracks
+    Session "1" o-- "*" FoodInstance : spawns
+    FoodInstance "1" -- "1" Food : is an instance of
+    WebSocketServer ..> DatabaseService : persists
 ```
 
+**Figure 1.** This diagram illustrates the architecture of our current backend service.
+
 ### Relationships
-This diagram illustrates the architecture of our backend services.
 
-The primary entry point is the WebSocketServer, which is responsible for managing all active game rooms. For each game, it creates and holds a GameSession instance.
+The primary entry point is the WebSocketServer, which is responsible for managing all active game rooms. For each game, it creates and holds a Session instance.
 
-Each GameSession then contains the list of connected Player objects and is composed of a GameState object, which tracks live data like scores and positions. To ensure security, the WebSocketServer uses an AuthValidator service to verify players when they first connect. During gameplay, the GameSession uses the FirebaseDB service to save and load the game's state, ensuring data is persisted.
+Each Session encapsulates the entire state and logic for a single game. It contains the set of connected Client objects and tracks all activeFoods, the fruitQueue, and player scores. The startGame and handlePlayerAction methods contain the core game logic, and a central game loop broadcasts the state to all players. A FoodInstance represents a specific food item currently on screen, with its own position and velocity. Each FoodInstance is an instance of a static Food object, which simply holds the food's name and ID.
+
+For production, the WebSocketServer uses the DatabaseService to save and load session and player data, ensuring data is persisted.
 
 ## Frontend
 
