@@ -12,6 +12,14 @@ import { movementStore } from './MovementStore';
 import { ModeSettings } from '../../config/gameModes';
 import { HIPPO_COLORS } from '../../config/hippoColors';
 
+interface FoodState {
+  instanceId: string;
+  foodId: string;
+  x: number;
+  y: number;
+  effect: AacVerb | null;
+}
+
 export class Game extends Scene {
   private sessionId!: string;
   private hippo: Hippo | null = null;
@@ -383,6 +391,10 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
 
     EventBus.emit('current-scene-ready', this);
 
+    EventBus.on('sync-food-state', (foodStates: FoodState[]) => {
+      this.syncFoodState(foodStates);
+    });
+
     EventBus.on('apply-player-effect', (data: { targetUserId: string, effect: AacVerb }) => {
       if (data.targetUserId !== this.localPlayerId) {
         this.applyEffectToPlayer(data.targetUserId, data.effect);
@@ -541,7 +553,10 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
         if (isCorrect) {
           this.currentTargetFoodEffect = null;
         }
-        EventBus.emit('fruit-eaten', { foodId, x: fruit.x, y: fruit.y });
+        const instanceId = fruit.getData('instanceId');
+        if (instanceId) {
+            EventBus.emit('fruit-eaten', { instanceId });
+        }
       }
     }
   }
@@ -551,54 +566,51 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     this.modeSettings = settings;
   }
 
+  /**
+   * Synchronizes the food state with the server.
+   * @param serverFoods Array of food states from the server.
+   */
+  private syncFoodState(serverFoods: FoodState[]) {
+    // Get existing food sprites and their IDs
+    const existingFoodSprites = this.foods.getChildren() as Phaser.Physics.Arcade.Image[];
+    const serverFoodIds = new Set(serverFoods.map(f => f.instanceId));
 
-  public addFoodManually(foodId: string, angle: number) {
-    const centerX = this.scale.width / 2;
-    const centerY = this.scale.height / 2;
-    let speed = this.modeSettings.fruitSpeed;
+    // Update existing sprites and create new ones
+    serverFoods.forEach(foodState => {
+      let existingSprite = existingFoodSprites.find(sprite => sprite.getData('instanceId') === foodState.instanceId);
 
-    const food = this.foods.create(centerX, centerY, foodId) as Phaser.Physics.Arcade.Image;
-    food.setScale(0.15);
-    food.setBounce(0);
-    food.setCollideWorldBounds(false);
-    food.setDamping(false);
-    food.setDrag(0);
-
-    if (
-      foodId === this.currentTargetFoodId &&
-      this.currentTargetFoodEffect &&
-      typeof this.currentTargetFoodEffect.color === 'string' &&
-      this.modeSettings.allowEffect
-    ) {
-      const tintColor = parseInt(this.currentTargetFoodEffect.color.replace('#', '0x'));
-      food.setTint(tintColor);
-      const effect = this.currentTargetFoodEffect;
-
-      // Handle each effect type
-      switch (effect.id) {
-        case 'freeze':
-          speed *= 0.6;
-          break;
-        case 'burn':
-          speed *= 1.4;
-          break;
-        case 'grow':
-          food.setScale(0.40);
-          // Pulse animation
-          this.tweens.add({
-            targets: food,
-            scale: { from: 0.15, to: 0.2 },
-            yoyo: true,
-            repeat: -1,
-            duration: 400
-          });
-          break;
+      // If it exists, update its position smoothly using interpolation
+      if (existingSprite) {
+        this.tweens.add({
+          targets: existingSprite,
+          x: foodState.x * this.scale.width,
+          y: foodState.y * this.scale.height,
+          duration: 50,
+          ease: 'Linear'
+        });
+      } else {
+        // If it doesn't exist, create it on the client side
+        const spawnX = foodState.x * this.scale.width;
+        const spawnY = foodState.y * this.scale.height;
+        const newFood = this.foods.create(spawnX, spawnY, foodState.foodId) as Phaser.Physics.Arcade.Image;
+        newFood.setData('instanceId', foodState.instanceId);
+        newFood.setScale(0.15);
+        newFood.body?.setCircle(newFood.width * 0.5);
+        
+        // If the food has an effect, apply the tint color
+        if (foodState.effect && foodState.effect.color) {
+          const tintColor = parseInt(foodState.effect.color.replace('#', '0x'));
+          newFood.setTint(tintColor);
+        }
       }
-    }
+    });
 
-    const velocityX = Math.cos(angle) * speed;
-    const velocityY = Math.sin(angle) * speed;
-    food.setVelocity(velocityX, velocityY);
+    // Remove any client-side sprites that no longer exist on the server
+    existingFoodSprites.forEach(sprite => {
+      if (!serverFoodIds.has(sprite.getData('instanceId'))) {
+        sprite.destroy();
+      }
+    });
   }
 
 
@@ -607,10 +619,13 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     this.currentTargetFoodEffect = effect;
   }
 
-  public removeFruitAt(foodId: string, x: number, y: number) {
-    const radius = 20;
+  /**
+   * Removes a food item by its instance ID.
+   * @param instanceId The unique identifier of the food item to remove.
+   */
+  public removeFoodByInstanceId(instanceId: string) {
     this.foods.children.each((child: any) => {
-      if (child.texture.key === foodId && Phaser.Math.Distance.Between(child.x, child.y, x, y) < radius) {
+      if (child.getData('instanceId') === instanceId) {
         child.destroy();
         return false;
       }

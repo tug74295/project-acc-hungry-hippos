@@ -8,12 +8,22 @@ import Leaderboard from '../../components/Leaderboard/Leaderboard';
 import styles from './PhaserPage.module.css';
 import { GameMode, MODE_CONFIG } from '../../config/gameModes';
 import { useNavigate } from 'react-router-dom';
+
 /**
  * PhaserPage component.
  *
  * Shows the game UI, leaderboard, current food, and runs the core game loop via Phaser.
  * Syncs game state via WebSocket and EventBus.
  */
+
+interface FoodState {
+  instanceId: string;
+  foodId: string;
+  x: number;
+  y: number;
+  effect: AacVerb | null;
+}
+
 const PhaserPage: React.FC = () => {
   // ---- ROUTER & CONTEXT ----
   const { sessionId, userId } = useParams<{ sessionId: string, userId: string }>();
@@ -30,7 +40,6 @@ const PhaserPage: React.FC = () => {
   // Defensive: what if no state? Fallback to false.
   const isSpectator = location.state?.role === 'Spectator';
 
-  // ---- WEBSOCKET ----
   const {connectedUsers, lastMessage, sendMessage, clearLastMessage } = useWebSocket();
 
   // Build color map from connected users
@@ -62,6 +71,7 @@ const PhaserPage: React.FC = () => {
       }
     }
   }, [sessionId, userId, location.state?.role, sendMessage, connectedUsers]);
+
   // --- REMOTE PLAYER MOVEMENT SYNC ---
   useEffect(() => {
     if (lastMessage?.type === 'PLAYER_MOVE_BROADCAST') {
@@ -90,51 +100,42 @@ const PhaserPage: React.FC = () => {
     }
   }, [lastMessage, clearLastMessage]);
 
-  // --- FOOD LAUNCH & FRUIT EATEN BROADCAST ---
+  // --- FOOD STATE SYNC ---
   useEffect(() => {
-    if (lastMessage?.type === 'FOOD_STREAM_LAUNCH') {
-      const { launches } = lastMessage.payload;
-      const scene = phaserRef.current?.scene as any;
-
-      launches.forEach(({ foodId, angle }: { foodId: string; angle: number }, index: number) => {
-        setTimeout(() => {
-          if (scene && typeof scene.addFoodManually === 'function') {
-            scene.addFoodManually(foodId, angle);
-          }
-        }, index );
-      });
-
-      clearLastMessage?.();
+    // Handle food state updates
+    if (lastMessage?.type === 'FOOD_STATE_UPDATE') {
+      const { foods } = lastMessage.payload as { foods: FoodState[] };
+      EventBus.emit('sync-food-state', foods);
     }
 
+    // When a new food is set as target
     if (lastMessage?.type === 'AAC_TARGET_FOOD') {
       const { targetFoodId, targetFoodData, effect } = lastMessage.payload;
-
       const scene = phaserRef.current?.scene as any;
-        if (scene && typeof scene.setTargetFood === 'function') {
-          if (effect) {
-            scene.setTargetFood(targetFoodId, effect);
-          } else {
-            scene.setTargetFood(targetFoodId);
-          }
+      if (typeof scene.setTargetFood === 'function') {
+        if (effect) {
+          scene.setTargetFood(targetFoodId, effect);
+        } else {
+          scene.setTargetFood(targetFoodId);
         }
-
-
+      }
       if (targetFoodData) {
         setCurrentFood(targetFoodData);
       }
-
       clearLastMessage?.();
     }
 
-    if (lastMessage?.type === 'FRUIT_EATEN_BROADCAST') {
-      const { foodId, x, y } = lastMessage.payload;
+    // When a food has been eaten, remove it from the scene
+    if (lastMessage?.type === 'REMOVE_FOOD') {
+      const { instanceId } = lastMessage.payload;
       const scene = phaserRef.current?.scene as any;
-      if (scene && typeof scene.removeFruitAt === 'function') {
-        scene.removeFruitAt(foodId, x, y);
+      if (scene && typeof scene.removeFoodByInstanceId === 'function') {
+        scene.removeFoodByInstanceId(instanceId);
       }
+      clearLastMessage?.();
     }
 
+    // When a player effect is broadcasted, apply it
     if (lastMessage?.type === 'PLAYER_EFFECT_BROADCAST') {
       const { targetUserId, effect } = lastMessage.payload as { targetUserId: string, effect: AacVerb };
       EventBus.emit('apply-player-effect', { targetUserId, effect });
@@ -143,12 +144,12 @@ const PhaserPage: React.FC = () => {
   }, [lastMessage, clearLastMessage]);
 
   // --- FRUIT EATEN LOCAL (EMITTED FROM PHASER) ---
-  useEffect(() => {
-    const handleFruitEaten = ({ foodId, x, y }: { foodId: string; x: number; y: number }) => {
+   useEffect(() => {
+    const handleFruitEaten = ({ instanceId }: { instanceId: string }) => {
       if (sessionId) {
         sendMessage({
           type: 'FRUIT_EATEN',
-          payload: { sessionId, foodId, x, y }
+          payload: { sessionId, instanceId }
         });
       }
     };
