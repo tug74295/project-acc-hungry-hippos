@@ -53,42 +53,38 @@ export class EdgeSlideStrategy implements MoveStrategy {
   }
 
   // Top & bottom edge: flipX so “left” looks left, “right” looks right
-  private moveX(
-  sprite: Phaser.Physics.Arcade.Sprite,
-  cursors: Phaser.Types.Input.Keyboard.CursorKeys
-) {
+  private moveX(sprite: Phaser.Physics.Arcade.Sprite, cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
   if (cursors.left.isDown) {
     sprite.setVelocityX(-this.speed);
-    sprite.setFlipX(this.edge === 'top' ? false : true);
-  }
-  else if (cursors.right.isDown) {
+    if (this.edge === 'top') {
+      sprite.setFlipX(true); // left on top edge: flip
+    } else {
+      sprite.setFlipX(false); // left on bottom: no flip
+    }
+  } else if (cursors.right.isDown) {
     sprite.setVelocityX(this.speed);
-    sprite.setFlipX(this.edge === 'top' ? true : false);
-  }
-  else {
-    // No input, keep current flip
+    if (this.edge === 'top') {
+      sprite.setFlipX(false); // right on top edge: no flip
+    } else {
+      sprite.setFlipX(true); // right on bottom: flip
+    }
+  } else {
     sprite.setVelocityX(0);
   }
 }
 
 
-  // Left & right edge: still flipX, but inverted for the right edge
-  private moveY(
-    sprite: Phaser.Physics.Arcade.Sprite,
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys
-  ) {
-    if (cursors.up.isDown) {
-      sprite.setVelocityY(-this.speed);
-      // up: left-edge flips to face up, right-edge unflipped
-      sprite.setFlipX(this.edge === 'left');
-    }
-    else if (cursors.down.isDown) {
-      sprite.setVelocityY(this.speed);
-      // down: left-edge unflipped, right-edge flips to face down
-      sprite.setFlipX(this.edge === 'right');
-    }
-    else {
-      sprite.setVelocityY(0);
-    }
+private moveY(sprite: Phaser.Physics.Arcade.Sprite, cursors: Phaser.Types.Input.Keyboard.CursorKeys) {
+  if (cursors.up.isDown) {
+    sprite.setVelocityY(-this.speed);
+    sprite.setFlipX(this.edge === 'right'); // up: right=true, left=false
   }
+  else if (cursors.down.isDown) {
+    sprite.setVelocityY(this.speed);
+    sprite.setFlipX(this.edge === 'left'); // down: left=true, right=false
+  }
+  else {
+    sprite.setVelocityY(0);
+  }
+}
 }
