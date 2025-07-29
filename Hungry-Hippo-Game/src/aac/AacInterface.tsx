@@ -29,6 +29,22 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         type: 'PLAYER_JOIN',
         payload: { sessionId, userId, role }
       });
+
+      try {
+        const stored = localStorage.getItem('playerSession');
+        const existing = stored ? JSON.parse(stored) : {};
+        localStorage.setItem(
+          'playerSession',
+          JSON.stringify({
+            ...existing,
+            sessionId,
+            userId,
+            role,
+          })
+        );
+      } catch (err) {
+        console.error('Failed to persist session info', err);
+      }
     }
   }, [sessionId, userId, role, sendMessage]);
 
