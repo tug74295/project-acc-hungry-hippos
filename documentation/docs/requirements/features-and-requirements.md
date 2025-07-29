@@ -12,6 +12,7 @@ sidebar_position: 4
 - Hippos must be able to **slide left-right (horizontal edges)**
 - Hippos can **catch Food and traps** launched from the center.
 - Food and traps should have **clear visual distinction**.
+- Presenter must be able to spectate the game flow and logic synced with all the game objects
 
 ### 🎯 AAC Game Conductor Role
 - An **AAC (Augmentative and Alternative Communication) user** acts as the **Game Conductor**.
