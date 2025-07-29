@@ -143,76 +143,83 @@ sequenceDiagram
 
 ```
 
-## Use Case 4 – Control Fruit Queue (AAC User)
+## Use Case 4 – Control Food Queue (AAC User)
 
-*As an AAC user, I want to control the next three fruits in the queue so that I can challenge players.*
+*As an AAC user, I want to control the food in the queue so that I can challenge players.*
 
-1. During gameplay, the AAC interface shows options for fruits to appear.
-2. The AAC user selects the next fruit from a set of fruit buttons.
-3. The selected fruit is queued to drop into the play area.
-4. The next 1 fruit is visible on screen to all players.
+1. During the game, the AAC user sees a menu of foods they can pick from.
+2. They tap the foods they want the other players to go after.
+3. They can also choose a special effect, like Freeze or Grow
+4. The foods they picked becomes the new target for all the hippos playing.
+5. The chosen food appears on screen, and players try to catch it with their hippos.
 
 ```mermaid
 ---
-title: Sequence Diagram 4 – Control Fruit Queue
+title: Sequence Diagram 4 – Control Food Queue
 ---
 
 sequenceDiagram
-participant AAC_User as AAC User
-participant AAC_Interface as AAC Interface
-participant Fruit_Queue as Fruit Queue
-participant Firebase as Firebase Realtime DB
-participant Hippo_Player as Hippo Player
-participant Hippo_Arena as Hippo Arena
+    participant AAC_User as AAC User
+    participant AAC_Interface as AAC Interface (React)
+    participant WebSocket_Client as WebSocket Context
+    participant Game_Server as WebSocket Server
+    participant Phaser_Scene as Phaser Game Scene
+    participant Hippo_Player as Hippo Player (Phaser)
 
-AAC_User->>AAC_Interface: View available fruit options
-AAC_User->>AAC_Interface: Select fruit to queue
-AAC_Interface->>Fruit_Queue: Send selected fruit
-Fruit_Queue->>Firebase: Update fruit queue in database
-Firebase-->>Fruit_Queue: Confirm update
-Fruit_Queue-->>AAC_Interface: Display updated fruit queue
-AAC_Interface-->>AAC_User: Show updated queue (visual feedback)
+    AAC_User->>AAC_Interface: Select food and (optionally) effect
+    AAC_Interface->>WebSocket_Client: sendMessage({ type: 'AAC_FOOD_SELECTED', payload })
+    WebSocket_Client->>Game_Server: WebSocket → AAC_FOOD_SELECTED
 
-Firebase-->>Hippo_Arena: Push updated fruit queue
-Hippo_Arena-->>Hippo_Player: Display target fruit
+    Game_Server->>Game_Server: Update currentTargetFoodId and effect
+    Game_Server->>Game_Server: Unshift food into food queue
+
+    Game_Server-->>All: Broadcast AAC_TARGET_FOOD (targetFoodId, foodData, effect)
+
+    AAC_Interface-->>AAC_User: Show "You selected: [Food]"
+    Hippo_Player-->>Phaser_Scene: Display new target food in sidebar
 
 ```
 
-## Use Case 5 – Eats Fruit (Player)
+## Use Case 5 – Eats Food (Player)
 
-*As a player, I want to move my hippo around the arena and eat the correct fruit so that I can earn points.*
+*As a player, I want to move my hippo on my side and eat the correct food so that I can earn points.*
 
-1. Fruits spawn and are placed randomly across the arena in real time.
-2. The player watches the displayed queue to know which fruit is “correct.”
-3. The player moves their hippo toward the fruits on the arena.
-4. If correct, a point is awarded.
-5. If incorrect, no point is awarded (or a penalty is applied).
+1. Food spawn out from the center of the screen toward each hippo player.
+2. The screen shows which food the AAC user has selected as the target.
+3. The player moves their hippo along their edge of the screen to try to catch that food.
+4. If they catch the correct food, they earn a point — and may receive a bonus effect like growing bigger.
+5. If they catch the wrong food, they may lose a point or trigger a penalty like being frozen.
+6. The game continues until the timer runs out.
 
 ```mermaid
 ---
-title: Sequence Diagram 5 – Eats Fruit
+title: Sequence Diagram 5 – Eats Food
 ---
 
 sequenceDiagram
-participant Hippo_Player as Hippo Player
-participant Hippo_Arena as Hippo Arena
-participant Fruit_Queue as Fruit Queue
-participant Firebase as Firebase Realtime DB
+    participant Hippo_Player as Hippo Player (Phaser)
+    participant Phaser_Scene as Game Scene
+    participant Game_Server as WebSocket Server
+    participant WebSocket_Client as WebSocket Context
+    participant AAC_User as AAC User
 
-Fruit_Queue->>Hippo_Arena: Spawn fruits randomly
-Firebase-->>Hippo_Player: Push current target fruit
+    Hippo_Player->>Phaser_Scene: Move hippo toward food
+    Phaser_Scene->>Phaser_Scene: Detect collision with food
 
-Hippo_Player->>Hippo_Arena: Move hippo toward fruit
-Hippo_Arena->>Hippo_Arena: Detect collision with fruit
+    alt Collision with correct food
+        Phaser_Scene->>Phaser_Scene: Apply effect (e.g. freeze, grow)
+        Phaser_Scene->>Game_Server: sendMessage(FRUIT_EATEN_BY_PLAYER)
+        Phaser_Scene->>Game_Server: sendMessage(FRUIT_EATEN with instanceId)
+    else Collision with incorrect food
+        Phaser_Scene->>Game_Server: sendMessage(FRUIT_EATEN_BY_PLAYER)
+    end
 
-alt Collision with correct fruit
-    Hippo_Arena-->>Hippo_Player: Award point
-    Hippo_Arena-->>Firebase: Update player score
-else Collision with incorrect fruit
-    Hippo_Arena-->>Hippo_Player: No point (or apply penalty)
-end
+    Game_Server->>Game_Server: Update scores
+    Game_Server-->>All Clients: Broadcast SCORE_UPDATE_BROADCAST
+    Game_Server-->>All Clients: Broadcast REMOVE_FOOD
+    Game_Server-->>Phaser_Scene: Emit scoreUpdate, removeFruit
 
-Firebase-->>Hippo_Player: Sync updated score
+    Phaser_Scene-->>Hippo_Player: Update score, remove eaten food
 
 ```
 
