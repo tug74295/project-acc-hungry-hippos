@@ -132,22 +132,24 @@ The server operates by receiving messages from clients and broadcasting **state 
 
 ---
 
-### Client-to-Server Messages
+### Server-to-Client Broadcasts
 
-| Message Type              | Payload                                 | Description |
-|---------------------------|------------------------------------------|-------------|
-| `CREATE_SESSION`          | `{}`                                     | Requests a new unique session ID. |
-| `VALIDATE_SESSION`        | `{ sessionId: string }`                  | Validates session ID. |
-| `PLAYER_JOIN`             | `{ sessionId, userId, role, color }`     | Adds user to session and syncs presence. |
-| `PLAYER_MOVE`             | `{ sessionId, userId, x, y }`            | Sends current player position. |
-| `AAC_FOOD_SELECTED`       | `{ sessionId, food, effect }`            | Target food selection by AAC user. |
-| `START_GAME`              | `{ sessionId, mode }`                    | Initializes game loop, spawns food. |
-| `START_TIMER`             | `{ sessionId }`                          | Starts countdown (180s). |
-| `SET_EDGE`                | `{ sessionId, userId, edge }`            | Assigns spawn angle per player. |
-| `FRUIT_EATEN`             | `{ sessionId, instanceId }`              | Tells server to remove food from list. |
-| `FRUIT_EATEN_BY_PLAYER`   | `{ sessionId, userId, isCorrect, effect }` | Updates score and clears effect. |
-| `PLAYER_EFFECT_APPLIED`   | `{ sessionId, targetUserId, effect }`    | Triggers visual effect (burn, freeze). |
-| `SELECT_COLOR`            | `{ sessionId, userId, color }`           | Assigns a color to a user. |
+| Message Type               | Payload                                 | Description |
+|----------------------------|------------------------------------------|-------------|
+| `SESSION_CREATED`          | `{ sessionId: string }`                  | A new session was created. |
+| `SESSION_VALIDATED`        | `{ sessionId: string, isValid: boolean }`| Result of a validation request. |
+| `PLAYER_JOINED_BROADCAST`  | `{ userId, role, color }`                | Sent when new player joins. |
+| `USERS_LIST_UPDATE`        | `{ users: [{ userId, role, color }] }`   | Updated player list. |
+| `FOOD_STATE_UPDATE`        | `{ foods: [...foodInstances] }`          | Broadcasts food positions. |
+| `AAC_TARGET_FOOD`          | `{ targetFoodId, targetFoodData, effect }` | Designates target food. |
+| `SCORE_UPDATE_BROADCAST`   | `{ scores: { [userId]: number } }`       | Live score updates. |
+| `REMOVE_FOOD`              | `{ instanceId: string }`                 | Removes food from client canvas. |
+| `PLAYER_EFFECT_BROADCAST`  | `{ targetUserId, effect }`               | Applies power-up or penalty effect. |
+| `COLOR_UPDATE`             | `{ takenColors: string[] }`              | Sends all chosen player colors. |
+| `TIMER_UPDATE`             | `{ secondsLeft: number }`                | Countdown timer for game end. |
+| `GAME_OVER`                | `{}`                                     | Signals game end state. |
+
+---
 
 ## Data Structures
 
