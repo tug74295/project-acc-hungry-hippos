@@ -8,9 +8,12 @@ description: Backend API
 ## Table of Contents
 
 - [Overview](#overview)
+- [Session and Player Lifecycle](#session-and-player-lifecycle)
 - [Utility Functions](#utility-functions)
-  - [generateSessionId](#generatesessionid)
-  - [generateUniqueSessionId](#generateuniquesessionid)
+  - [`generateSessionId`](#generatesessionid)
+  - [`generateUniqueSessionId`](#generateuniquesessionid)
+  - [`getWeightedRandomFood`](#getweightedrandomfood)
+  - [`broadcast`](#broadcast)
 - [WebSocket Communication](#websocket-communication)
   - [Client-to-Server Messages](#client-to-server-messages)
   - [Server-to-Client Broadcasts](#server-to-client-broadcasts)
@@ -20,12 +23,32 @@ description: Backend API
 
 ## Overview
 
-The backend is a **central, real-time game server** built with **Node.js** and the `ws` WebSocket library. It manages the entire lifecycle of a game session.
+The backend is a **real-time multiplayer game server** implemented in **Node.js** using the `ws` WebSocket library. It manages active game sessions, tracks scores and players, and arranges all real-time gameplay logic including spawning food, and effects.
 
-Instead of traditional REST endpoints, the server communicates with clients **exclusively through WebSocket messages**. It maintains the game state for each session — including player positions, scores, and the state of all active food items — and runs a central `setInterval` game loop to handle physics and spawning.
+The server does **not** use REST endpoints. All communication is performed using WebSocket messages.
+
 
 - **Production**: Uses **PostgreSQL (via Railway)** to persist session/player data.
 - **Local Development**: Uses a JSON file for session storage.
+
+## Session and Player Lifecycle
+
+### `CREATE_SESSION`
+- **Purpose**: Generates a new unique `sessionId`.
+- **Pre-conditions**: None.
+- **Post-conditions**:
+  - Local: New entry added to `sessionID.json`.
+  - Prod: New row inserted in `sessions` table.
+- **Returns**: `{ sessionId: string }`
+
+### `PLAYER_JOIN`
+- **Purpose**: Joins a user to a session and stores role/color.
+- **Pre-conditions**: `sessionId` must exist.
+- **Post-conditions**:
+  - Socket added to session’s connection set.
+  - Broadcasts updated user list.
+  - Updates database if in production.
+- **Returns**: Broadcasts `PLAYER_JOINED_BROADCAST` and `USERS_LIST_UPDATE`.
 
 ---
 
@@ -35,49 +58,54 @@ Instead of traditional REST endpoints, the server communicates with clients **ex
 
 Generates a random alphanumeric session ID consisting of uppercase letters and digits.
 
-- **Parameters**:  
-  `length` — `number`, defaults to `5`  
-- **Returns**:  
-  `string` — A randomly generated session ID
+- **Parameters**:
+  - `length` (`number`) - Optional. Defaults to `5`.
+- **Returns**:
+  - `string` - Random session ID.
+- **Pre-conditions**: None.
+- **Post-conditions**: None.
 
 ---
 
 ### `generateUniqueSessionId(existingSessions, length = 5)`
 
-Generates a unique session ID that does not exist in the provided list.
+Ensures the session ID is not already in use.
 
 - **Parameters**:
-  - `existingSessions` — `string[]`
-  - `length` — `number`, defaults to `5`
-- **Returns**:  
-  `string` — A new unique session ID
-
----
-
-### `broadcast(sessionId, data)`
-
-Broadcasts a message to all WebSocket clients connected to a given session.
-
-- **Parameters**:
-  - `sessionId` — `string`
-  - `data` — `object`
-- **Effect**:  
-  Sends a JSON message to all connected clients in the session.
+  - `existingSessions` (`string[]`)
+  - `length` (`number`) - Optional. Defaults to `5`.
+- **Returns**:
+  - `string` - Unique session ID.
+- **Pre-conditions**: `existingSessions` must be an array of valid IDs.
+- **Post-conditions**: New ID guaranteed not in existingSessions.
 
 ---
 
 ### `getWeightedRandomFood(allFoods, targetId)`
 
-Returns a randomly selected food object with higher probability for the target food.
+Selects a food item randomly, with extra weight given to a "target" food ID.
 
 - **Parameters**:
-  - `allFoods` — `object[]` — List of all possible food items
-  - `targetId` — `string` — ID of the food to favor
-- **Returns**:  
-  `object` — A food item selected with weighted probability
+  - `allFoods` (`object[]`) - Full list of food items.
+  - `targetId` (`string`) - ID of the target food to favor.
+- **Returns**:
+  - `object` - Randomly selected food object.
+- **Pre-conditions**: `allFoods` must include targetId.
+- **Post-conditions**: Returns a new weighted choice each call.
 
 ---
 
+### `broadcast(sessionId, data)`
+
+Sends a message to all clients in a session.
+
+- **Parameters**:
+  - `sessionId` (`string`)
+  - `data` (`object`) - Will be serialized with `JSON.stringify`.
+- **Pre-conditions**: `sessions[sessionId]` must exist.
+- **Post-conditions**: All clients with `readyState === OPEN` will receive the message.
+
+---
 
 ## WebSocket Communication
 
@@ -87,38 +115,66 @@ The server operates by receiving messages from clients and broadcasting **state 
 
 ### Client-to-Server Messages
 
-| Message Type            | Payload                                | Description |
-|-------------------------|----------------------------------------|-------------|
-| `CREATE_SESSION`        | `{}`                                   | Requests the server to generate a new unique session ID. |
-| `VALIDATE_SESSION`      | `{ gameCode: string }`                 | Asks the server if a given session code is valid. |
-| `PLAYER_JOIN`           | `{ sessionId, userId, role, color }`   | Informs the server that a new player has joined a session. |
-| `PLAYER_MOVE`           | `{ sessionId, userId, x, y }`          | Sends the local player's position to the server. |
-| `AAC_FOOD_SELECTED`     | `{ sessionId, food, effect }`          | AAC user selects a target food with optional effect. |
-| `FRUIT_EATEN_BY_PLAYER` | `{ sessionId, userId, isCorrect, effect }` | Player collided with a fruit. |
-| `PLAYER_EFFECT_APPLIED` | `{ sessionId, targetUserId, effect }`  | A visual effect was applied to a player. |
-| `SET_EDGE`              | `{ sessionId, userId, edge }`          | Assigns a player to a screen edge. |
-| `START_GAME`            | `{ sessionId, mode }`                  | Host starts the game for all players. |
+| Message Type              | Payload                                 | Description |
+|---------------------------|------------------------------------------|-------------|
+| `CREATE_SESSION`          | `{}`                                     | Requests a new unique session ID. |
+| `VALIDATE_SESSION`        | `{ sessionId: string }`                  | Validates session ID. |
+| `PLAYER_JOIN`             | `{ sessionId, userId, role, color }`     | Adds user to session and syncs presence. |
+| `PLAYER_MOVE`             | `{ sessionId, userId, x, y }`            | Sends current player position. |
+| `AAC_FOOD_SELECTED`       | `{ sessionId, food, effect }`            | Target food selection by AAC user. |
+| `START_GAME`              | `{ sessionId, mode }`                    | Initializes game loop, spawns food. |
+| `START_TIMER`             | `{ sessionId }`                          | Starts countdown (180s). |
+| `SET_EDGE`                | `{ sessionId, userId, edge }`            | Assigns spawn angle per player. |
+| `FRUIT_EATEN`             | `{ sessionId, instanceId }`              | Tells server to remove food from list. |
+| `FRUIT_EATEN_BY_PLAYER`   | `{ sessionId, userId, isCorrect, effect }` | Updates score and clears effect. |
+| `PLAYER_EFFECT_APPLIED`   | `{ sessionId, targetUserId, effect }`    | Triggers visual effect (burn, freeze). |
+| `SELECT_COLOR`            | `{ sessionId, userId, color }`           | Assigns a color to a user. |
 
 ---
 
-### Server-to-Client Broadcasts
+### Client-to-Server Messages
 
-| Message Type               | Payload                                  | Description |
-|----------------------------|------------------------------------------|-------------|
-| `SESSION_CREATED`          | `{ sessionId: string }`                  | Responds to `CREATE_SESSION` with new session ID. |
-| `USERS_LIST_UPDATE`        | `{ users: [...] }`                       | Broadcasts updated list of all players in session. |
-| `FOOD_STATE_UPDATE`        | `{ foods: [...] }`                       | Core game sync message — full state of active food. |
-| `AAC_TARGET_FOOD`          | `{ targetFoodId, targetFoodData, effect }` | Sets the correct food to target. |
-| `PLAYER_EFFECT_BROADCAST` | `{ targetUserId, effect }`              | Apply visual effect (e.g. freeze, grow) to player. |
-| `SCORE_UPDATE_BROADCAST`  | `{ scores: {...} }`                     | Sends updated scores to all players. |
-| `GAME_OVER`                | `{}`                                    | Notifies all clients that the game has ended. |
+| Message Type              | Payload                                 | Description |
+|---------------------------|------------------------------------------|-------------|
+| `CREATE_SESSION`          | `{}`                                     | Requests a new unique session ID. |
+| `VALIDATE_SESSION`        | `{ sessionId: string }`                  | Validates session ID. |
+| `PLAYER_JOIN`             | `{ sessionId, userId, role, color }`     | Adds user to session and syncs presence. |
+| `PLAYER_MOVE`             | `{ sessionId, userId, x, y }`            | Sends current player position. |
+| `AAC_FOOD_SELECTED`       | `{ sessionId, food, effect }`            | Target food selection by AAC user. |
+| `START_GAME`              | `{ sessionId, mode }`                    | Initializes game loop, spawns food. |
+| `START_TIMER`             | `{ sessionId }`                          | Starts countdown (180s). |
+| `SET_EDGE`                | `{ sessionId, userId, edge }`            | Assigns spawn angle per player. |
+| `FRUIT_EATEN`             | `{ sessionId, instanceId }`              | Tells server to remove food from list. |
+| `FRUIT_EATEN_BY_PLAYER`   | `{ sessionId, userId, isCorrect, effect }` | Updates score and clears effect. |
+| `PLAYER_EFFECT_APPLIED`   | `{ sessionId, targetUserId, effect }`    | Triggers visual effect (burn, freeze). |
+| `SELECT_COLOR`            | `{ sessionId, userId, color }`           | Assigns a color to a user. |
 
+## Data Structures
+
+### `sessions: { [sessionId: string]: Set<WebSocket> }`
+Tracks all sockets connected to each active session.
+
+### `scoresBySession: { [sessionId: string]: { [userId: string]: number } }`
+Stores player scores per session.
+
+### `activeFoods: { [sessionId: string]: FoodInstance[] }`
+Holds current active food objects on screen.
+
+### `fruitQueues: { [sessionId: string]: Food[] }`
+FIFO queue of upcoming food to spawn.
+
+### `fruitIntervals: { [sessionId: string]: Interval }`
+Per-session loop interval that controls spawning and physics.
+
+---
 ---
 
 ## Server Info
 
-- **Port**: `4000` (local dev)
+- **Port**: `4000` (local development)
 - **Protocol**: `ws://` (WebSocket)
 - **Session Storage**:
   - Local: `./src/data/sessionID.json`
   - Production: **PostgreSQL on Railway**
+- **Frontend Deployment (Production)**:  
+  Hosted on Vercel - communicates with this WebSocket backend via `wss://` in deployed mode.
