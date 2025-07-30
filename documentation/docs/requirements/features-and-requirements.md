@@ -30,7 +30,7 @@ sidebar_position: 4
 ### Object Types
 - **Food** is catchable for points.
 - **Traps** (burn, freeze, grow) negatively affect Hippos.
-- Catching the wrong food or trap should trigger **visual and audio effects** (e.g., a hippo "throwing up" animation for poison).
+- Catching the wrong food or trap should trigger **visual and audio effects** (e.g., a hippo "freeze" animation for freeze verb).
 
 ### Scoring & Feedback
 - Hippos earn points for **catching correct food**.
