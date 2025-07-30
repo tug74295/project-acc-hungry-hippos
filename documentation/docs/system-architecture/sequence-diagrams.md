@@ -4,93 +4,77 @@ sidebar_position: 4
 
 # Sequence Diagrams
 
-## Use Case 1 - Start Game Session (Host Player) 
-*As a player, I want to initiate a new game session from my device, acting as the host, so that other players can join and I can control the game session. *
-1. The Host Player opens their Host Interface and authenticates with the Auth Service (Firebase), navigating to the session creation screen.
-2. The Host Player selects the "Create Session" or "Host Game" control on their Host Interface.
-3. The Host Interface sends a request to the Game Server to create a new game session, identifying itself as the session host.
-4. The Game Server generates a unique Room Code, registers the Host Player, initializes the game state to "Lobby," and updates its internal lobby management.
-5. The Game Server sends the generated Room Code back to the Host Interface.
-6. The Host Interface displays the unique Room Code.
-7. The Host Player communicates or shows the Room Code to nearby players.
-8. The Host Interface shows a "Waiting for Players" screen.
-9. AAC Device Identification: Separately, the AAC Interface (Hippo_Player_App on AAC user's device) indicates to the Game Server that it is the designated AAC device for the session. This allows the Game Server to properly direct AAC-specific game state and process AAC user inputs.
+## Use Case 1 - Start Game Session (Host)
+*As a host, I want to initiate a new game session from my device, so that players can join.*
+1. The host opens the game and chooses to start a new session.
+2. A unique game code and QR code is created and shown on their screen.
+3. The host shares this code (or QR code) with those who want to join.
+4. As players join the game, their hippo avatars and roles appear on the host’s screen.
+5. Once at least one AAC user and one hippo player have joined, the host can begin the game.inputs.
     
 ```mermaid
 ---
-title: Sequence Diagram 1 – Start Game Session (Host Player) - No Facilitator Monitor
+title: Sequence Diagram – Start Game Session (Host)
 ---
 
 sequenceDiagram
-    participant Host_Interface as Host Player Interface
-    participant Game_Server as Game Server
-    participant Auth_Service as Auth Service (Firebase Auth)
-    participant AAC_Interface as AAC Player Interface
+    participant Host
+    participant Server
+    participant Players
 
-    Host_Interface->>Auth_Service: Authenticate (PlayerID request)
-    Auth_Service-->>Host_Interface: PlayerID received
+    Host->>Server: Select "No code? Create new game!"
+    activate Server
+    Server->>Server: Generate game code + QR code
+    Server-->>Host: Send code and QR for display
+    deactivate Server
 
-    Host_Interface->>Host_Interface: Host opens app & navigates to host screen
-    Host_Interface->>Host_Interface: Host selects "Create Session" / "Host Game"
+    Host->>Players: Share code/QR
 
-    Host_Interface->>Game_Server: Request new game session (as host)
-    activate Game_Server
-    Game_Server->>Game_Server: Generate unique Room Code
-    Game_Server->>Game_Server: Register Host Player : Init Lobby GameState
-    Game_Server-->>Host_Interface: Send Room Code
-    deactivate Game_Server
+    loop Each player joins
+        Players->>Server: Join using code
+        Server->>Server: Register player and assign role
+        Server-->>Host: Show new avatar & role
+    end
 
-    Host_Interface->>Host_Interface: Display Room Code
-    Host_Interface->>Host_Interface: Display "Waiting for Players" screen
-    Host_Interface->>Host_Interface: Host communicates code to nearby players
+    Server-->>Host: One AAC user + one hippo joined
+    Host->>Server: Begin game
 
-    AAC_Interface->>AAC_Interface: AAC User (or facilitator) indicates this is an AAC device
-    AAC_Interface->>Game_Server: Send "I am AAC device" signal
-    activate Game_Server
-    Game_Server->>Game_Server: Register AAC device's PlayerID internally
-    deactivate Game_Server
-   
 ```
 
-## Use Case 2 – Join Game Session (Player or AAC User)
-*As a player or AAC User, I want to join a game session using a code so that I can play the game.*
 
-1. A player opens the game/ website on their device.
-2. They enter the room code or use the audio provided by the host.
-3. They tap “Join Game” or use audio.
-4. Once the code is accepted, they are added to the game lobby.
-5. The player waits until the host starts the game.
+## Use Case 2 – Join Game Session (Hippo Player or AAC User)
+*As a hippo player or AAC User, I want to join a game session using a code so that I can play the game.*
+
+1. A player opens the game on their device.
+2. They enter or scan the game code that was shared by the host.
+3. They choose a role: Hippo Player or AAC User
+4. Hippo Players also choose a hippo color.
+5. Once joined, they wait until the host starts the game.
 
 
 ```mermaid
 ---
-title: Sequence Diagram 2 – Join Game Session
+title: Sequence Diagram 2 - Join Game Session
 ---
 
 sequenceDiagram
-    participant AAC_User as AAC User
-    participant Hippo_Player as Player
-    participant Interface as AAC/Player Interface
-    participant Vercel as Vercel Hosting
-    participant Firebase as Firebase Realtime DB
+    participant Host
+    participant Player
+    participant Game
 
-    AAC_User->>Vercel: Open game URL
-    Hippo_Player->>Vercel: Open game URL
-    Vercel-->>AAC_User: Serve Interface
-    Vercel-->>Hippo_Player: Serve Interface
+    Host->>Player: Share game code
+    Player->>Game: Open game and enter code
+    Game-->>Player: Validate code / accept
+    alt Select role: Hippo Player
+        Player->>Game: Choose Hippo Player
+        Game-->>Player: Prompt for hippo color
+        Player->>Game: Select color
+    else Select role: AAC User
+        Player->>Game: Choose AAC User
+    end
+    Game-->>Player: Joined lobby (waiting)
+    Player-->>Host: Wait for host to start game
 
-    AAC_User->>Interface: Enter room code & tap "Join"
-    Hippo_Player->>Interface: Enter room code & tap "Join"
-
-    Interface->>Firebase: Validate room code
-    Firebase-->>Interface: Room code valid / invalid
-
-    Interface->>Firebase: Add AAC_User to lobby
-    Interface->>Firebase: Add Hippo_Player to lobby
-
-    Firebase-->>Interface: Return lobby data
-    Interface-->>AAC_User: Display lobby
-    Interface-->>Hippo_Player: Display lobby
 
 
 ```
