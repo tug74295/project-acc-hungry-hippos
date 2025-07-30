@@ -1,8 +1,12 @@
-# 🦛 Hippo Game Requirements 
+---
+sidebar_position: 4
+---
 
-## 🧩 Functional Requirements
+# Hippo Game Requirements 
 
-### 🎮 Core Gameplay
+## Functional Requirements
+
+### Core Gameplay
 - The game must allow up to **4 Hippo players**, each positioned at one edge of the screen (top, bottom, left, right).
 - Hippos must be able to **slide along their edge** (left-right for horizontal edges, up-down for vertical edges).
 - Hippos can **catch Food and traps** launched during the game.
@@ -12,7 +16,7 @@
 - Food may spawn from **different points** on the map (not just the center) for variety.
 - Presenter/Spectator view must **mirror the hippo player view** to support joint attention.
 
-### 🎯 AAC Game Conductor Role
+### AAC Game Conductor Role
 - An **AAC (Augmentative and Alternative Communication) user** acts as the **Game Conductor**.
 - The AAC user must be able to:
   - Choose the **type of food or trap**.
@@ -23,19 +27,19 @@
   - Support **customizable categories** to limit options (e.g., max ~10 visible items).
   - Be optimized for **touchscreen use** with large buttons and simple folder navigation.
 
-### 🍓 Object Types
+### Object Types
 - **Food** is catchable for points.
 - **Traps** (burn, freeze, grow) negatively affect Hippos.
 - Catching the wrong food or trap should trigger **visual and audio effects** (e.g., a hippo "throwing up" animation for poison).
 
-### 🧠 Scoring & Feedback
+### Scoring & Feedback
 - Hippos earn points for **catching correct food**.
 - Provide **fun, animated feedback** for events (catch, trap effects).
 - **Leaderboard** must be **visual**:
   - Use **hippo colors, icons, or progress bars** instead of text labels or numbers.
 - Game must have a clear **progress indicator or game over screen**.
 
-### 👀 Spectator Mode
+### Spectator Mode
 - A **spectator mode** must allow observers to watch gameplay in real time.
 - Spectators should see:
   - Player hippos
@@ -44,13 +48,13 @@
 
 ---
 
-## 🧑‍💻 Facilitator/Admin Features
+## Facilitator/Admin Features
 - Provide a **facilitator panel** to:
 - Pre-configure **game rooms** with specific settings.
 
 ---
 
-## 📊 Research & Data Logging
+## Research & Data Logging
 - The game must **log key actions with timestamps**, including:
   - AAC user selections (e.g., "User clicked Apple").
   - Player catches (correct/wrong food).
@@ -59,9 +63,9 @@
 
 ---
 
-## 🛠️ Non-Functional Requirements
+## Non-Functional Requirements
 
-### 💡 Accessibility
+### Accessibility
 - Autism-friendly design:
   - **Low sensory load**: plain, non-distracting background.
   - **High contrast** between hippos, food, and background.
@@ -69,23 +73,23 @@
 - AAC interface must be **simple, large-buttoned, and optimized for touchscreens**.
 - Game **mode and role selection must be icon-based**, avoiding text or dropdown menus.
 
-### 📱 Usability
+### Usability
 - Must work on **desktop, laptop, or tablet**.
 - Controls must be **intuitive for touchscreens and desktops**:
   - Touchscreen: swipe or large on-screen buttons.
   - Desktop: arrow keys **or alternative visual controls**.
 - UI must **minimize text** where possible, relying on **icons and colors**.
 
-### ⚙️ Performance
+### Performance
 - Game must run **smoothly (≥ 30 FPS)** even with multiple objects on screen.
 - Use **real-time synchronization** via WebSockets with **movement interpolation** to reduce jitter.
 - Physics (bounce, expiration, collisions) must remain accurate and lightweight.
 
-### 🔐 Reliability
+### Reliability
 - Game state must **not crash or freeze** during normal play.
 - Players should be able to **reconnect** without breaking game state.
 
-### 🔧 Maintainability
+### Maintainability
 - Code must be **modular and well-structured**, especially for:
   - Movement strategies
   - Food/trap spawning logic
