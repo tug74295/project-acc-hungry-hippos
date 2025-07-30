@@ -159,6 +159,15 @@ function RoleSelect() {
         },
     });
 
+    // Persist join information for reconnection
+    const rejoinDetails = {
+      sessionId,
+      userId: username,
+      role,
+      color: selectedColor,
+    };
+    sessionStorage.setItem('rejoinDetails', JSON.stringify(rejoinDetails));
+
     setWaiting(true);
   };
 

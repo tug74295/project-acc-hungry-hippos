@@ -212,9 +212,10 @@ wss.on('connection', (ws) => {
         ws.color = color;
 
         if (!sessions[sessionId]) {
-          sessions[sessionId] = new Set(); 
+          sessions[sessionId] = new Set();
         }
-        sessions[sessionId].add(ws);
+        const clientInfo = { ws, userId, role, color };
+        sessions[sessionId].add(clientInfo);
         console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
 
         if (!scoresBySession[sessionId]) scoresBySession[sessionId] = {};
@@ -241,7 +242,6 @@ wss.on('connection', (ws) => {
         });
         // Collect all users in the session
         const usersInSession = Array.from(sessions[sessionId])
-          .filter(client => client.readyState === WebSocket.OPEN)
           .map(client => ({
             userId: client.userId,
             role: client.role,
@@ -263,6 +263,50 @@ wss.on('connection', (ws) => {
           payload: { scores: scoresBySession[sessionId] }
         });
 
+      }
+
+      // Handle player rejoining with stored details
+      if (data.type === 'REJOIN_SESSION') {
+        const { sessionId, userId, role, color } = data.payload;
+        ws.sessionId = sessionId;
+        ws.userId = userId;
+        ws.role = role;
+        ws.color = color;
+
+        if (sessions[sessionId]) {
+          let reconnected = null;
+          for (const client of sessions[sessionId]) {
+            if (client.userId === userId) {
+              reconnected = client;
+              break;
+            }
+          }
+
+          if (reconnected) {
+            console.log(`[WSS] Player ${userId} is rejoining session ${sessionId}.`);
+            reconnected.ws = ws;
+            delete reconnected.disconnectedAt;
+            reconnected.role = role;
+            reconnected.color = color;
+
+            ws.send(JSON.stringify({
+              type: 'FULL_STATE_SYNC',
+              payload: {
+                users: Array.from(sessions[sessionId]).map(c => ({ userId: c.userId, role: c.role, color: c.color })),
+                scores: scoresBySession[sessionId],
+                currentTargetFood: sessions[sessionId].currentTargetFoodId,
+                activeFoods: activeFoods[sessionId]
+              }
+            }));
+
+            broadcast(sessionId, {
+              type: 'USERS_LIST_UPDATE',
+              payload: {
+                users: Array.from(sessions[sessionId]).map(c => ({ userId: c.userId, role: c.role, color: c.color }))
+              }
+            });
+          }
+        }
       }
 
       // When the presenter clicks "Start Game", broadcast to all clients in the session
@@ -574,57 +618,21 @@ wss.on('connection', (ws) => {
     }
     console.log(`WSS Client ${userId} disconnected from session ${sessionId}`);
 
-    // Remove the client from the ws
     if (sessions[sessionId]) {
-      sessions[sessionId].delete(ws);
-
-      // If the session still exists, broadcast the updated user list
-      const usersInSession = Array.from(sessions[sessionId])
-        .filter(client => client.readyState === WebSocket.OPEN)
-        .map(client => ({
-          userId: client.userId,
-          role: client.role
-        }));
-
-      broadcast(sessionId, {
-        type: 'USERS_LIST_UPDATE',
-        payload: {
-          users: usersInSession
+      for (const client of sessions[sessionId]) {
+        if (client.userId === userId) {
+          client.ws = null;
+          client.disconnectedAt = Date.now();
+          console.log(`[WSS] Marked player ${userId} as disconnected.`);
+          break;
         }
-      });
-
-      // After a player leaves, re-calculate the taken colors and notify everyone.
-      const takenColors = Array.from(sessions[sessionId])
-        .map(client => client.color)
-        .filter(c => c);
-
-      broadcast(sessionId, {
-        type: 'COLOR_UPDATE',
-        payload: { takenColors }
-      });
-      console.log(`WSS Player left, broadcasting updated USERS_LIST_UPDATE to ${sessionId}:`, usersInSession);
-    }
-
-    // Remove the session from the sessions object if it is empty
-    if (sessions[sessionId].size === 0) {
-      delete sessions[sessionId];
+      }
     }
 
     // Remove the client from the database
-    let remainingPlayers = 0;
     if (IS_PROD) {
       try {
         await pool.query('DELETE FROM players WHERE session_id = $1 AND user_id = $2', [sessionId, userId]);
-        const result = await pool.query('SELECT COUNT(*) FROM players WHERE session_id = $1', [sessionId]);
-        remainingPlayers = parseInt(result.rows[0].count, 10);
-
-        // If no players remain, remove the session from the database
-        if (remainingPlayers === 0) {
-          await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
-          console.log(`WSS Session ${sessionId} was empty and has been removed from the database.`);
-        } else {
-          console.log(`WSS Player ${userId} removed from session ${sessionId}. Remaining players: ${remainingPlayers}`);
-        }
       } catch (err) {
         console.error('Error removing player from database:', err);
       }
@@ -640,8 +648,8 @@ wss.on('connection', (ws) => {
 function broadcast(sessionId, data) {
     if (sessions[sessionId]) {
         sessions[sessionId].forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify(data));
+            if (client.ws && client.ws.readyState === WebSocket.OPEN) {
+                client.ws.send(JSON.stringify(data));
             }
         });
     }
@@ -685,3 +693,24 @@ setupDatabase().then(() => {
     console.log(`Server listening on ${PORT}`);
   });
 });
+
+// Periodically remove players who have been disconnected for over a minute
+setInterval(() => {
+  const now = Date.now();
+  for (const sessionId in sessions) {
+    const session = sessions[sessionId];
+    const toRemove = [];
+    for (const client of session) {
+      if (client.disconnectedAt && (now - client.disconnectedAt > 60000)) {
+        toRemove.push(client);
+      }
+    }
+    toRemove.forEach(client => {
+      session.delete(client);
+      console.log(`[WSS] Cleaned up disconnected player ${client.userId} from session ${sessionId}.`);
+    });
+    if (session.size === 0) {
+      delete sessions[sessionId];
+    }
+  }
+}, 60000);
