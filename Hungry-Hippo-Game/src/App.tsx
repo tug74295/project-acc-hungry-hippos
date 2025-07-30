@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import LandingPage from './pages/LandingPage/LandingPage';
 import Presenter from './pages/PresenterPage/Presenter';
 import RoleSelect from './pages/RoleSelection/RoleSelect';
@@ -10,6 +11,25 @@ import Victory from './pages/Victory/Victory';
 import { Navigate } from 'react-router-dom';
 
 function App() {
+  const navigate = useNavigate();
+
+  // Auto-navigate a player back into their session if details were saved
+  useEffect(() => {
+    const saved = sessionStorage.getItem('rejoinDetails');
+    if (saved) {
+      const { sessionId, userId, role, color } = JSON.parse(saved);
+      if (sessionId && userId && role) {
+        if (role === 'Hippo Player') {
+          navigate(`/hippo/${sessionId}/${userId}/${role}`, { state: { role, color }, replace: true });
+        } else if (role === 'AAC User') {
+          navigate(`/aac/${sessionId}/${userId}/${role}`, { state: { role, color }, replace: true });
+        } else if (role === 'Spectator') {
+          navigate(`/spectator/${sessionId}/${userId}`, { state: { role, color }, replace: true });
+        }
+      }
+    }
+  }, [navigate]);
+
   return (
     <BrowserRouter>
       <Routes>
