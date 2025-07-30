@@ -8,9 +8,13 @@ This section presents the low-fidelity and high-fidelity game design mockups for
 
 > All mockups are available for preview in the [[Figma project link](https://www.figma.com/design/kF9uAD0Apu4SL2jEjisWbQ/AAC-Hungry-Hippo?node-id=212-279&t=vFsFYqKEPL8jwgvC-1)].
 
+## **Final Design**
+![Hippo Game](../../assets/mock6.png)  
+ Hungry Hungry Hippos Replica design. Read the rest of documentaion in chronological order to understand how we came to this final design. We came up with 4 game designs, then decided on 1 draft design, then came up with a final design.
+
 ---
 
-## 1. **Static Hippos + Tap to Eat**
+## Design 1. **Static Hippos + Tap to Eat**
 
 ![Static Hippos](../../assets/mock1.png)  
 <sub>**Left:** Low-Fidelity  **Right:** High-Fidelity</sub>
@@ -27,7 +31,7 @@ This section presents the low-fidelity and high-fidelity game design mockups for
 
 ---
 
-## 2. **Responsive Hippos – Split Screen**
+## Design 2. **Responsive Hippos – Split Screen**
 
 ![Split Screen](../../assets/mock3.png)  
 <sub>**Left:** Low-Fidelity  **Right:** High-Fidelity</sub>
@@ -45,7 +49,7 @@ This section presents the low-fidelity and high-fidelity game design mockups for
 
 ---
 
-## 3. **Snake-Style Hippo Game**
+## Design 3. **Snake-Style Hippo Game**
 
 ![Snake Game](../../assets/mock2.png)  
 <sub>**Left:** Low-Fidelity  **Right:** High-Fidelity</sub>
@@ -59,7 +63,7 @@ This section presents the low-fidelity and high-fidelity game design mockups for
 
 ---
 
-## 4. **Hungry Hungry Hippos Replica– Exclusive Screen Sides**
+## Design 4. **Hungry Hungry Hippos Replica– Exclusive Screen Sides**
 
 ![Exclusive Sides](../../assets/mock4.png)  
 <sub>**Left:** Low-Fidelity  **Right:** High-Fidelity</sub>
@@ -95,7 +99,7 @@ During discussions with stakeholders of the 4 different mockups, a few key point
 
 ---
 
-## Final Gameplay Design
+## Draft Design
 
 After reviewing all mockups and incorporating stakeholder feedback, we decided to move forward with a design based on the Snake Game concept.
 
@@ -125,3 +129,28 @@ Initially, we looked to the web game Slither.io for inspiration, particularly it
   Using circular avatars allows for cleaner visuals and more scalable gameplay, especially with larger player counts.
 
 This direction preserves the inclusivity and flexibility of the Snake-style gameplay while reinforcing the visual identity of hippos eating fruit in a way that’s friendly and accessible.
+
+---
+
+
+## Final Design
+
+![Hippo Game](../../assets/mock6.png)  
+
+After reviewing all our designs and speaking with stakeholders, we decided to return to the original Design 4: Hungry Hungry Hippos Replica. While the Snake-style concept offered scalability and flexibility, it introduced unnecessary complexity.
+
+We decided on this design as it was the most inclusive. Scaling for a large number of players was not necessary, as our goal is to empower AAC users with a fun, intuitive, and accessible multiplayer experience.
+
+### Why We Chose to Return to Design 4:
+
+- **Familiar Gameplay**  
+  Closely resembles the classic Hungry Hungry Hippos game, making it immediately recognizable and easy to understand.
+
+- **AAC Integration**  
+  The AAC user continues to guide gameplay by selecting both the fruit type and launch direction—making them a central, active participant.
+
+- **Simplified Screen Layout**  
+  Each hippo remains on a specific side of the screen, reducing visual clutter and making the game more accessible.
+
+
+
