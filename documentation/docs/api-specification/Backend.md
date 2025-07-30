@@ -17,6 +17,8 @@ The server does **not** use REST endpoints. All communication is performed using
 - **Production**: Uses **PostgreSQL (via Railway)** to persist session/player data.
 - **Local Development**: Uses a JSON file for session storage.
 
+---
+
 ## Session and Player Lifecycle
 
 ### `CREATE_SESSION`
@@ -53,8 +55,6 @@ The server does **not** use REST endpoints. All communication is performed using
 ## WebSocket Communication
 
 The server operates by receiving messages from clients and broadcasting **state updates** to all clients in a given session.
-
----
 
 ### Client-to-Server Messages
 
@@ -176,7 +176,6 @@ FIFO queue of upcoming food to spawn.
 ### `fruitIntervals: { [sessionId: string]: Interval }`
 Per-session loop interval that controls spawning and physics.
 
----
 ---
 
 ## Server Info
