@@ -84,14 +84,15 @@ sequenceDiagram
 
 1. The Host Player sees a "Start Game" button on their game interface.
 2. The Host Player taps "Start Game".
-3. The Host Player's interface sends a command to Firebase to start the game.
-4. Firebase updates the central game state to begin a 3-second countdown.
-5. All connected player interfaces (Host, AAC User, and other players) receive the updated game state and switch to a gameplay screen, displaying the countdown.
-6. When the countdown ends, the game officially starts, and gameplay begins on all connected screens.
+3. The Host Player's client sends a start_game command to the backend via WebSocket.
+4. The backend updates the central game state in PostgreSQL to state = 'playing'.
+5. The backend broadcasts the updated game state (playing) to all connected clients via WebSocket.
+6. All clients (Host, AAC User, and Other Players) immediately switch to the gameplay screen and the game begins for everyone at the same time.
+
 
 ```mermaid
 ---
-title: Sequence Diagram 3 – Start Game
+title: Sequence Diagram 3 – Start Game (No Countdown)
 ---
 
 sequenceDiagram
@@ -99,28 +100,19 @@ sequenceDiagram
     participant AAC_User     as AAC User
     participant Other_Player as Other Player
     participant Interface    as Game Interface (Client Apps)
-    participant Firebase     as Firebase Realtime DB
+    participant WS_Server    as Backend WebSocket Server
+    participant DB           as PostgreSQL DB
 
     %% ─── Host starts the game ─────────────────────────────
     Host_Player ->> Interface: Sees “Start Game” button
     Host_Player ->> Interface: Taps “Start Game”
 
     %% ─── Command sent to backend ──────────────────────────
-    Interface   ->> Firebase  : start_game command
-    Firebase    ->> Firebase : Set state to countdown (3 s)
+    Interface   ->> WS_Server: WebSocket: start_game command
+    WS_Server   ->> DB       : UPDATE games SET state='playing' WHERE id=...
 
-    %% ─── Countdown broadcast to all clients ───────────────
-    Firebase  -->> Interface : Broadcast state – countdown
-    Interface  ->> Host_Player  : Show 3-second countdown
-    Interface  ->> AAC_User     : Show 3-second countdown
-    Interface  ->> Other_Player : Show 3-second countdown
-
-    %% ─── Countdown ends ───────────────────────────────────
-    Firebase    ->> Firebase : Countdown ends
-    Firebase    ->> Firebase : Set state to playing
-    Firebase  -->> Interface : Broadcast state – playing
-
-    %% ─── Gameplay screen appears ──────────────────────────
+    %% ─── State broadcast to all clients ──────────────────
+    WS_Server  -->> Interface : WebSocket: state = playing
     Interface  ->> Host_Player  : Display gameplay screen
     Interface  ->> AAC_User     : Display gameplay screen
     Interface  ->> Other_Player : Display gameplay screen
@@ -208,39 +200,49 @@ sequenceDiagram
 ```
 
 ## Use Case 6 – Game Timer and End State (Host)
-*As a player or AAC user, I want the game to end automatically after 1 minute so we know when the round is over.*
+*As a player or AAC user, I want the game to end automatically after 3 minute so we know when the round is over.*
 
-1. The host sees a timer selection screen.
-2. There is a 60-second default timer. The host can use buttons or audio to change the time.
-3. The host starts the game. See User Case 3.
-4. When the timer reaches 0, the game ends.
+1. The host starts the game. (See Use Case 3.)
+2. The backend WebSocket server starts the timer and tracks the countdown for the game session.
+3. When the timer reaches 0, the backend sets the game state in PostgreSQL to ended.
+4. The backend broadcasts the game end and scores to all clients via WebSocket.
 5. A score screen is shown to all players.
 6. The host sees a “Play Again” or “End Game” option.
 
+
 ```mermaid
 ---
-title: Sequence Diagram 6 - Game Timer and End State (Host)
+title: Sequence Diagram 6 – Game Timer and End State (Backend Timer Activity)
 ---
 sequenceDiagram
 participant Host as Host Player
-participant Game_UI as Game UI
-participant Timer as Game Timer
+participant Game_UI as Game UI (Client)
+participant WS_Server as WebSocket Server (Backend)
+participant DB as PostgreSQL DB
+participant Timer as Timer (Backend Activity)
 participant All_Players as All Players
-participant Firebase as Firebase Realtime DB
 
 Host->>Game_UI: Open timer selection screen
-Game_UI-->>Host: Show default timer (60 seconds)
-Host->>Game_UI: Adjust timer (optional via button/audio)
+Game_UI-->>Host: Show default timer (180 seconds)
+Host->>Game_UI: Adjust timer (optional)
 Host->>Game_UI: Start game
-Game_UI->>Timer: Start countdown
+Game_UI->>WS_Server: WebSocket: start_game with timer value
 
-Timer-->>Game_UI: Timer ticks down
-Timer-->>Game_UI: Timer reaches 0
+WS_Server->>DB: UPDATE games SET state='playing', timer=VALUE
+WS_Server->>Timer: Start timer for session (timer value)
+
+alt Each second
+    Timer-->>WS_Server: Timer tick (current time left)
+    WS_Server-->>Game_UI: WebSocket: timer tick
+end
+
+Timer-->>WS_Server: Timer reached 0
+WS_Server->>DB: UPDATE games SET state='ended'
+WS_Server-->>Game_UI: WebSocket: state=ended, final scores
 Game_UI->>All_Players: Show score screen
 Game_UI->>Host: Show “Play Again” or “End Game” options
 
 ```
-
 
 ## Use Case 7 – Play Again (AAC User or Player)
 *As an AAC user or player, I want to play another game session after a round ends.*
@@ -250,21 +252,26 @@ Game_UI->>Host: Show “Play Again” or “End Game” options
 
 ```mermaid
 ---
-title: Sequence Diagram – Play Again Option
+title: Sequence Diagram – Play Again Option (WebSocket + PostgreSQL)
 ---
 
 sequenceDiagram
 participant Host as Host Player
-participant Game_UI as Game UI
+participant Game_UI as Game UI (Client)
+participant WS_Server as WebSocket Server (Backend)
+participant DB as PostgreSQL DB
 participant All_Players as All Players
-participant Firebase as Firebase Realtime DB
 
 alt Host chooses "Play Again"
     Host->>Game_UI: Tap/voice "Play Again"
-    Game_UI->>Firebase: Reset game state
+    Game_UI->>WS_Server: WebSocket: play_again
+    WS_Server->>DB: Reset game state for new round
+    WS_Server-->>Game_UI: WebSocket: state = lobby / ready
     Game_UI->>All_Players: Go to Use Case 3 (Start New Game)
 else Host chooses "End Game"
     Host->>Game_UI: Tap/voice "End Game"
+    Game_UI->>WS_Server: WebSocket: end_game
+    WS_Server-->>Game_UI: WebSocket: end_session
     Game_UI->>All_Players: Redirect to game home screen
 end
 ```
