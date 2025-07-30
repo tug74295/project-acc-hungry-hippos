@@ -52,12 +52,24 @@ const PhaserPage: React.FC = () => {
   // --- JOIN on MOUNT ---
   useEffect(() => {
     const role = location.state?.role;
+    const color = location.state?.color;
     const alreadyJoined = connectedUsers.some(
       (u) => u.userId === userId && u.role === role
     );
 
     if (sessionId && userId && role && !alreadyJoined) {
-      // Defensive: avoid double joining as both.
+      const saved = sessionStorage.getItem('rejoinDetails');
+      if (saved) {
+        const details = JSON.parse(saved);
+        if (details.sessionId === sessionId && details.userId === userId) {
+          sendMessage({
+            type: 'REJOIN_SESSION',
+            payload: { sessionId, userId, role, color: details.color }
+          });
+          return;
+        }
+      }
+
       if (role === 'Spectator') {
         sendMessage({
           type: 'SPECTATOR_JOIN',
@@ -66,11 +78,11 @@ const PhaserPage: React.FC = () => {
       } else {
         sendMessage({
           type: 'PLAYER_JOIN',
-          payload: { sessionId, userId, role }
+          payload: { sessionId, userId, role, color }
         });
       }
     }
-  }, [sessionId, userId, location.state?.role, sendMessage, connectedUsers]);
+  }, [sessionId, userId, location.state?.role, location.state?.color, sendMessage, connectedUsers]);
 
   // --- REMOTE PLAYER MOVEMENT SYNC ---
   useEffect(() => {
