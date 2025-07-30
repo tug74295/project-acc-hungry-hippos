@@ -112,6 +112,15 @@ function RoleSelect() {
           role: 'pending', // Initial role is pending until user selects
         },
       });
+
+      try {
+        localStorage.setItem(
+          'playerSession',
+          JSON.stringify({ sessionId, userId: username, role: 'pending' })
+        );
+      } catch (err) {
+        console.error('Failed to store session info', err);
+      }
     }
   }, [sessionId, username, isConnected, sendMessage]);
 
@@ -159,6 +168,21 @@ function RoleSelect() {
         },
     });
 
+    // Persist session details locally for reconnects
+    try {
+      localStorage.setItem(
+        'playerSession',
+        JSON.stringify({
+          sessionId,
+          userId: username,
+          role,
+          color: selectedColor,
+        })
+      );
+    } catch (err) {
+      console.error('Failed to store session info', err);
+    }
+
     setWaiting(true);
   };
 
@@ -173,6 +197,17 @@ function RoleSelect() {
     }
     setRole(selectedRole);
     setSelectedColor(null);
+
+    try {
+      const stored = localStorage.getItem('playerSession');
+      const session = stored ? JSON.parse(stored) : {};
+      localStorage.setItem(
+        'playerSession',
+        JSON.stringify({ ...session, role: selectedRole })
+      );
+    } catch (err) {
+      console.error('Failed to store session role', err);
+    }
   };
 
   const handleCancel = () => {
@@ -186,6 +221,17 @@ function RoleSelect() {
         type: 'SELECT_COLOR',
         payload: { sessionId, userId: username, color }
     });
+
+    try {
+      const stored = localStorage.getItem('playerSession');
+      const session = stored ? JSON.parse(stored) : {};
+      localStorage.setItem(
+        'playerSession',
+        JSON.stringify({ ...session, color })
+      );
+    } catch (err) {
+      console.error('Failed to store session color', err);
+    }
   };
 
   const isNextDisabled = !role || (role === 'Hippo Player' && !selectedColor)

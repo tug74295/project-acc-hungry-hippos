@@ -30,6 +30,25 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     socket.onopen = () => {
       console.log('[WS_CONTEXT] Connection established.');
       setIsConnected(true);
+
+      // Attempt to restore previous session
+      try {
+        const stored = localStorage.getItem('playerSession');
+        if (stored) {
+          const { sessionId: storedSessionId, userId, role, color } = JSON.parse(stored);
+          if (storedSessionId && userId && role) {
+            setSessionId(storedSessionId);
+            socket.send(
+              JSON.stringify({
+                type: 'PLAYER_JOIN',
+                payload: { sessionId: storedSessionId, userId, role, color },
+              })
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Failed to restore session from storage', err);
+      }
     };
 
     socket.onclose = () => {

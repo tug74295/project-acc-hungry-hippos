@@ -26,7 +26,7 @@ interface FoodState {
 
 const PhaserPage: React.FC = () => {
   // ---- ROUTER & CONTEXT ----
-  const { sessionId, userId } = useParams<{ sessionId: string, userId: string }>();
+  const { sessionId, userId, role: roleParam } = useParams<{ sessionId: string, userId: string, role?: string }>();
   const location = useLocation();
 
   // ---- REFS & STATE ----
@@ -49,9 +49,37 @@ const PhaserPage: React.FC = () => {
       .map(user => [user.userId, user.color as string]) // safe to cast now
   );
 
+  // Persist session info for reconnects
+  useEffect(() => {
+    const role = location.state?.role || roleParam;
+    const color = location.state?.color;
+    if (sessionId && userId && role) {
+      try {
+        const stored = localStorage.getItem('playerSession');
+        const existing = stored ? JSON.parse(stored) : {};
+        localStorage.setItem(
+          'playerSession',
+          JSON.stringify({
+            ...existing,
+            sessionId,
+            userId,
+            role,
+            color: color ?? existing.color,
+          })
+        );
+      } catch (err) {
+        console.error('Failed to persist session info', err);
+      }
+    }
+  }, [sessionId, userId, roleParam, location.state]);
+
   // --- JOIN on MOUNT ---
   useEffect(() => {
-    const role = location.state?.role;
+    const stored = localStorage.getItem('playerSession');
+    const storedData = stored ? JSON.parse(stored) : {};
+    const role = location.state?.role || roleParam || storedData.role;
+    const color = storedData.color || location.state?.color;
+
     const alreadyJoined = connectedUsers.some(
       (u) => u.userId === userId && u.role === role
     );
@@ -66,11 +94,18 @@ const PhaserPage: React.FC = () => {
       } else {
         sendMessage({
           type: 'PLAYER_JOIN',
-          payload: { sessionId, userId, role }
+          payload: { sessionId, userId, role, color }
         });
+
+        if (color) {
+          sendMessage({
+            type: 'SELECT_COLOR',
+            payload: { sessionId, userId, color }
+          });
+        }
       }
     }
-  }, [sessionId, userId, location.state?.role, sendMessage, connectedUsers]);
+  }, [sessionId, userId, location.state?.role, roleParam, sendMessage, connectedUsers]);
 
   // --- REMOTE PLAYER MOVEMENT SYNC ---
   useEffect(() => {
