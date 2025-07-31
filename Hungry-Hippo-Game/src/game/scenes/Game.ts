@@ -127,7 +127,7 @@ export class Game extends Scene {
 
     HIPPO_COLORS.forEach(h => {
       this.load.image(h.color + 'Hippo', h.imgSrc);
-      });
+    });
 
   }
 

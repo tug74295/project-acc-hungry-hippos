@@ -135,32 +135,17 @@ const PhaserPage: React.FC = () => {
       const { targetFoodId, targetFoodData, effect } = lastMessage.payload;
       const scene = phaserRef.current?.scene as any;
       if (scene && typeof scene.setTargetFood === 'function') {
-    if (effect) {
-      scene.setTargetFood(targetFoodId, effect);
-    } else {
-      scene.setTargetFood(targetFoodId);
-    }
-  }
-
-  useEffect(() => {
-    const handleLocalEdgeAssigned = (edge: string) => {
-      if (sessionId && userId) {
-        updatePlayerInSessionStorage(sessionId, { userId, role: 'Hippo Player', edge });
+        if (effect) {
+          scene.setTargetFood(targetFoodId, effect);
+        } else {
+          scene.setTargetFood(targetFoodId);
+        }
       }
-    };
-
-    EventBus.on('local-player-edge-assigned', handleLocalEdgeAssigned);
-
-    return () => {
-      EventBus.off('local-player-edge-assigned', handleLocalEdgeAssigned);
-    };
-  }, [sessionId, userId]);
-
-  if (targetFoodData){
-    setCurrentFood(targetFoodData);
-  }
-  clearLastMessage?.();
-}
+      if (targetFoodData) {
+        setCurrentFood(targetFoodData);
+      }
+      clearLastMessage?.();
+    }
 
     // When a food has been eaten, remove it from the scene
     if (lastMessage?.type === 'REMOVE_FOOD') {
@@ -181,7 +166,7 @@ const PhaserPage: React.FC = () => {
   }, [lastMessage, clearLastMessage]);
 
   // --- FRUIT EATEN LOCAL (EMITTED FROM PHASER) ---
-   useEffect(() => {
+  useEffect(() => {
     const handleFruitEaten = ({ instanceId }: { instanceId: string }) => {
       if (sessionId) {
         sendMessage({
@@ -272,66 +257,66 @@ const PhaserPage: React.FC = () => {
 
 
   // ---- RENDER ----
-return (
-  <div className={styles.pageWrapper}>
-    {/* Game Canvas */}
-    <div className={styles.canvasWrapper}>
-      <PhaserGame
-        ref={phaserRef}
-        currentActiveScene={(scene: Phaser.Scene) => {
-          if (
-            scene &&
-            userId &&
-            connectedUsers &&
-            typeof (scene as any).init === 'function'
-          ) {
-            (scene as any).init({
-              sendMessage,
-              localPlayerId: userId,
-              sessionId,
-              connectedUsers,
-              modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined,
-              role: location.state?.role,
-            });
-          }
-        }}
-      />
-    </div>
+  return (
+    <div className={styles.pageWrapper}>
+      {/* Game Canvas */}
+      <div className={styles.canvasWrapper}>
+        <PhaserGame
+          ref={phaserRef}
+          currentActiveScene={(scene: Phaser.Scene) => {
+            if (
+              scene &&
+              userId &&
+              connectedUsers &&
+              typeof (scene as any).init === 'function'
+            ) {
+              (scene as any).init({
+                sendMessage,
+                localPlayerId: userId,
+                sessionId,
+                connectedUsers,
+                modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined,
+                role: location.state?.role,
+              });
+            }
+          }}
+        />
+      </div>
 
-    {/* Sidebar */}
-    <div className={styles.sidebarWrapper}>
-      <div className={styles.sidebar}>
-        {isSpectator && (
-          <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
-            <span className={styles.spectatorText}>
-            <span className={styles.spectatorHighlight}>Spectator Mode</span>
-            </span>
-          </div>
-        )}
-
-        <div className={styles.timerBox}>
-          <h3 className={styles.timerTitle}>Time Left:</h3>
-          <div className={styles.timerValue}>{secondsLeft} sec</div>
-        </div>
-
-        <div className={styles.currentFood}>
-          <h3>Current Food to Eat:</h3>
-          {currentFood ? (
-            <>
-              <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
-              <p>{currentFood.name}</p>
-            </>
-          ) : (
-            <p>No Food Selected</p>
+      {/* Sidebar */}
+      <div className={styles.sidebarWrapper}>
+        <div className={styles.sidebar}>
+          {isSpectator && (
+            <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
+              <span className={styles.spectatorText}>
+              <span className={styles.spectatorHighlight}>Spectator Mode</span>
+              </span>
+            </div>
           )}
-        </div>
 
-        <div className={styles.leaderboardBox}>
-        <Leaderboard scores={scores} colors={colors} userId={userId ?? ''} />
+          <div className={styles.timerBox}>
+            <h3 className={styles.timerTitle}>Time Left:</h3>
+            <div className={styles.timerValue}>{secondsLeft} sec</div>
+          </div>
+
+          <div className={styles.currentFood}>
+            <h3>Current Food to Eat:</h3>
+            {currentFood ? (
+              <>
+                <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
+                <p>{currentFood.name}</p>
+              </>
+            ) : (
+              <p>No Food Selected</p>
+            )}
+          </div>
+
+          <div className={styles.leaderboardBox}>
+          <Leaderboard scores={scores} colors={colors} userId={userId ?? ''} />
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 export default PhaserPage;
