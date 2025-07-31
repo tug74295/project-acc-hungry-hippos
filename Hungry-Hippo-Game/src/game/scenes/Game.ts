@@ -382,7 +382,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
 
 
     this.onSyncFoodState = (foodStates: FoodState[]) => this.syncFoodState(foodStates);
-  this.onApplyPlayerEffect = (data: { targetUserId: string, effect: AacVerb }) => {
+    this.onApplyPlayerEffect = (data: { targetUserId: string, effect: AacVerb }) => {
     if (data.targetUserId !== this.localPlayerId) {
       this.applyEffectToPlayer(data.targetUserId, data.effect);
     }
@@ -400,9 +400,13 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
   };
 
   // Subscribe EventBus with named handlers
+  EventBus.on('sync-food-state', this.onSyncFoodState);
+  EventBus.on('apply-player-effect', this.onApplyPlayerEffect);
   EventBus.on('external-message', this.onExternalMessage);
   EventBus.on('start-game', this.onStartGame);
   EventBus.on('TIMER_UPDATE', this.onTimerUpdate);
+
+
 
   // movementStore subscription (and save the unsubscribe function!)
     this.unsubscribeMove = movementStore.subscribe(({ userId, x, y }) => {
@@ -420,75 +424,75 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     this.events.on('shutdown', this.shutdown, this);
     this.events.on('destroy', this.destroy, this);
 
-    //this.physics.add.collider(this.hippoGroup, this.hippoGroup);
+    
+    
+    
+    EventBus.emit('current-scene-ready', this);
+    EventBus.emit('edges-ready', this.edgeAssignments); 
+    
+    
+        // // Delay animation for swipe hand
+        // this.time.delayedCall(100, () => {
+        //   // Play animation only for the hippo users, not on spectator
+        //   if (this.role === 'Hippo Player') {
+        //     this.swipeHint = this.add.image(this.scale.width / 2, this.scale.height * 0.7, 'swipeHand')
+        //       .setOrigin(0.5)
+        //       .setDepth(1000)
+        //       .setScale(0.6);
+    
+        //     // Add swipe hint animation
+        //     this.tweens.add({
+        //       targets: this.swipeHint,
+        //       x: {
+        //         from: this.scale.width / 2 - 60,
+        //         to: this.scale.width / 2 + 60
+        //       },
+        //       duration: 800,
+        //       ease: 'Sine.easeInOut',
+        //       yoyo: true,
+        //       repeat: -1
+        //     });
+        //   }
+        // });
+    
+      //  movementStore.subscribe(({ userId, x, y }) => {
+      //     const player = this.players[userId];
+      //     if (player && userId !== this.localPlayerId) {
+      //       const edge = this.edgeAssignments[userId] as Edge;
+      //       const prevX = player.targetX;
+      //       const prevY = player.targetY;
+      //       player.updatePointerFlip(prevX, prevY, edge, x, y);
+      //       player.setTargetPosition(x, y);
+      //     }
+      //   });
 
+    // EventBus.on('sync-food-state', (foodStates: FoodState[]) => {
+    //   this.syncFoodState(foodStates);
+    // });
 
-    // // Delay animation for swipe hand
-    // this.time.delayedCall(100, () => {
-    //   // Play animation only for the hippo users, not on spectator
-    //   if (this.role === 'Hippo Player') {
-    //     this.swipeHint = this.add.image(this.scale.width / 2, this.scale.height * 0.7, 'swipeHand')
-    //       .setOrigin(0.5)
-    //       .setDepth(1000)
-    //       .setScale(0.6);
-
-    //     // Add swipe hint animation
-    //     this.tweens.add({
-    //       targets: this.swipeHint,
-    //       x: {
-    //         from: this.scale.width / 2 - 60,
-    //         to: this.scale.width / 2 + 60
-    //       },
-    //       duration: 800,
-    //       ease: 'Sine.easeInOut',
-    //       yoyo: true,
-    //       repeat: -1
-    //     });
+    // EventBus.on('apply-player-effect', (data: { targetUserId: string, effect: AacVerb }) => {
+    //   if (data.targetUserId !== this.localPlayerId) {
+    //     this.applyEffectToPlayer(data.targetUserId, data.effect);
+    //   }
+    // });
+   
+    // EventBus.on('external-message', (data: any) => {
+    //   if(data.type == 'gameOver')
+    //   {
+    //     this.handleGameOver();
     //   }
     // });
 
-  //  movementStore.subscribe(({ userId, x, y }) => {
-  //     const player = this.players[userId];
-  //     if (player && userId !== this.localPlayerId) {
-  //       const edge = this.edgeAssignments[userId] as Edge;
-  //       const prevX = player.targetX;
-  //       const prevY = player.targetY;
-  //       player.updatePointerFlip(prevX, prevY, edge, x, y);
-  //       player.setTargetPosition(x, y);
-  //     }
-  //   });
+    // EventBus.on('start-game', () => {
+    //   //console.log('[Game.ts] start-game event received, requesting timer start.')
+    //   this.requestStartTimer();
+    // });
 
+    // EventBus.on('TIMER_UPDATE', (secondsLeft: number) => {
+    //   //console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
+    //   this.updateTimerUI(secondsLeft);
+    // });
 
-    EventBus.emit('current-scene-ready', this);
-
-    EventBus.on('sync-food-state', (foodStates: FoodState[]) => {
-      this.syncFoodState(foodStates);
-    });
-
-    EventBus.on('apply-player-effect', (data: { targetUserId: string, effect: AacVerb }) => {
-      if (data.targetUserId !== this.localPlayerId) {
-        this.applyEffectToPlayer(data.targetUserId, data.effect);
-      }
-    });
-   
-    EventBus.on('external-message', (data: any) => {
-      if(data.type == 'gameOver')
-      {
-        this.handleGameOver();
-      }
-    });
-
-    EventBus.on('start-game', () => {
-      //console.log('[Game.ts] start-game event received, requesting timer start.')
-      this.requestStartTimer();
-    });
-
-    EventBus.on('TIMER_UPDATE', (secondsLeft: number) => {
-      //console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
-      this.updateTimerUI(secondsLeft);
-    });
-
-    EventBus.emit('edges-ready', this.edgeAssignments); 
   }
 
 
@@ -794,7 +798,5 @@ destroy() {
     this.foods.clear(true, true); // <--- DESTROY ALL SPRITES!
   }
   this.input?.removeAllListeners?.();
-
-
-}
+  }
 }
