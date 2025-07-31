@@ -33,30 +33,35 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // Attempt to restore session from localStorage
       try {
-        const urlSessionId = window.location.pathname.split('/')[2]; // Get sessionId from URL
-        if (urlSessionId) {
+        const pathParts = window.location.pathname.split('/');
+        const urlSessionId = pathParts[2];
+        const urlUserId = pathParts[3];
+
+        if (urlSessionId && urlUserId) {
           const stored = localStorage.getItem('playerSessions');
           const allSessions = stored ? JSON.parse(stored) : {};
           const playersInSession = allSessions[urlSessionId];
 
           if (playersInSession && playersInSession.length > 0) {
-            // Find the last user from this browser for this session
-            const lastPlayer = playersInSession[playersInSession.length - 1];
-            console.log(`[WS_CONTEXT] Found previous player data. Attempting to rejoin as ${lastPlayer.userId}`);
             
-            // Use a different message type for rejoining if you want special server handling
-            socket.send(
-              JSON.stringify({
-                type: 'PLAYER_JOIN', 
-                payload: {
-                  sessionId: urlSessionId,
-                  userId: lastPlayer.userId,
-                  role: lastPlayer.role,
-                  color: lastPlayer.color,
-                  isReconnecting: true
-                },
-              })
-            );
+            const playerToRejoin = playersInSession.find((p: { userId: string; role: string; color?: string }) => p.userId === urlUserId);
+
+            if (playerToRejoin) {
+              console.log(`[WS_CONTEXT] Found previous player data. Attempting to rejoin as ${playerToRejoin.userId}`);
+              
+              socket.send(
+                JSON.stringify({
+                  type: 'PLAYER_JOIN', 
+                  payload: {
+                    sessionId: urlSessionId,
+                    userId: playerToRejoin.userId,
+                    role: playerToRejoin.role,
+                    color: playerToRejoin.color,
+                    isReconnecting: true
+                  },
+                })
+              );
+            }
           }
         }
       } catch (err) {
