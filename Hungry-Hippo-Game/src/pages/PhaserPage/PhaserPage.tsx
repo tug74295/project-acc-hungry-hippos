@@ -255,6 +255,38 @@ const PhaserPage: React.FC = () => {
     };
   }, [sendMessage, sessionId, userId, location.state?.role]);
 
+  // Listen for player edge assignment from the server
+  useEffect(() => {
+    const handlePlayerEdgeAssigned = (data: { userId: string, edge: string }) => {
+      
+      if (sessionId && data.userId === userId) {
+        updatePlayerInSessionStorage(sessionId, { userId, role: 'Hippo Player', edge: data.edge });
+      }
+    };
+
+    EventBus.on('player-edge-assigned', handlePlayerEdgeAssigned);
+
+    return () => {
+      EventBus.off('player-edge-assigned', handlePlayerEdgeAssigned);
+    };
+  }, [sessionId, userId]);
+
+  // Check local storage for player edge
+  let localPlayerEdge: string | undefined;
+  if (sessionId && userId) {
+    try {
+      const stored = localStorage.getItem('playerSessions');
+      const allSessions = stored ? JSON.parse(stored) : {};
+      const playersInSession = allSessions[sessionId] || [];
+      const currentPlayer = playersInSession.find(p => p.userId === userId);
+      if (currentPlayer && currentPlayer.edge) {
+        localPlayerEdge = currentPlayer.edge;
+      }
+    } catch (e) {
+      console.error('Failed to read player edge from storage', e);
+    }
+  }
+
 
   // ---- RENDER ----
   return (
@@ -277,6 +309,7 @@ const PhaserPage: React.FC = () => {
                 connectedUsers,
                 modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined,
                 role: location.state?.role,
+                localPlayerEdge: localPlayerEdge,
               });
             }
           }}
