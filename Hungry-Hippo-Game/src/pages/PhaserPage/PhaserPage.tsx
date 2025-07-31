@@ -8,6 +8,7 @@ import Leaderboard from '../../components/Leaderboard/Leaderboard';
 import styles from './PhaserPage.module.css';
 import { GameMode, MODE_CONFIG } from '../../config/gameModes';
 import { useNavigate } from 'react-router-dom';
+import { updatePlayerInSessionStorage } from '../../components/Storage/Storage';
 
 /**
  * PhaserPage component.
@@ -26,7 +27,7 @@ interface FoodState {
 
 const PhaserPage: React.FC = () => {
   // ---- ROUTER & CONTEXT ----
-  const { sessionId, userId } = useParams<{ sessionId: string, userId: string }>();
+  const { sessionId, userId, role: roleParam } = useParams<{ sessionId: string, userId: string, role?: string }>();
   const location = useLocation();
 
   // ---- REFS & STATE ----
@@ -49,9 +50,23 @@ const PhaserPage: React.FC = () => {
       .map(user => [user.userId, user.color as string]) // safe to cast now
   );
 
+  // --- INITIALIZE PLAYER IN SESSION STORAGE ---
+  // This is to ensure the player is registered in session storage
+  useEffect(() => {
+    const role = location.state?.role || roleParam;
+    const color = location.state?.color;
+
+    if (sessionId && userId && role) {
+      updatePlayerInSessionStorage(sessionId, { userId, role, color });
+    }
+  }, [sessionId, userId, roleParam, location.state]);
+
   // --- JOIN on MOUNT ---
   useEffect(() => {
+    const stored = localStorage.getItem('playerSession');
+    const storedData = stored ? JSON.parse(stored) : {};
     const role = location.state?.role;
+    const color = storedData.color || location.state?.color;
     const alreadyJoined = connectedUsers.some(
       (u) => u.userId === userId && u.role === role
     );
@@ -68,9 +83,16 @@ const PhaserPage: React.FC = () => {
           type: 'PLAYER_JOIN',
           payload: { sessionId, userId, role }
         });
+
+        if (color) {
+          sendMessage({
+            type: 'SELECT_COLOR',
+            payload: { sessionId, userId, color }
+          });
+        }
       }
     }
-  }, [sessionId, userId, location.state?.role, sendMessage, connectedUsers]);
+  }, [sessionId, userId, location.state?.role, roleParam, sendMessage, connectedUsers]);
 
   // --- REMOTE PLAYER MOVEMENT SYNC ---
   useEffect(() => {
