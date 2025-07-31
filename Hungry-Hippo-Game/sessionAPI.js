@@ -4,6 +4,9 @@ const http = require('http');
 const WebSocket = require('ws');
 const { Pool } = require('pg');
 
+const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
+
+
 // Constants for game modes and their configurations
 const MODE_CONFIG = {
   Easy: {
@@ -37,6 +40,9 @@ const sessionGameModes = {};
 let foodInstanceCounter = 0
 const activeFoods = {};
 const lastSpawnAt = {};
+
+
+const QUEUE_MAX = 10;
 
 // Reject connections from unauthorized origins
 const allowedOrigins = [
@@ -277,11 +283,22 @@ wss.on('connection', (ws) => {
 
         // Seed queue with objects
         if (!fruitQueues[sessionId]) {
-          const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
-          fruitQueues[sessionId] = [];
-          for (let i = 0; i < 10; i++) {
+         // const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
+          // fruitQueues[sessionId] = [];
+          // for (let i = 0; i < 10; i++) {
+          //   const food = allFoods[Math.floor(Math.random() * allFoods.length)];
+          //   fruitQueues[sessionId].push(food);
+
+          //   if (fruitQueues[sessionId].length > QUEUE_MAX) {
+          //     fruitQueues[sessionId] = fruitQueues[sessionId].slice(0, QUEUE_MAX);
+          //   }
+          // }
+
+
+          clearFruitQueue(sessionId);
+          for (let i = 0; i < QUEUE_MAX; i++) {
             const food = allFoods[Math.floor(Math.random() * allFoods.length)];
-            fruitQueues[sessionId].push(food);
+            enqueueFruit(sessionId, food);
           }
         }
 
@@ -296,12 +313,14 @@ wss.on('connection', (ws) => {
 
         // 50ms game loop; spawns happen every 2000ms
         fruitIntervals[sessionId] = setInterval(() => {
+
+
           if (!sessions[sessionId]) {
             clearInterval(fruitIntervals[sessionId]);
             delete fruitIntervals[sessionId];
             return;
           }
-          const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
+          //const allFoods = require('./src/data/food.json').categories.flatMap(c => c.foods);
           const gameMode = sessionGameModes[sessionId] || 'Easy';
           const speed = MODE_CONFIG[gameMode].fruitSpeed;
 
@@ -312,6 +331,8 @@ wss.on('connection', (ws) => {
 
             if (fruitQueues[sessionId] && fruitQueues[sessionId].length > 0) {
               const dequeued = fruitQueues[sessionId].shift();
+
+
               const nextFoodId = typeof dequeued === 'string' ? dequeued : dequeued.id;
               const targetFood = allFoods.find(f => f.id === nextFoodId);
               if (nextFoodId && targetFood) {
@@ -325,7 +346,14 @@ wss.on('connection', (ws) => {
                 }
 
                 const weightedFood = getWeightedRandomFood(allFoods, sessions[sessionId].currentTargetFoodId);
-                fruitQueues[sessionId].push(weightedFood); // keep objects
+                // fruitQueues[sessionId].push(weightedFood); // keep objects
+
+                // if (fruitQueues[sessionId].length > QUEUE_MAX) {
+                //     fruitQueues[sessionId] = fruitQueues[sessionId].slice(0, QUEUE_MAX);
+                //   }
+
+
+                enqueueFruit(sessionId, weightedFood);
 
                 foodInstanceCounter++;
                 const instanceId = `food-${foodInstanceCounter}`;
@@ -358,7 +386,7 @@ wss.on('connection', (ws) => {
                   payload: { foods: activeFoods[sessionId] }
                 });
 
-                console.log('[WSS] Spawned', nextFoodId, 'queueLen=', fruitQueues[sessionId].length);
+                //console.log('[WSS] Spawned', nextFoodId, 'queueLen=', fruitQueues[sessionId].length);
               } else {
                 console.warn('[WSS] Unknown food in queue, skipping spawn:', dequeued);
               }
@@ -379,14 +407,14 @@ wss.on('connection', (ws) => {
           });
 
           // cull off-screen
-          const BOUNDARY_BUFFER = 300;
+          const BOUNDARY_BUFFER = 100;
           activeFoods[sessionId] = activeFoods[sessionId].filter(food =>
             food.x > -BOUNDARY_BUFFER &&
             food.x < 1024 + BOUNDARY_BUFFER &&
             food.y > -BOUNDARY_BUFFER &&
-            food.y < 768 + BOUNDARY_BUFFER
+            food.y < 1024 + BOUNDARY_BUFFER
           );
-        }, 50);
+        }, 30);
 
         broadcast(sessionId, {
           type: 'START_GAME_BROADCAST',
@@ -395,28 +423,23 @@ wss.on('connection', (ws) => {
       }
 
 
-
-
-
-
-
-
-
-
-
       if (data.type === 'START_TIMER') {
         const { sessionId } = data.payload;
-        console.log(`[WSS] Starting timer for session ${sessionId}`);
+        //console.log(`[WSS] Starting timer for session ${sessionId}`);
 
         let secondsLeft = 180;
-        console.log('[WSS] SECONDSLEFT INIT:', secondsLeft); 
+        //console.log('[WSS] SECONDSLEFT INIT:', secondsLeft); 
         const interval = setInterval(() => {
           if(secondsLeft <= 0) {
-            console.log(`[WSS] Timer ended for session ${sessionId}`);
+            //console.log(`[WSS] Timer ended for session ${sessionId}`);
             broadcast(sessionId, { type: 'TIMER_UPDATE', secondsLeft: 0 });
             broadcast(sessionId, { type: 'GAME_OVER' });
 
             clearInterval(fruitIntervals[sessionId]);
+
+            cleanupSession(sessionId); 
+
+
             delete fruitIntervals[sessionId];
             delete fruitQueues[sessionId];
 
@@ -435,19 +458,19 @@ wss.on('connection', (ws) => {
         for (const client of sessions[sessionId]) {
           if (client.userId === userId) {
             client.edge = edge;
-            console.log(`[WSS] Stored edge "${edge}" for user ${userId}`);
+            //console.log(`[WSS] Stored edge "${edge}" for user ${userId}`);
             break;
           }
         }
 
         const assignedEdges = [...sessions[sessionId]].map(c => `${c.userId}: ${c.edge}`);
-        console.log(`[WSS DEBUG] Current edge map for session ${sessionId}:`, assignedEdges);
+       // console.log(`[WSS DEBUG] Current edge map for session ${sessionId}:`, assignedEdges);
       }
 
       // When an AAC user selects a food, broadcast it to the session
       if (data.type === 'AAC_FOOD_SELECTED') {
         const { sessionId, food, effect } = data.payload;
-        console.log(`WSS Food selected in session ${sessionId}:`, food, effect);
+        //console.log(`WSS Food selected in session ${sessionId}:`, food, effect);
 
         const gameMode = sessionGameModes[sessionId] || 'Easy';
         const finalEffect = MODE_CONFIG[gameMode].allowEffect ? effect : null;
@@ -458,7 +481,13 @@ wss.on('connection', (ws) => {
           const head = fruitQueues[sessionId][0];
           const headId = head && (head.id || head); // tolerate any stray ids
           if (headId !== food.id) {
-            fruitQueues[sessionId].unshift(food);
+          //   fruitQueues[sessionId].unshift(food);
+
+          // if (fruitQueues[sessionId].length > QUEUE_MAX) {
+          //   fruitQueues[sessionId] = fruitQueues[sessionId].slice(0, QUEUE_MAX);
+          // }
+          enqueueFruit(sessionId, food, { front: true });
+
           }
         }
 
@@ -520,10 +549,10 @@ wss.on('connection', (ws) => {
           sessions[sessionId].currentTargetEffect = null;
           if (effect === 'burn') {
             scoresBySession[sessionId][userId] = Math.max(0, prev - 2);
-            console.log(`[WSS] Player ${userId} burned, score reduced by 2 from ${prev} to ${scoresBySession[sessionId][userId]}`);
+            //console.log(`[WSS] Player ${userId} burned, score reduced by 2 from ${prev} to ${scoresBySession[sessionId][userId]}`);
           } else if (effect === 'grow') {
             scoresBySession[sessionId][userId] = prev + 2;
-            console.log(`[WSS] Player ${userId} grew, score increased by 2 from ${prev} to ${scoresBySession[sessionId][userId]}`);
+           // console.log(`[WSS] Player ${userId} grew, score increased by 2 from ${prev} to ${scoresBySession[sessionId][userId]}`);
           } else {
             scoresBySession[sessionId][userId] = prev + 1;
           }
@@ -574,6 +603,19 @@ wss.on('connection', (ws) => {
     }
     console.log(`WSS Client ${userId} disconnected from session ${sessionId}`);
 
+  //   ws.on('close', async () => {
+  // const { sessionId, userId } = ws;
+  
+
+  // Remove the session from the sessions object if it is empty
+  if (sessions[sessionId] && sessions[sessionId].size === 0) {
+    cleanupSession(sessionId); // 🟢 Clean up intervals and state!
+    delete sessions[sessionId];
+  }
+  // ...existing DB code...
+//});
+
+
     // Remove the client from the ws
     if (sessions[sessionId]) {
       sessions[sessionId].delete(ws);
@@ -606,9 +648,9 @@ wss.on('connection', (ws) => {
     }
 
     // Remove the session from the sessions object if it is empty
-    if (sessions[sessionId].size === 0) {
-      delete sessions[sessionId];
-    }
+    // if (sessions[sessionId].size === 0) {
+    //   delete sessions[sessionId];
+    // }
 
     // Remove the client from the database
     let remainingPlayers = 0;
@@ -685,3 +727,42 @@ setupDatabase().then(() => {
     console.log(`Server listening on ${PORT}`);
   });
 });
+
+function cleanupSession(sessionId) {
+  // Clear fruit interval if present
+  if (fruitIntervals[sessionId]) {
+    clearInterval(fruitIntervals[sessionId]);
+    delete fruitIntervals[sessionId];
+  }
+  // Remove all per-session state
+  delete activeFoods[sessionId];
+  delete fruitQueues[sessionId];
+  delete scoresBySession[sessionId];
+  delete sessionGameModes[sessionId];
+  delete lastSpawnAt[sessionId];
+}
+
+
+// ---- Queue Management Helpers ----
+function enqueueFruit(sessionId, fruit, { front = false } = {}) {
+  if (!fruitQueues[sessionId]) fruitQueues[sessionId] = [];
+  if (front) {
+    fruitQueues[sessionId].unshift(fruit);
+  } else {
+    fruitQueues[sessionId].push(fruit);
+  }
+  // Trim after any mutation
+  if (fruitQueues[sessionId].length > QUEUE_MAX) {
+    fruitQueues[sessionId] = fruitQueues[sessionId].slice(0, QUEUE_MAX);
+  }
+}
+
+function dequeueFruit(sessionId) {
+  if (!fruitQueues[sessionId] || fruitQueues[sessionId].length === 0) return null;
+  return fruitQueues[sessionId].shift();
+}
+
+function clearFruitQueue(sessionId) {
+  fruitQueues[sessionId] = [];
+}
+

@@ -28,12 +28,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ws.current = socket;
 
     socket.onopen = () => {
-      console.log('[WS_CONTEXT] Connection established.');
+      //console.log('[WS_CONTEXT] Connection established.');
       setIsConnected(true);
     };
 
     socket.onclose = () => {
-      console.log('[WS_CONTEXT] Connection closed.');
+      //console.log('[WS_CONTEXT] Connection closed.');
       setIsConnected(false);
     };
 
@@ -42,7 +42,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // console.log('[WS_CONTEXT] Message from server:', data);
 
       if (data.type === 'TIMER_UPDATE') {
-        console.log(`[WS_CONTEXT] Timer update: ${data.secondsLeft} seconds left`);
+       // console.log(`[WS_CONTEXT] Timer update: ${data.secondsLeft} seconds left`);
         EventBus.emit('TIMER_UPDATE', data.secondsLeft);
 
         setLastMessage({
@@ -55,7 +55,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       if (data.type === 'LAUNCH_FOOD') {
         const { foodKey, angle } = data.payload;
-        console.log(`[WS_CONTEXT] Received LAUNCH_FOOD → ${foodKey}, angle ${angle}`);
+        //console.log(`[WS_CONTEXT] Received LAUNCH_FOOD → ${foodKey}, angle ${angle}`);
         EventBus.emit('launch-food', { foodKey, angle });  // 👈 Send to Phaser
         return;
       }
@@ -72,7 +72,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }  
 
       if (data.type === 'START_GAME_BROADCAST') {
-        console.log('[WS_CONTEXT] Game started!');
+      //  console.log('[WS_CONTEXT] Game started!');
         setGameStarted(true);
         setLastMessage(data);
 
@@ -89,13 +89,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       if (data.type === 'SCORE_UPDATE_BROADCAST') {
-        console.log('[WS_CONTEXT] Received SCORE_UPDATE_BROADCAST:', data.payload.scores);
+        //console.log('[WS_CONTEXT] Received SCORE_UPDATE_BROADCAST:', data.payload.scores);
         EventBus.emit('scoreUpdate', data.payload);
         return;
       }
 
       if (data.type === 'GAME_OVER') {
-        console.log('[WS_CONTEXT] GAME_OVER');
+        //console.log('[WS_CONTEXT] GAME_OVER');
         EventBus.emit('gameOver', data.payload);
         setLastMessage(data);
         return;
