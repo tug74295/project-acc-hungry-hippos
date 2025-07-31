@@ -12,6 +12,9 @@ type MovementPayload = {
   
     subscribe(listener: MoveListener) {
       this.listeners.push(listener);
+      return () => {
+      this.unsubscribe(listener);
+    };
     }
   
     unsubscribe(listener: MoveListener) {

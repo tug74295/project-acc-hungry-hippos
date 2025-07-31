@@ -78,36 +78,32 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
      * useEffect listens for the Phaser event `current-scene-ready`,
      * then injects AAC food keys into the scene and shares the scene reference via ref.
     */
-    useEffect(() =>
-    {
-        EventBus.on('current-scene-ready', (scene_instance: Phaser.Scene) =>
-        {
-            const foodKeys = AAC_DATA.categories.flatMap(cat => cat.foods.map(f => f.id));
-            if ('setFoodKeys' in scene_instance && typeof scene_instance['setFoodKeys'] === 'function') {
-                scene_instance['setFoodKeys'](foodKeys);
-            }
-            
-            if (currentActiveScene && typeof currentActiveScene === 'function')
-            {
+   useEffect(() => {
+  // Define the handler outside, so the reference is stable
+  const handler = (scene_instance: Phaser.Scene) => {
+    const foodKeys = AAC_DATA.categories.flatMap(cat => cat.foods.map(f => f.id));
+    if ('setFoodKeys' in scene_instance && typeof scene_instance['setFoodKeys'] === 'function') {
+      scene_instance['setFoodKeys'](foodKeys);
+    }
+    if (currentActiveScene && typeof currentActiveScene === 'function') {
+      currentActiveScene(scene_instance);
+    }
+    if (typeof ref === 'function') {
+      ref({ game: game.current, scene: scene_instance });
+    } else if (ref) {
+      ref.current = { game: game.current, scene: scene_instance };
+    }
+  };
 
-                currentActiveScene(scene_instance);
+  EventBus.on('current-scene-ready', handler);
 
-            }
+  return () => {
+    EventBus.off('current-scene-ready', handler);
+  };
+}, [currentActiveScene, ref]);
 
-            if (typeof ref === 'function')
-            {
-                ref({ game: game.current, scene: scene_instance });
-            } else if (ref)
-            {
-                ref.current = { game: game.current, scene: scene_instance };
-            }
-            
-        });
-        return () =>
-        {
-            EventBus.removeListener('current-scene-ready');
-        }
-    }, [currentActiveScene, ref]);
+
+
 
     /**
      * Renders the HTML container that will hold the Phaser canvas.

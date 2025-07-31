@@ -43,6 +43,16 @@ export class Game extends Scene {
   private timerText!: Phaser.GameObjects.Text;
 
 
+  // Handlers for cleanup
+    private onSyncFoodState: any;
+    private onApplyPlayerEffect: any;
+    private onExternalMessage: any;
+    private onStartGame: any;
+    private onTimerUpdate: any;
+    private unsubscribeMove?: () => void;
+
+
+
   private role: string = 'Hippo Player';
   private lastSentX: number | null = null;
   private lastSentY: number | null = null;
@@ -120,11 +130,16 @@ export class Game extends Scene {
   }
 
 
-  private getEdgePosition(edge: string) {
+  private getEdgePosition(edge: string, sprite?: Phaser.GameObjects.Sprite) {
     const w = this.scale.width;
     const h = this.scale.height;
-    const marginX = w * 0.05;
-    const marginY = h * 0.05;
+    // const marginX = w * 0.05;
+    // const marginY = h * 0.05;
+
+    const marginX = sprite ? sprite.displayWidth / 2 : w * 0.05;
+    const marginY = sprite ? sprite.displayHeight / 2 : h * 0.05;
+
+
     switch (edge) {
       case 'top': return { x: w / 2, y: marginY };
       case 'bottom': return { x: w / 2, y: h - marginY };
@@ -147,7 +162,7 @@ export class Game extends Scene {
       if (color) {
       spriteKey = color + 'Hippo';
       }
-      console.log(`[addPlayer] ${playerId} -> color: ${color}, spriteKey: ${spriteKey}`);
+      //console.log(`[addPlayer] ${playerId} -> color: ${color}, spriteKey: ${spriteKey}`);
 
       const playerSprite = new Hippo(this, x, y, spriteKey, strategy);
 
@@ -350,6 +365,61 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     this.foods = this.physics.add.group();
     this.cursors = this.input!.keyboard!.createCursorKeys();
 
+
+     this.input.once('pointerdown', () => {
+      this.hasUserInteracted = true;
+      this.swipeHint?.destroy();
+    });
+
+    // Check if user has interacted with the game on keyboard
+    this.input.keyboard?.on('keydown', () => {
+      if (!this.hasUserInteracted) {
+        this.hasUserInteracted = true;
+        this.swipeHint?.destroy();
+      }
+    });
+
+
+
+    this.onSyncFoodState = (foodStates: FoodState[]) => this.syncFoodState(foodStates);
+  this.onApplyPlayerEffect = (data: { targetUserId: string, effect: AacVerb }) => {
+    if (data.targetUserId !== this.localPlayerId) {
+      this.applyEffectToPlayer(data.targetUserId, data.effect);
+    }
+  };
+  this.onExternalMessage = (data: any) => {
+    if (data.type == 'gameOver') {
+      this.handleGameOver();
+    }
+  };
+  this.onStartGame = () => {
+    this.requestStartTimer();
+  };
+  this.onTimerUpdate = (secondsLeft: number) => {
+    this.updateTimerUI(secondsLeft);
+  };
+
+  // Subscribe EventBus with named handlers
+  EventBus.on('external-message', this.onExternalMessage);
+  EventBus.on('start-game', this.onStartGame);
+  EventBus.on('TIMER_UPDATE', this.onTimerUpdate);
+
+  // movementStore subscription (and save the unsubscribe function!)
+    this.unsubscribeMove = movementStore.subscribe(({ userId, x, y }) => {
+    const player = this.players[userId];
+    if (player && userId !== this.localPlayerId) {
+      const edge = this.edgeAssignments[userId] as Edge;
+      const prevX = player.targetX;
+      const prevY = player.targetY;
+      player.updatePointerFlip(prevX, prevY, edge, x, y);
+      player.setTargetPosition(x, y);
+    }
+    });
+
+    // Listen for shutdown/destroy events (Phaser scene events)
+    this.events.on('shutdown', this.shutdown, this);
+    this.events.on('destroy', this.destroy, this);
+
     //this.physics.add.collider(this.hippoGroup, this.hippoGroup);
 
 
@@ -377,16 +447,16 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     //   }
     // });
 
-   movementStore.subscribe(({ userId, x, y }) => {
-      const player = this.players[userId];
-      if (player && userId !== this.localPlayerId) {
-        const edge = this.edgeAssignments[userId] as Edge;
-        const prevX = player.targetX;
-        const prevY = player.targetY;
-        player.updatePointerFlip(prevX, prevY, edge, x, y);
-        player.setTargetPosition(x, y);
-      }
-    });
+  //  movementStore.subscribe(({ userId, x, y }) => {
+  //     const player = this.players[userId];
+  //     if (player && userId !== this.localPlayerId) {
+  //       const edge = this.edgeAssignments[userId] as Edge;
+  //       const prevX = player.targetX;
+  //       const prevY = player.targetY;
+  //       player.updatePointerFlip(prevX, prevY, edge, x, y);
+  //       player.setTargetPosition(x, y);
+  //     }
+  //   });
 
 
     EventBus.emit('current-scene-ready', this);
@@ -409,34 +479,37 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     });
 
     EventBus.on('start-game', () => {
-      console.log('[Game.ts] start-game event received, requesting timer start.')
+      //console.log('[Game.ts] start-game event received, requesting timer start.')
       this.requestStartTimer();
     });
 
     EventBus.on('TIMER_UPDATE', (secondsLeft: number) => {
-      console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
+      //console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
       this.updateTimerUI(secondsLeft);
     });
 
     EventBus.emit('edges-ready', this.edgeAssignments); 
   }
 
+
+
+
   
     
   update() {
     // Check if user has interacted with the game on mobile
-    this.input.once('pointerdown', () => {
-      this.hasUserInteracted = true;
-      this.swipeHint?.destroy();
-    });
+    // this.input.once('pointerdown', () => {
+    //   this.hasUserInteracted = true;
+    //   this.swipeHint?.destroy();
+    // });
 
-    // Check if user has interacted with the game on keyboard
-    this.input.keyboard?.on('keydown', () => {
-      if (!this.hasUserInteracted) {
-        this.hasUserInteracted = true;
-        this.swipeHint?.destroy();
-      }
-    });
+    // // Check if user has interacted with the game on keyboard
+    // this.input.keyboard?.on('keydown', () => {
+    //   if (!this.hasUserInteracted) {
+    //     this.hasUserInteracted = true;
+    //     this.swipeHint?.destroy();
+    //   }
+    // });
 
     if (this.hippo && this.role !== 'Spectator') {
       if (this.usePointerControl) {
@@ -452,12 +525,11 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
         this.hippo.update(this.getEdgeCursors(edge, this.cursors)); 
         
       }
-      // ... rest unchanged
       const newX = this.hippo.x;
       const newY = this.hippo.y;
       if (this.lastSentX !== newX || this.lastSentY !== newY) {
         const now = Date.now();
-        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 30) {
+        if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 40) {
           this.lastSentX = newX;
           this.lastSentY = newY;
           this.lastMoveSentAt = now;
@@ -486,6 +558,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
 
   private applyEffectToPlayer(targetUserId: string, effect: AacVerb) {
     const targetHippo = this.players[targetUserId];
+    const edge = this.edgeAssignments[targetUserId];
     if (!targetHippo) return;
     switch(effect.id) {
       case 'freeze':
@@ -499,10 +572,21 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
         break;
       case 'grow':
         targetHippo.setTint(0x00FF00);
-        targetHippo.setScale(0.4);
+        targetHippo.setScale(0.3);
+
+        // Use snapToEdge() from Hippo, or call getEdgePosition with the sprite
+    if (typeof targetHippo.snapToEdge === "function") {
+        targetHippo.snapToEdge(edge); // This will call getEdgePosition with itself!
+    }
+
         this.time.delayedCall(5000, () => {
           targetHippo.clearTint();
-          targetHippo.setScale(0.25);
+          targetHippo.setScale(0.12);
+
+          if (typeof targetHippo.snapToEdge === "function") {
+            targetHippo.snapToEdge(edge); // Snap again after shrink
+        }
+
         });
         break;
     }
@@ -562,7 +646,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
   }
 
   public applyModeSettings(settings: ModeSettings) {
-    console.log('[Game] Applying mode settings:', settings);
+   // console.log('[Game] Applying mode settings:', settings);
     this.modeSettings = settings;
   }
 
@@ -594,7 +678,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
         const spawnY = foodState.y * this.scale.height;
         const newFood = this.foods.create(spawnX, spawnY, foodState.foodId) as Phaser.Physics.Arcade.Image;
         newFood.setData('instanceId', foodState.instanceId);
-        newFood.setScale(0.15);
+        newFood.setScale(0.12);
         newFood.body?.setCircle(newFood.width * 0.5);
         
         // If the food has an effect, apply the tint color
@@ -684,4 +768,33 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     return this.edgeAssignments;
 
   }
+
+
+
+shutdown() {
+  // Remove all EventBus listeners
+  EventBus.off('sync-food-state', this.onSyncFoodState);
+  EventBus.off('apply-player-effect', this.onApplyPlayerEffect);
+  EventBus.off('external-message', this.onExternalMessage);
+  EventBus.off('start-game', this.onStartGame);
+  EventBus.off('TIMER_UPDATE', this.onTimerUpdate);
+
+  // Unsubscribe from movementStore
+  if (this.unsubscribeMove) {
+    this.unsubscribeMove();
+    this.unsubscribeMove = undefined;
+  }
+}
+
+destroy() {
+  this.shutdown(); // Always clean up
+  this.time?.removeAllEvents?.();
+  this.tweens?.killAll?.();
+   if (this.foods) {
+    this.foods.clear(true, true); // <--- DESTROY ALL SPRITES!
+  }
+  this.input?.removeAllListeners?.();
+
+
+}
 }
