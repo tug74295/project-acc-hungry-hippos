@@ -5,70 +5,6 @@ description: Frontend API
 
 # Frontend API
 
-## Table of Contents
-
-- [AAC Interface](#aac-interface)
-  - [`interface AacInterfaceProps`](#interface-aacinterfaceprops)
-  - [`onFoodSelected`](#onfoodselected-food-aacfood--void)
-  - [`AacInterface` Component](#const-aacinterface-reactfcaacinterfaceprops--)
-  - [`selectedFood`](#const-selectedfood-setselectedfood--reactusestateaacfood--null)
-  - [`selectedCategory`](#const-selectedcategory-setselectedcategory--reactusestatestring--null)
-  - [`isAudioPlaying`](#const-isaudioplaying-setisaudioplaying--reactusestatefalse)
-  - [`handleFoodClick`](#const-handlefoodclick--food-aacfood--)
-  - [`audio.onerror`](#audioonerror--)
-  - [`renderCategoryView`](#const-rendercategoryview--)
-  - [`renderFoodsView`](#const-renderfoodsview--)
-  - [`AAC Interface JSX`](#return--div-classnameaac-container-div-classnameaac-device-h1-aac-device-)
-- [Foods.ts](#foodsts)
-  - [`AacFood`](#export-interface-aacfood)
-  - [`AacCategory`](#export-interface-aaccategory)
-  - [`AacData`](#export-interface-aacdata)
-  - [`AAC_DATA`](#export-const-aac_data-aacdata--aacdata-as-aacdata)
-- [Game.ts](#gamets)
-  - [`Game` class](#class-game-extends-phaserscene)
-  - [`hippo`](#private-hippo-phaserphysicsarcadesprite)
-  - [`foods`](#private-foods-phaserphysicsarcadegroup)
-  - [`foodKeys`](#private-foodkeys-string)
-  - [`lanePositions`](#private-lanepositions-number)
-  - [`foodSpawnTimer`](#private-foodspawntimer-phasertimetimerevent)
-  - [`constructor`](#constructor)
-  - [`preload`](#preload)
-  - [`create`](#create)
-  - [`setFoodKeys`](#setfoodkeyskeys-string)
-  - [`startSpawningFood`](#startspawningfood)
-  - [`spawnFood`](#spawnfood)
-  - [`addFoodManually`](#addfoodmanuallyfoodkey-string)
-  - [`handleFoodCollision`](#handlefoodcollisionhippo-food)
-  - [`update`](#update)
-- [PhaserGame.tsx](#phasergametsx)
-  - [`PhaserGame`](#phasergame-reactfciprops)
-  - [`IRefPhaserGame`](#interface-irefphasergame)
-  - [`IProps`](#interface-iprops)
-  - [`useLayoutEffect`](#uselayouteffect)
-  - [`useEffect`](#useeffect)
-  - [`PhaserGame JSX`](#return)
-- [LandingPage.tsx](#landingpagetsx)
-  - [`LandingPage`](#landingpage)
-  - [`code`](#const-code-setcode--usestate)
-  - [`inputsRef`](#const-inputsref--useref)
-  - [`isValidCode`](#const-isvalidcode-setisvalidcode--usestate)
-  - [`handleStart`](#const-handlestart--async--)
-  - [`handleCreateGame`](#const-handlecreategame--async--)
-  - [`handleChange`](#const-handlechange--)
-  - [`handleKeyDown`](#const-handlekeydown--)
-  - [`handlePaste`](#const-handlepaste--)
-- [ButtonClick.tsx](#buttonclicktsx)
-  - [`ButtonClick`](#buttonclick-component)
-  - [`ButtonClickProps`](#interface-buttonclickprops)
-- [GamePage.tsx](#gamepagetsx)
-  - [`GamePage` Component](#const-gamepage-reactfc--)
-  - [`phaserRef`](#const-phaserref--userefirefphasergame--null)
-  - [`foodStack`](#const-foodstack-setfoodstack--reactusestateaacfood)
-  - [`handleSelectedFood`](#const-handleselectedfood--selectedfood-aacfood--)
-  - [`JSX Return`](#return--div-idapp--aacinterface-onfoodselected)
-
-
-
 # AAC Interface
 
 ## `interface AacInterfaceProps`
@@ -148,112 +84,292 @@ Defines the structure for the entire AAC data, which includes multiple categorie
 
 Exports the AAC data, which includes categories and their respective foods. This data is imported from a JSON file.
 
+
 # Game.ts
 
-## `class Game extends Phaser.Scene`
+## `class: Game extends Phaser.Scene`
 
-Defines the core gameplay scene using Phaser. Handles spawning food items, collision detection with the hippo, and animations.
+## Data Fields
 
-## `private hippo: Phaser.Physics.Arcade.Sprite`
+| Field                     | Type                                     | Purpose                                         |
+| ------------------------- | ---------------------------------------- | ----------------------------------------------- |
+| `sessionId`               | `string`                                 | Current WebSocket session ID                    |
+| `hippo`                   | `Hippo \| null`                          | Local player’s hippo sprite                     |
+| `foods`                   | `Phaser.Physics.Arcade.Group`            | Group of all active food sprites                |
+| `currentTargetFoodId`     | `string \| null`                         | ID of food chosen by AAC user                   |
+| `currentTargetFoodEffect` | `AacVerb \| null`                        | Active effect (burn, freeze, grow)              |
+| `playerScores`            | `Record<string, number>`                 | Map of player scores                            |
+| `players`                 | `Record<string, Hippo>`                  | Map of player IDs to hippo sprites              |
+| `edgeAssignments`         | `Record<string, string>`                 | Screen edge (top, bottom, etc.) per player      |
+| `availableEdges`          | `string[]`                               | Remaining edges available for assignment        |
+| `cursors`                 | `Phaser.Types.Input.Keyboard.CursorKeys` | Arrow key input                                 |
+| `sendMessage`             | `(msg: any) => void`                     | WebSocket message sender                        |
+| `localPlayerId`           | `string`                                 | Current user’s ID                               |
+| `usePointerControl`       | `boolean`                                | Whether pointer dragging is active              |
+| `isKeyboardActive`        | `boolean`                                | Whether keyboard is being used                  |
+| `role`                    | `string`                                 | "Hippo Player", "Spectator", "AAC User"         |
+| `lastSentX/Y`             | `number \| null`                         | Last movement sync position                     |
+| `lastMoveSentAt`          | `number`                                 | Timestamp of last movement sent                 |
+| `modeSettings`            | `ModeSettings`                           | Current game mode rules (fruitSpeed, penalties) |
+| `hasUserInteracted`       | `boolean`                                | Used to hide swipe tutorial                     |
+| `swipeHint`               | `Phaser.GameObjects.Image \| undefined`  | Swipe hint image                                |
+| `timerText`               | `Phaser.GameObjects.Text`                | Countdown timer UI                              |
 
-Animated hippo character that interacts with food.
+## Methods
 
-## `private foods: Phaser.Physics.Arcade.Group`
+### `constructor()`
+-   **Purpose**: Initializes the Phaser scene with ID `"Game"`.
+-   **Pre-conditions**: None
+-   **Post-conditions**: Scene is registered with the Phaser runtime.
+-   **Returns**: `Game` instance
+-   **Exceptions**: None
 
-Group that contains all active food objects.
+### `init(data)`
+-   **Purpose**: Initializes the scene with player/session/game mode info.
+-   **Parameters**:
+    -   `data: { sendMessage, localPlayerId, sessionId, role, connectedUsers?, modeSettings? }`
+-   **Pre-conditions**: Called from React before `create()`.
+-   **Post-conditions**: Internal state and players are set up.
+-   **Returns**: void
+-   **Exceptions**: None
 
-## `private foodKeys: string[]`
+### `preload()`
+-   **Purpose**: Loads images and assets into memory.
+-   **Pre-conditions**: None
+-   **Post-conditions**: Images available to use in scene.
+-   **Returns**: void
+-   **Exceptions**: None
 
-Tracks food types allowed to spawn, based on AAC selection.
+### `create()`
+-   **Purpose**: Builds the game world, sets up input and listeners.
+-   **Pre-conditions**: `preload()` must have been called.
+-   **Post-conditions**: Scene is active.
+-   **Returns**: void
+-   **Exceptions**: None
 
-## `private lanePositions: number[]`
+### `update()`
+-   **Purpose**: Handles input, movement, and syncs positions.
+-   **Pre-conditions**: `create()` must have been called.
+-   **Post-conditions**: Scene reflects latest state each frame.
+-   **Returns**: void
+-   **Exceptions**: WebSocket send failure is caught and logged:
+    -   `'[Game.update] Failed to send player movement'`
 
-Predefined X-axis lanes where food may appear.
+* * * * *
 
-## `private foodSpawnTimer: Phaser.Time.TimerEvent`
+Gameplay Methods
+----------------
 
-Timer that triggers periodic spawning of food.
+### `addPlayer(playerId: string, color?: string)`
+-   **Purpose**: Adds a new hippo to the scene at an available edge.
+-   **Pre-conditions**: `connectedUsers` passed to `init()`
+-   **Post-conditions**: Hippo sprite is visible and tracked
+-   **Returns**: void
+-   **Exceptions**: None
 
----
+### `getEdgeCursors(edge, cursors)`
+-   **Purpose**: Remaps arrow keys to match orientation of assigned edge.
+-   **Parameters**:
+    -   `edge: Edge` -- assigned side of screen
+    -   `cursors: CursorKeys` -- raw keyboard input
+-   **Returns**: Remapped `CursorKeys` object
+-   **Exceptions**: None
 
-## `constructor()`
+### `handlePointer(pointer)`
+-   **Purpose**: Updates hippo position based on touch/mouse drag.
+-   **Parameters**:
+    -   `pointer: Phaser.Input.Pointer`
+-   **Pre-conditions**: Only runs for local Hippo Player
+-   **Post-conditions**: Hippo target position is updated
+-   **Returns**: void
+-   **Exceptions**: None
 
-Initializes the scene with the key `"Game"`.
+* * * * *
 
-## `preload()`
+WebSocket Interaction
+---------------------
 
-Preloads all images and sprite sheets, including dynamically loaded food assets.
+### `requestStartTimer()`
+-   **Purpose**: Sends `"START_TIMER"` message to backend
+-   **Pre-conditions**: Scene must be active
+-   **Post-conditions**: Backend starts countdown
+-   **Returns**: void
+-   **Exceptions**: None
 
-## `create()`
+### `applyModeSettings(settings)`
+-   **Purpose**: Updates game difficulty rules
+-   **Parameters**: `settings: ModeSettings`
+-   **Pre-conditions**: Called before game starts
+-   **Returns**: void
+-   **Exceptions**: None
 
-Adds hippo, food group, animations, and physics overlaps to the scene.
+* * * * *
 
-## `setFoodKeys(keys: string[])`
+EventBus Integration
+--------------------
 
-Sets which food types are currently allowed to spawn.
+### `applyEffectToPlayer(userId, effect)`
+-   **Purpose**: Applies freeze, grow, burn effect with tint to a hippo
+-   **Parameters**:
+    -   `userId: string`
+    -   `effect: AacVerb`
+-   **Pre-conditions**: `effect` must be valid
+-   **Post-conditions**: Visual and gameplay change applied
+-   **Returns**: void
+-   **Exceptions**: None
 
-- **Parameters**: `keys` — string array of food IDs.
+### `handleFruitCollision(playerId, fruit)`
+-   **Purpose**: Triggered when a hippo touches fruit
+-   **Parameters**:
+    -   `playerId: string`
+    -   `fruit: GameObject`
+-   **Pre-conditions**: Collision must occur
+-   **Post-conditions**:
+    -   Fruit disappears if correct
+    -   Score updated
+    -   Effects sent if enabled
+-   **Returns**: void
+-   **Exceptions**:
+    -   WebSocket errors logged:
+        -   `'[Game.handleFruitCollision] Error sending score update:'`
 
-## `startSpawningFood()`
+* * * * *
 
-Starts a 1500ms interval that repeatedly calls `spawnFood`.
+Food Management
+---------------
 
-## `spawnFood()`
+### `setTargetFood(foodId, effect?)`
+-   **Purpose**: Marks a fruit as the AAC target.
+-   **Parameters**:
+    -   `foodId: string`
+    -   `effect?: AacVerb | null`
+-   **Returns**: void
+-   **Exceptions**: None
 
-Chooses a food key and lane, then drops the food with physics.
+### `removeFoodByInstanceId(instanceId)`
+-   **Purpose**: Deletes a fruit from the screen.
+-   **Parameters**:
+    -   `instanceId: string`
+-   **Returns**: void
+-   **Exceptions**: None
 
-## `addFoodManually(foodKey: string)`
+### `syncFoodState(serverFoods)`
+-   **Purpose**: Matches client-side fruits to server state
+-   **Parameters**:
+    -   `serverFoods: FoodState[]`
+-   **Pre-conditions**: Called on `FOOD_STATE_UPDATE`
+-   **Returns**: void
+-   **Exceptions**: None
 
-Allows an external event like AAC selection to spawn a specific food.
+* * * * *
 
-## `handleFoodCollision(hippo, food)`
+Timer
+----------
 
-Handles logic when the hippo collides with food. Destroys the food.
+### `updateTimerUI(secondsLeft)`
+-   **Purpose**: Changes on-screen timer text.
+-   **Parameters**: `secondsLeft: number`
+-   **Returns**: void
+-   **Exceptions**: None
 
-## `update()`
+### `handleGameOver()`
+-   **Purpose**: Stops game and displays "Game Over" overlay
+-   **Returns**: void
+-   **Exceptions**: None
 
-Phaser's update loop. Destroys food that hits the ground.
+* * * * *
+
+Utility
+-------
+
+### `getEdgeAssignments()`
+-   **Purpose**: Returns mapping of players to their screen edges
+-   **Returns**: `Record<string, string>`
+-   **Exceptions**: None
+
+
 
 # PhaserGame.tsx
 
-## `PhaserGame: React.FC<IProps>`
+Overview
+------------------
 
-A React wrapper component that initializes the Phaser game engine and provides a reference to the game and active scene via `ref`.
+This is a React component that:
+-   Mounts and manages a Phaser game instance
+-   Forwards access to the game and scene via a shared ref
+-   Responds to Phaser's `'current-scene-ready'` event
 
-## `interface IRefPhaserGame`
+* * * * *
 
-Reference structure passed back to parent via `ref`.
+### `currentActiveScene`
+-   **Type**: `(scene_instance: Phaser.Scene) => void`
+-   **Purpose**: A callback function passed from the parent that receives the Phaser scene instance once it becomes ready.
 
-- **game**: `Phaser.Game | null` — The Phaser game instance.
-- **scene**: `Phaser.Scene | null` — The active scene instance when ready.
+* * * * *
 
-## `interface IProps`
+**Ref Type: `IRefPhaserGame`**
+------------------------------
 
-Props accepted by the component:
+This is the object passed back to the parent through the forwarded `ref`.
+| Field   | Type                   | Purpose                                                   |
+| ------- | ---------------------- | --------------------------------------------------------- |
+| `game`  | `Phaser.Game \| null`  | The root Phaser game instance, created with `StartGame()` |
+| `scene` | `Phaser.Scene \| null` | The current scene instance that is emitted by `EventBus`  |
 
-- **currentActiveScene**: `(scene_instance: Phaser.Scene) => void` — Optional callback to notify parent of the active Phaser scene.
 
----
+* * * * *
 
-## `useLayoutEffect`
+**Local State (Inside Component)**
+----------------------------------
 
-Initializes the Phaser game on mount and ensures full cleanup on unmount.
+| Field  | Type                                   | Purpose                                                                                               |
+| ------ | -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `game` | `React.RefObject<Phaser.Game \| null>` | Mutable reference to the Phaser game instance that doesn't change value when the component re-renders |
+| `ref`  | `React.ForwardedRef<IRefPhaserGame>`   | Exposes `{ game, scene }` to parent via `ref.current` or callback                                     |
 
----
+### `useLayoutEffect()`
+- **Purpose**: Creates the Phaser game instance on mount and destroys it on unmount.
+- **Parameters**: None directly (hook-based).
+- **Pre-conditions**:
+    -   Component must be mounted.
+    -   A container with `id="game-container"` must exist in the DOM.
+- **Post-conditions**:
+    -   `game.current` is assigned a `Phaser.Game` instance.
+    -   The `ref` receives `{ game, scene: null }`.
+- **Returns**: A cleanup function that:
+    -   Destroys the game (`game.current.destroy(true)`)
+    -   Clears `game.current` to `null`.
+- **Exceptions**: None
 
-## `useEffect`
+* * * * *
 
-Listens for the `'current-scene-ready'` event. When triggered:
+### `useEffect()`
+- **Purpose**: Waits for `'current-scene-ready'` from the Phaser game and:
+    -   Injects AAC food keys into the scene
+    -   Calls `currentActiveScene(scene)` if provided
+    -   Updates the forwarded `ref` with `{ game, scene }`
+- **Parameters**: None directly (hook-based). Uses:
+    -   `EventBus.on('current-scene-ready', scene_instance => ...)`
+- **Pre-conditions**:
+    -   Phaser game must emit `EventBus` event `'current-scene-ready'`
+    -   Scene must support `.setFoodKeys()` method (optional)
+- **Post-conditions**:
+    -   Food keys are injected into the scene
+    -   `currentActiveScene(scene)` callback is executed
+    -   `ref.current` is updated with the live `scene` instance
+- **Returns**: A cleanup function that removes the event listener:
+    -   `EventBus.removeListener('current-scene-ready');`
+- **Exceptions**: None.
 
-- Injects AAC food keys into the scene using `setFoodKeys`.
-- Shares the scene instance via `ref` and `currentActiveScene`.
+* * * * *
 
----
-
-## `return`
-
-Renders a `<div id="game-container">` for mounting the Phaser canvas.
-
+### `return ( <div id="game-container" /> )`
+- **Purpose**: Renders a DOM element into which the Phaser game will mount its canvas.
+- **Pre-conditions**: Used by `StartGame("game-container")`.
+- **Post-conditions**: Phaser canvas is injected into this `div`.
+- **Returns**: JSX element:
+    -   `<div id="game-container"></div>`
+- **Exceptions**: None.
 
 ---
 
@@ -368,27 +484,140 @@ Renders the button with styles and binds the click event.
 
 ---
 
+# PhaserPage.tsx
 
+## Data Fields
+| Field              | Type                                      | Purpose                                                                               |
+| ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------- |
+| `currentFood`      | `AacFood \| null`                         | The current food the AAC user has selected as the target.                             |
+| `scores`           | `Record<string, number>`                  | Player score map, updated via WebSocket.                                              |
+| `gameMode`         | `GameMode \| null`                        | The game difficulty mode (`Easy`, `Medium`, `Hard`).                                  |
+| `secondsLeft`      | `number`                                  | Countdown timer shown in sidebar.                                                     |
+| `sessionId`        | `string \| undefined`                     | Unique session ID from URL params.                                                    |
+| `userId`           | `string \| undefined`                     | Current user ID from URL params.                                                      |
+| `location`         | `Location`                                | From `useLocation()`; contains user role (`Hippo`, `AAC`, `Spectator`) in `.state`.   |
+| `navigate`         | `ReturnType<typeof useNavigate>`          | React Router navigation function.                                                     |
+| `isSpectator`      | `boolean`                                 | `true` if the current user is a spectator (from location state).                      |
+| `phaserRef`        | `React.RefObject<IRefPhaserGame \| null>` | Reference to Phaser game and scene (`{ game, scene }`). Passed into `<PhaserGame />`. |
+| `connectedUsers`   | `{ userId, role, color? }[]`              | List of all players in the current session.                                           |
+| `lastMessage`      | `any`                                     | Most recent message received over WebSocket.                                          |
+| `sendMessage`      | `(msg: any) => void`                      | Sends data to the backend WebSocket server.                                           |
+| `clearLastMessage` | `() => void`                              | Clears `lastMessage` to avoid duplicate handling.                                     |
+| `colors`           | `Record<string, string>`                  | Maps each user ID to their assigned hippo color, for leaderboard use.                 |
 
-## `const GamePage: React.FC = () =>`
+* * * * *
 
- * **Returns:** `JSX.Element` — The rendered game page.
+JOIN on MOUNT
+----------
 
-## `const phaserRef = useRef<IRefPhaserGame | null>(null)`
+### `useEffect(() => {...}, [sessionId, userId, role])`
+-   **Purpose**: Joins the WebSocket session when the component mounts.
+-   **Parameters**: None directly.
+-   **Pre-conditions**: Requires valid `sessionId`, `userId`, and `role`.
+-   **Returns**: void
+-   **Exceptions**: None.
 
-* @description A React ref pointing to the PhaserGame component instance. Used to access its scene and methods like addFoodManually.
+* * * * *
 
-## `const [foodStack, setFoodStack] = React.useState<AacFood[]>([])`
+REMOTE PLAYER MOVEMENT SYNC
+----------
 
+### `useEffect(() => {...}, [lastMessage, userId, clearLastMessage])`
+-   **Purpose**: Updates remote player movement when a `PLAYER_MOVE_BROADCAST` is received.
+-   **Parameters**:
+    -   `lastMessage`: contains the payload with `userId`, `x`, `y`.
+-   **Pre-conditions**: Scene must exist and support `updateRemotePlayer()`.
+-   **Returns**: void
+-   **Exceptions**: None.
 
-## `const handleSelectedFood = (selectedFood: AacFood) =>`
+* * * * *
 
- * **Parameters:** `selectedFood` — `AacFood` — - The food object selected from the AAC interface.
+GAME MODE BROADCAST
+----------
 
-## `return ( <div id="app"> <AacInterface onFoodSelected=`
+### `useEffect(() => {...}, [lastMessage, clearLastMessage])`
+-   **Purpose**: Applies game mode settings when `START_GAME_BROADCAST` is received.
+-   **Parameters**:
+    -   `lastMessage.payload.mode: GameMode`
+-   **Pre-conditions**: Scene must support `applyModeSettings()`.
+-   **Returns**: void
+-   **Exceptions**: None.
 
- * **Returns:** `JSX.Element` — 
+* * * * *
 
+FOOD STATE SYNC
+----------
+
+### `useEffect(() => {...}, [lastMessage, clearLastMessage])`
+-   **Purpose**: Handles multiple WebSocket message types:
+    -   `FOOD_STATE_UPDATE`: syncs food state via `EventBus`.
+    -   `AAC_TARGET_FOOD`: sets the target food in the scene and sidebar.
+    -   `REMOVE_FOOD`: deletes food object from scene.
+    -   `PLAYER_EFFECT_BROADCAST`: applies effects via `EventBus`.
+-   **Parameters**: `lastMessage` payload varies by type.
+-   **Pre-conditions**: Scene must support relevant methods.
+-   **Returns**: void
+-   **Exceptions**: None.
+
+* * * * *
+
+FRUIT EATEN LOCAL (EMITTED FROM PHASER)
+----------
+
+### `useEffect(() => {...}, [sendMessage, sessionId])`
+-   **Purpose**: Emits `FRUIT_EATEN` to backend when triggered by the Phaser scene.
+-   **Parameters**: `instanceId` from `EventBus`.
+-   **Pre-conditions**: Requires `sessionId` and `sendMessage`.
+-   **Returns**: void
+-   **Exceptions**: None.
+
+* * * * *
+
+SCORE UPDATE BROADCAST (EVENTBUS)
+----------
+
+### `useEffect(() => {...}, [])`
+-   **Purpose**: Updates the local scoreboard when `scoreUpdate` is emitted from `EventBus`.
+-   **Parameters**: `{ scores }`
+-   **Pre-conditions**: None
+-   **Returns**: void
+-   **Exceptions**: None
+
+* * * * *
+
+TIMER UPDATE BROADCAST (EVENTBUS)
+----------
+
+### `useEffect(() => {...}, [])`
+-   **Purpose**: Updates the timer when `TIMER_UPDATE` is emitted from `EventBus`.
+-   **Parameters**: `time: number`
+-   **Pre-conditions**: Timer must be active
+-   **Returns**: void
+-   **Exceptions**: None
+
+* * * * *
+
+GAME OVER → VICTORY NAVIGATION
+----------
+
+### `useEffect(() => {...}, [navigate, sessionId, scores, connectedUsers])`
+-   **Purpose**: Navigates to the Victory page when `gameOver` is emitted.
+-   **Parameters**: none
+-   **Pre-conditions**: `sessionId` must exist
+-   **Returns**: void
+-   **Exceptions**: Falls back to `/` if `sessionId` is missing
+
+* * * * *
+
+SET EDGE SYNC WITH BACKEND
+----------
+
+### `useEffect(() => {...}, [sendMessage, sessionId, userId, location.state?.role])`
+-   **Purpose**: Sends `SET_EDGE` to backend after `edges-ready` is emitted from the scene.
+-   **Parameters**: `{ sessionId, userId, edge }`
+-   **Pre-conditions**: User must not be a Spectator, and edge must be known.
+-   **Returns**: void
+-   **Exceptions**: None
 
  ---
 
