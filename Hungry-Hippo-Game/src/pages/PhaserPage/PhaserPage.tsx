@@ -278,7 +278,7 @@ const PhaserPage: React.FC = () => {
       const stored = localStorage.getItem('playerSessions');
       const allSessions = stored ? JSON.parse(stored) : {};
       const playersInSession = allSessions[sessionId] || [];
-      const currentPlayer = playersInSession.find(p => p.userId === userId);
+      const currentPlayer = playersInSession.find((p: { userId: string; edge?: string }) => p.userId === userId);
       if (currentPlayer && currentPlayer.edge) {
         localPlayerEdge = currentPlayer.edge;
       }
