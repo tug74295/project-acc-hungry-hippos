@@ -2,6 +2,7 @@ interface PlayerData {
   userId: string;
   role: string;
   color?: string | null;
+  edge?: string | null;
 }
 
 export const updatePlayerInSessionStorage = (sessionId: string, playerData: PlayerData) => {

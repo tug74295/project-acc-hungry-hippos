@@ -79,30 +79,32 @@ export class Game extends Scene {
    * Real game data is passed by your React wrapper later!
    */
   init(data: { 
-  sendMessage: (msg: any) => void; 
-  localPlayerId: string; 
-  sessionId: string;
-  role: string;
-  connectedUsers?: {
-    color: string | undefined; userId: string; role: string 
-}[]; 
-  modeSettings?: ModeSettings;
-}) {
-  this.sendMessage = data.sendMessage;
-  this.localPlayerId = data.localPlayerId;
-  this.sessionId = data.sessionId;
-  // ... your resets
+    sendMessage: (msg: any) => void; 
+      localPlayerId: string; 
+      sessionId: string;
+      role: string;
+      connectedUsers?: { color: string | undefined; userId: string; role: string }[];
+      modeSettings?: ModeSettings;
+      localPlayerEdge?: string;
+  }) {
+    this.sendMessage = data.sendMessage;
+    this.localPlayerId = data.localPlayerId;
+    this.sessionId = data.sessionId;
+    this.role = data.role;
 
-  if (data.modeSettings) {
-    this.modeSettings = data.modeSettings;
+    if (data.modeSettings) {
+      this.modeSettings = data.modeSettings;
+    }
+    if (data.connectedUsers) {
+      data.connectedUsers
+      .filter(u => u.role === 'Hippo Player')
+      .forEach(u => {
+        const edgeForPlayer = (u.userId === this.localPlayerId) ? data.localPlayerEdge : undefined;
+        this.addPlayer(u.userId, u.color, edgeForPlayer as Edge | undefined);
+      });
+    }
+    this.role = data.role;
   }
-  if (data.connectedUsers) {
-    data.connectedUsers
-    .filter(u => u.role === 'Hippo Player')
-    .forEach(u => this.addPlayer(u.userId, u.color));
-  }
-  this.role = data.role;
-}
 
 
   preload() {
@@ -149,18 +151,17 @@ export class Game extends Scene {
     }
   }
 
-  public addPlayer(playerId: string, color?: string) {
+  public addPlayer(playerId: string, color?: string, hippoEdge?: Edge) {
     if (!(playerId in this.playerScores)) this.playerScores[playerId] = 0;
     if (!(playerId in this.players)) {
-      const edge = (this.availableEdges.shift() || 'bottom') as Edge;
-      this.edgeAssignments[playerId] = edge;
+      const edge = hippoEdge || (this.availableEdges.shift() || 'bottom') as Edge;
       const { x, y } = this.getEdgePosition(edge);
       const slideDistance = (edge === 'top' || edge === 'bottom') ? this.scale.width * 0.8 : this.scale.height * 0.8;
 
       let spriteKey = 'character';
       const strategy = new EdgeSlideStrategy(edge, slideDistance);
       if (color) {
-      spriteKey = color + 'Hippo';
+        spriteKey = color + 'Hippo';
       }
       //console.log(`[addPlayer] ${playerId} -> color: ${color}, spriteKey: ${spriteKey}`);
 
@@ -168,6 +169,14 @@ export class Game extends Scene {
 
       //this.hippoGroup.add(playerSprite);
 
+      // Remove the player from available edges if it was passed
+      if (hippoEdge) {
+        const index = this.availableEdges.indexOf(hippoEdge);
+        if (index > -1) {
+          this.availableEdges.splice(index, 1);
+        }
+      }
+      this.edgeAssignments[playerId] = edge;
 
       playerSprite.setScale(0.12);
      
@@ -190,22 +199,22 @@ export class Game extends Scene {
       this.players[playerId] = playerSprite;
       if (playerId === this.localPlayerId && this.role !== 'Spectator') {
         this.hippo = playerSprite;
-
-         const camera = this.cameras.main;
-      switch (edge) {
-        case 'bottom':
-          camera.setRotation(0);
-          break;
-        case 'right':
-          camera.setRotation(Math.PI / 2);
-          break;
-        case 'top':
-          camera.setRotation(Math.PI);
-          break;
-        case 'left':
-          camera.setRotation(-Math.PI / 2);
-          break;
-      }
+        EventBus.emit('local-player-edge-assigned', edge);
+        const camera = this.cameras.main;
+        switch (edge) {
+          case 'bottom':
+            camera.setRotation(0);
+            break;
+          case 'right':
+            camera.setRotation(Math.PI / 2);
+            break;
+          case 'top':
+            camera.setRotation(Math.PI);
+            break;
+          case 'left':
+            camera.setRotation(-Math.PI / 2);
+            break;
+        }
       }
     }
   }

@@ -141,10 +141,25 @@ const PhaserPage: React.FC = () => {
       scene.setTargetFood(targetFoodId);
     }
   }
-    if (targetFoodData){
-      setCurrentFood(targetFoodData);
-    }
-    clearLastMessage?.();
+
+  useEffect(() => {
+    const handleLocalEdgeAssigned = (edge: string) => {
+      if (sessionId && userId) {
+        updatePlayerInSessionStorage(sessionId, { userId, role: 'Hippo Player', edge });
+      }
+    };
+
+    EventBus.on('local-player-edge-assigned', handleLocalEdgeAssigned);
+
+    return () => {
+      EventBus.off('local-player-edge-assigned', handleLocalEdgeAssigned);
+    };
+  }, [sessionId, userId]);
+
+  if (targetFoodData){
+    setCurrentFood(targetFoodData);
+  }
+  clearLastMessage?.();
 }
 
     // When a food has been eaten, remove it from the scene
