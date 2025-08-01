@@ -8,6 +8,7 @@ import Leaderboard from '../../components/Leaderboard/Leaderboard';
 import styles from './PhaserPage.module.css';
 import { GameMode, MODE_CONFIG } from '../../config/gameModes';
 import { useNavigate } from 'react-router-dom';
+import { updatePlayerInSessionStorage } from '../../components/Storage/Storage';
 
 /**
  * PhaserPage component.
@@ -26,7 +27,7 @@ interface FoodState {
 
 const PhaserPage: React.FC = () => {
   // ---- ROUTER & CONTEXT ----
-  const { sessionId, userId } = useParams<{ sessionId: string, userId: string }>();
+  const { sessionId, userId, role: roleParam } = useParams<{ sessionId: string, userId: string, role?: string }>();
   const location = useLocation();
 
   // ---- REFS & STATE ----
@@ -49,9 +50,23 @@ const PhaserPage: React.FC = () => {
       .map(user => [user.userId, user.color as string]) // safe to cast now
   );
 
+  // --- INITIALIZE PLAYER IN SESSION STORAGE ---
+  // This is to ensure the player is registered in session storage
+  useEffect(() => {
+    const role = location.state?.role || roleParam;
+    const color = location.state?.color;
+
+    if (sessionId && userId && role) {
+      updatePlayerInSessionStorage(sessionId, { userId, role, color });
+    }
+  }, [sessionId, userId, roleParam, location.state]);
+
   // --- JOIN on MOUNT ---
   useEffect(() => {
+    const stored = localStorage.getItem('playerSession');
+    const storedData = stored ? JSON.parse(stored) : {};
     const role = location.state?.role;
+    const color = storedData.color || location.state?.color;
     const alreadyJoined = connectedUsers.some(
       (u) => u.userId === userId && u.role === role
     );
@@ -68,9 +83,16 @@ const PhaserPage: React.FC = () => {
           type: 'PLAYER_JOIN',
           payload: { sessionId, userId, role }
         });
+
+        if (color) {
+          sendMessage({
+            type: 'SELECT_COLOR',
+            payload: { sessionId, userId, color }
+          });
+        }
       }
     }
-  }, [sessionId, userId, location.state?.role, sendMessage, connectedUsers]);
+  }, [sessionId, userId, location.state?.role, roleParam, sendMessage, connectedUsers]);
 
   // --- REMOTE PLAYER MOVEMENT SYNC ---
   useEffect(() => {
@@ -113,17 +135,17 @@ const PhaserPage: React.FC = () => {
       const { targetFoodId, targetFoodData, effect } = lastMessage.payload;
       const scene = phaserRef.current?.scene as any;
       if (scene && typeof scene.setTargetFood === 'function') {
-    if (effect) {
-      scene.setTargetFood(targetFoodId, effect);
-    } else {
-      scene.setTargetFood(targetFoodId);
+        if (effect) {
+          scene.setTargetFood(targetFoodId, effect);
+        } else {
+          scene.setTargetFood(targetFoodId);
+        }
+      }
+      if (targetFoodData) {
+        setCurrentFood(targetFoodData);
+      }
+      clearLastMessage?.();
     }
-  }
-    if (targetFoodData){
-      setCurrentFood(targetFoodData);
-    }
-    clearLastMessage?.();
-}
 
     // When a food has been eaten, remove it from the scene
     if (lastMessage?.type === 'REMOVE_FOOD') {
@@ -144,7 +166,7 @@ const PhaserPage: React.FC = () => {
   }, [lastMessage, clearLastMessage]);
 
   // --- FRUIT EATEN LOCAL (EMITTED FROM PHASER) ---
-   useEffect(() => {
+  useEffect(() => {
     const handleFruitEaten = ({ instanceId }: { instanceId: string }) => {
       if (sessionId) {
         sendMessage({
@@ -215,12 +237,17 @@ const PhaserPage: React.FC = () => {
         location.state?.role !== 'Spectator' &&
         edges?.[userId]
       ) {
+        const userEdge = edges[userId];
+        if (userEdge) {
+          // Update player edge in session storage
+          updatePlayerInSessionStorage(sessionId, { userId, role: 'Hippo Player', edge: userEdge });
+        }
         sendMessage({
           type: 'SET_EDGE',
           payload: {
             sessionId,
             userId,
-            edge: edges[userId],
+            edge: userEdge
           },
         });
       }
@@ -233,68 +260,85 @@ const PhaserPage: React.FC = () => {
     };
   }, [sendMessage, sessionId, userId, location.state?.role]);
 
+  // Check local storage for player edge
+  let localPlayerEdge: string | undefined;
+  if (sessionId && userId) {
+    try {
+      const stored = localStorage.getItem('playerSessions');
+      const allSessions = stored ? JSON.parse(stored) : {};
+      const playersInSession = allSessions[sessionId] || [];
+      const currentPlayer = playersInSession.find((p: { userId: string; edge?: string }) => p.userId === userId);
+      if (currentPlayer && currentPlayer.edge) {
+        localPlayerEdge = currentPlayer.edge;
+      }
+    } catch (e) {
+      console.error('Failed to read player edge from storage', e);
+    }
+  }
+
 
   // ---- RENDER ----
-return (
-  <div className={styles.pageWrapper}>
-    {/* Game Canvas */}
-    <div className={styles.canvasWrapper}>
-      <PhaserGame
-        ref={phaserRef}
-        currentActiveScene={(scene: Phaser.Scene) => {
-          if (
-            scene &&
-            userId &&
-            connectedUsers &&
-            typeof (scene as any).init === 'function'
-          ) {
-            (scene as any).init({
-              sendMessage,
-              localPlayerId: userId,
-              sessionId,
-              connectedUsers,
-              modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined,
-              role: location.state?.role,
-            });
-          }
-        }}
-      />
-    </div>
+  return (
+    <div className={styles.pageWrapper}>
+      {/* Game Canvas */}
+      <div className={styles.canvasWrapper}>
+        <PhaserGame
+          ref={phaserRef}
+          currentActiveScene={(scene: Phaser.Scene) => {
+            if (
+              scene &&
+              userId &&
+              connectedUsers &&
+              typeof (scene as any).init === 'function'
+            ) {
+              (scene as any).init({
+                sendMessage,
+                localPlayerId: userId,
+                sessionId,
+                connectedUsers,
+                modeSettings: gameMode ? MODE_CONFIG[gameMode] : undefined,
+                role: location.state?.role,
+                localPlayerEdge: localPlayerEdge,
+              });
+            }
+          }}
+        />
+      </div>
 
-    {/* Sidebar */}
-    <div className={styles.sidebarWrapper}>
-      <div className={styles.sidebar}>
-        {isSpectator && (
-          <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
-            <span className={styles.spectatorText}>
-            <span className={styles.spectatorHighlight}>Spectator Mode</span>
-            </span>
-          </div>
-        )}
-
-        <div className={styles.timerBox}>
-          <h3 className={styles.timerTitle}>Time Left:</h3>
-          <div className={styles.timerValue}>{secondsLeft} sec</div>
-        </div>
-
-        <div className={styles.currentFood}>
-          <h3>Current Food to Eat:</h3>
-          {currentFood ? (
-            <>
-              <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
-              <p>{currentFood.name}</p>
-            </>
-          ) : (
-            <p>No Food Selected</p>
+      {/* Sidebar */}
+      <div className={styles.sidebarWrapper}>
+        <div className={styles.sidebar}>
+          {isSpectator && (
+            <div className={styles.spectatorBanner} role="status" aria-label="Spectator Mode Banner">
+              <span className={styles.spectatorText}>
+              <span className={styles.spectatorHighlight}>Spectator Mode</span>
+              </span>
+            </div>
           )}
-        </div>
 
-        <div className={styles.leaderboardBox}>
-        <Leaderboard scores={scores} colors={colors} userId={userId ?? ''} />
+          <div className={styles.timerBox}>
+            <h3 className={styles.timerTitle}>Time Left:</h3>
+            <div className={styles.timerValue}>{secondsLeft} sec</div>
+          </div>
+
+          <div className={styles.currentFood}>
+            <h3>Current Food to Eat:</h3>
+            {currentFood ? (
+              <>
+                <img src={currentFood.imagePath} alt={currentFood.name} className={styles.foodImage} />
+                <p>{currentFood.name}</p>
+              </>
+            ) : (
+              <p>No Food Selected</p>
+            )}
+          </div>
+
+          <div className={styles.leaderboardBox}>
+          <Leaderboard scores={scores} colors={colors} userId={userId ?? ''} />
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 export default PhaserPage;

@@ -4,7 +4,6 @@ import Presenter from './pages/PresenterPage/Presenter';
 import RoleSelect from './pages/RoleSelection/RoleSelect';
 import PhaserPage from './pages/PhaserPage/PhaserPage';
 import AacPage from './pages/AacPage/AacPage';
-import PresenterGamePage from './pages/PresenterGamePage/PresenterGame';
 import Victory from './pages/Victory/Victory';
 
 import { Navigate } from 'react-router-dom';
@@ -20,11 +19,7 @@ function App() {
         <Route path="/aac/:sessionId/:userId/:role" element={<AacPage />} />
         <Route path="/game" element={<PhaserPage />} /> {}
         <Route path="/spectator/:sessionId/:userId" element={<PhaserPage />} />
-
-
-        <Route path="/presenter-game/:sessionId" element={<PresenterGamePage />} />
         <Route path="/victory/:sessionId" element={<Victory />} />
-
         {/* Redirect to landing page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

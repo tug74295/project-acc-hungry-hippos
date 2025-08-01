@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { AacFood, AAC_DATA, AacVerb, AAC_VERBS } from "../Foods";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import { updatePlayerInSessionStorage } from "../components/Storage/Storage";
 
 /**
  * Defines the props for the AacInterface component.
@@ -29,8 +30,10 @@ const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }
         type: 'PLAYER_JOIN',
         payload: { sessionId, userId, role }
       });
+      updatePlayerInSessionStorage(sessionId, { userId, role });
     }
   }, [sessionId, userId, role, sendMessage]);
+  
 
   /**
    * Plays the audio for the selected item.
