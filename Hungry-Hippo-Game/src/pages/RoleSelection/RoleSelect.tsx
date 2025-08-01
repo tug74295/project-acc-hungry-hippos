@@ -4,7 +4,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import { HIPPO_COLORS } from '../../config/hippoColors';  
 import { EventBus } from '../../game/EventBus';
-import { HIPPO_COLORS } from '../../config/hippoColors'; 
 import { updatePlayerInSessionStorage } from '../../components/Storage/Storage';
 
 /**
@@ -67,7 +66,7 @@ function RoleSelect() {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
-  const { connectedUsers, gameStarted, sendMessage, isConnected } = useWebSocket();
+  const { connectedUsers, gameStarted, sendMessage, isConnected, lastMessage, clearLastMessage } = useWebSocket();
 
   // State to track colors already taken by connected users
   const [takenColors, setTakenColors] = useState<string[]>([]);
@@ -79,6 +78,15 @@ function RoleSelect() {
   const aacUsersCount = connectedUsers.filter(user => user.role === 'AAC User').length;
   const isHippoRoleFull = hippoPlayersCount >= HIPPO_PLAYER_LIMIT;
   const isAacRoleFull = aacUsersCount >= AAC_USER_LIMIT;
+
+  // If presenter closes the session before game starts, go back to main page
+  useEffect(() => {
+    if (lastMessage?.type === 'SESSION_CLOSED') {
+        alert('The host has closed the session. Returning to the main page.');
+        clearLastMessage?.();
+        navigate('/');
+    }
+  }, [lastMessage, navigate]);
 
   // Effect to handle WebSocket connection and game resetting
   useEffect(() => {
