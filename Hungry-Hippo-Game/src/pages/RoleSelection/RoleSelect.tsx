@@ -66,6 +66,7 @@ function RoleSelect() {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
+  const [showClosedSession, setShowClosedSession] = useState(false);
   const { connectedUsers, gameStarted, sendMessage, isConnected, lastMessage, clearLastMessage } = useWebSocket();
 
   // State to track colors already taken by connected users
@@ -82,11 +83,10 @@ function RoleSelect() {
   // If presenter closes the session before game starts, go back to main page
   useEffect(() => {
     if (lastMessage?.type === 'SESSION_CLOSED') {
-        alert('The host has closed the session. Returning to the main page.');
+        setShowClosedSession(true);
         clearLastMessage?.();
-        navigate('/');
     }
-  }, [lastMessage, navigate]);
+  }, [lastMessage, clearLastMessage]);
 
   // Effect to handle WebSocket connection and game resetting
   useEffect(() => {
@@ -230,6 +230,19 @@ function RoleSelect() {
 
   return (
     <div className={styles.containerImg}>
+      {/* Popup for session closed by host */}
+      {showClosedSession && (
+        <div className={styles.closedSessionOverlay}>
+          <div className={styles.closedSessionContent}>
+            <button onClick={handleCancel} className={styles.closedSessionCloseButton}>✖</button>
+            <h3>Session Closed</h3>
+            <p>The host has left the lobby.</p>
+            <button onClick={handleCancel} className={styles.closedSessionOkButton}>
+                OK
+            </button>
+        </div>
+      </div>
+      )}
       <div className={styles.roleContainer}>
         <button
           className={styles.closeButton}
