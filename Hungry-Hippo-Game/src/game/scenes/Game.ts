@@ -156,7 +156,6 @@ export class Game extends Scene {
     if (!(playerId in this.playerScores)) this.playerScores[playerId] = 0;
     if (!(playerId in this.players)) {
       const edge = hippoEdge || (this.availableEdges.shift() || 'bottom') as Edge;
-      console.log(`[Game.addPlayer] Adding player ${playerId} at edge ${edge} with color ${color}`);
       const { x, y } = this.getEdgePosition(edge);
       const slideDistance = (edge === 'top' || edge === 'bottom') ? this.scale.width * 0.8 : this.scale.height * 0.8;
 
@@ -202,6 +201,7 @@ export class Game extends Scene {
       if (playerId === this.localPlayerId && this.role !== 'Spectator') {
         this.hippo = playerSprite;
         EventBus.emit('player-edge-assigned', { userId: playerId, edge: edge });
+        console.log(`[Game.addPlayer] Local player ${playerId} assigned to edge ${edge}`);
         const camera = this.cameras.main;
         switch (edge) {
           case 'bottom':

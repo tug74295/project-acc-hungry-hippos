@@ -257,6 +257,9 @@ const PhaserPage: React.FC = () => {
 
   // Listen for player edge assignment from the server
   useEffect(() => {
+    if (!sessionId || !userId) {
+      return;
+    }
     const handlePlayerEdgeAssigned = (data: { userId: string, edge: string }) => {
       
       if (sessionId && data.userId === userId) {
