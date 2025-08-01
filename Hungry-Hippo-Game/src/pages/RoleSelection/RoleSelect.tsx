@@ -4,7 +4,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import { HIPPO_COLORS } from '../../config/hippoColors';  
 import { EventBus } from '../../game/EventBus';
-import { HIPPO_COLORS } from '../../config/hippoColors'; 
 import { updatePlayerInSessionStorage } from '../../components/Storage/Storage';
 
 /**
