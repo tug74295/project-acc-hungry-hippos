@@ -237,12 +237,17 @@ const PhaserPage: React.FC = () => {
         location.state?.role !== 'Spectator' &&
         edges?.[userId]
       ) {
+        const userEdge = edges[userId];
+        if (userEdge) {
+          // Update player edge in session storage
+          updatePlayerInSessionStorage(sessionId, { userId, role: 'Hippo Player', edge: userEdge });
+        }
         sendMessage({
           type: 'SET_EDGE',
           payload: {
             sessionId,
             userId,
-            edge: edges[userId],
+            edge: userEdge
           },
         });
       }
@@ -254,25 +259,6 @@ const PhaserPage: React.FC = () => {
       EventBus.off('edges-ready', handleEdgesReady);
     };
   }, [sendMessage, sessionId, userId, location.state?.role]);
-
-  // Listen for player edge assignment from the server
-  useEffect(() => {
-    if (!sessionId || !userId) {
-      return;
-    }
-    const handlePlayerEdgeAssigned = (data: { userId: string, edge: string }) => {
-      
-      if (sessionId && data.userId === userId) {
-        updatePlayerInSessionStorage(sessionId, { userId, role: 'Hippo Player', edge: data.edge });
-      }
-    };
-
-    EventBus.on('player-edge-assigned', handlePlayerEdgeAssigned);
-
-    return () => {
-      EventBus.off('player-edge-assigned', handlePlayerEdgeAssigned);
-    };
-  }, [sessionId, userId]);
 
   // Check local storage for player edge
   let localPlayerEdge: string | undefined;

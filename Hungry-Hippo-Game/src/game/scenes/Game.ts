@@ -200,8 +200,6 @@ export class Game extends Scene {
       this.players[playerId] = playerSprite;
       if (playerId === this.localPlayerId && this.role !== 'Spectator') {
         this.hippo = playerSprite;
-        EventBus.emit('player-edge-assigned', { userId: playerId, edge: edge });
-        console.log(`[Game.addPlayer] Local player ${playerId} assigned to edge ${edge}`);
         const camera = this.cameras.main;
         switch (edge) {
           case 'bottom':
