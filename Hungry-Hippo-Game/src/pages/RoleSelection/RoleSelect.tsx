@@ -178,6 +178,7 @@ function RoleSelect() {
         return;
     }
 
+    playAudio('/audio/role-select/waiting-for-game-to-start.mp3');
     sendMessage({
         type: 'PLAYER_JOIN',
         payload: {
