@@ -3,6 +3,7 @@ import styles from './RoleSelect.module.css';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useWebSocket } from '../../contexts/WebSocketContext';
 import { HIPPO_COLORS } from '../../config/hippoColors';  
+import { EventBus } from '../../game/EventBus';
 
 /**
  * RoleSelect - React component for selecting a player's role in the game.
@@ -76,6 +77,20 @@ function RoleSelect() {
   const aacUsersCount = connectedUsers.filter(user => user.role === 'AAC User').length;
   const isHippoRoleFull = hippoPlayersCount >= HIPPO_PLAYER_LIMIT;
   const isAacRoleFull = aacUsersCount >= AAC_USER_LIMIT;
+
+  // Effect to handle WebSocket connection and game resetting
+  useEffect(() => {
+    const handleResetGame = () => {
+      console.log('[RoleSelect] RESET_GAME received – entering waiting state');
+      setWaiting(true);
+    };
+
+    EventBus.on('RESET_GAME', handleResetGame);
+
+    return () => {
+      EventBus.off('RESET_GAME', handleResetGame);
+    };
+  }, []);
 
   // Navigate to the next page depending on the selected role.
   // and pass ALL player info in the state for the next page to use.

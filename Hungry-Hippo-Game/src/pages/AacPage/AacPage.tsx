@@ -72,7 +72,7 @@ const AacPage: React.FC = () => {
           .map(user => [user.userId, user.color])
       );
 
-      navigate(`/victory/${sessionId}`, { state: { scores, colors } });
+      navigate(`/victory/${sessionId}`, { state: { scores, colors, sessionId, userId } });
     }
   }, [lastMessage, sessionId, navigate, scores, connectedUsers]);
 

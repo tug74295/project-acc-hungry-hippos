@@ -590,6 +590,38 @@ wss.on('connection', (ws) => {
         }
       }
 
+      // When a presenter clicks "End Game", broadcast to all clients in the session
+      if (data.type === 'RESET_GAME') {
+        const { sessionId } = data.payload;
+        console.log('[WSS] RESET_GAME received for session', sessionId);
+
+        // Reset scores to 0 for Hippo Players
+        if (scoresBySession[sessionId]) {
+          console.log('[WSS] Scores before reset:', scoresBySession[sessionId]);
+          for (const client of sessions[sessionId]) {
+            if (client.role === 'Hippo Player') {
+              console.log(`[WSS] Resetting score for ${client.userId}`);
+              scoresBySession[sessionId][client.userId] = 0;
+            }
+          }
+          console.log('[WSS] Scores after reset:', scoresBySession[sessionId]);
+        } else {
+          console.log('[WSS] No scores found for session', sessionId);
+        }
+
+        // Send updated scores to all clients
+        broadcast(sessionId, {
+          type: 'SCORE_UPDATE_BROADCAST',
+          payload: { scores: scoresBySession[sessionId] }
+        });
+
+        // Notify clients to reset game UI
+        broadcast(sessionId, {
+          type: 'RESET_GAME_BROADCAST',
+          payload: {},
+        });
+      }
+
     } catch (error) {
         console.error('WSS Error processing message:', error);
     }

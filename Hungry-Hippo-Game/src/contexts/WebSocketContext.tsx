@@ -100,6 +100,22 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setLastMessage(data);
         return;
       }
+
+      if (data.type === 'RESET_GAME_BROADCAST') {
+        console.log('[WS_CONTEXT] Game reset received.');
+        setGameStarted(false);
+        setLastMessage(data);
+        EventBus.emit('RESET_GAME');
+        return;
+      }
+
+      if (data.type === 'USERS_LIST_UPDATE') {
+        console.log('[WS_CONTEXT] Users updated from local storage:', data.payload.users);
+        setConnectedUsers(data.payload.users);
+        setLastMessage(data);
+        return;
+      }
+
       setLastMessage(data);
     };
 
