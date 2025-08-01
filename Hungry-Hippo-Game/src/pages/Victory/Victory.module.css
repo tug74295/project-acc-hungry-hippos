@@ -193,5 +193,10 @@
   margin: 0 1rem;
 }
 
+.playAgainWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px; 
+}
 
 

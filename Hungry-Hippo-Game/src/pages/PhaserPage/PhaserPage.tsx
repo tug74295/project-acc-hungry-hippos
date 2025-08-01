@@ -216,7 +216,7 @@ const PhaserPage: React.FC = () => {
 
       console.log('[PhaserPage] Game Over received. Navigating to Victory screen.');
       if (sessionId) {
-        navigate(`/victory/${sessionId}`, { state: { scores, colors } });
+        navigate(`/victory/${sessionId}`, { state: { scores, colors, sessionId, userId } });
       } else {
         navigate('/');
       }
