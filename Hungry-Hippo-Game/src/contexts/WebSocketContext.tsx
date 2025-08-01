@@ -30,6 +30,43 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     socket.onopen = () => {
       //console.log('[WS_CONTEXT] Connection established.');
       setIsConnected(true);
+
+      // Attempt to restore session from localStorage
+      try {
+        const pathParts = window.location.pathname.split('/');
+        const urlSessionId = pathParts[2];
+        const urlUserId = pathParts[3];
+
+        if (urlSessionId && urlUserId) {
+          const stored = localStorage.getItem('playerSessions');
+          const allSessions = stored ? JSON.parse(stored) : {};
+          const playersInSession = allSessions[urlSessionId];
+
+          if (playersInSession && playersInSession.length > 0) {
+            
+            const playerToRejoin = playersInSession.find((p: { userId: string; role: string; color?: string }) => p.userId === urlUserId);
+
+            if (playerToRejoin) {
+              console.log(`[WS_CONTEXT] Found previous player data. Attempting to rejoin as ${playerToRejoin.userId}`);
+              
+              socket.send(
+                JSON.stringify({
+                  type: 'PLAYER_JOIN', 
+                  payload: {
+                    sessionId: urlSessionId,
+                    userId: playerToRejoin.userId,
+                    role: playerToRejoin.role,
+                    color: playerToRejoin.color,
+                    isReconnecting: true
+                  },
+                })
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to restore session from storage', err);
+      }
     };
 
     socket.onclose = () => {

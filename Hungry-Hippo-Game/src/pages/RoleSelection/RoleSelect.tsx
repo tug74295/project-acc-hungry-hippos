@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import styles from './RoleSelect.module.css';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useWebSocket } from '../../contexts/WebSocketContext';
-import { HIPPO_COLORS } from '../../config/hippoColors';  
+import { HIPPO_COLORS } from '../../config/hippoColors'; 
+import { updatePlayerInSessionStorage } from '../../components/Storage/Storage';
 
 /**
  * RoleSelect - React component for selecting a player's role in the game.
@@ -109,9 +110,10 @@ function RoleSelect() {
         payload: {
           sessionId,
           userId: username,
-          role: 'pending', // Initial role is pending until user selects
+          role: 'pending',
         },
       });
+      updatePlayerInSessionStorage(sessionId, { userId: username, role: 'pending' });
     }
   }, [sessionId, username, isConnected, sendMessage]);
 
@@ -159,6 +161,10 @@ function RoleSelect() {
         },
     });
 
+    if (sessionId) {
+      updatePlayerInSessionStorage(sessionId, { userId: username, role, color: selectedColor });
+    }
+
     setWaiting(true);
   };
 
@@ -173,6 +179,10 @@ function RoleSelect() {
     }
     setRole(selectedRole);
     setSelectedColor(null);
+
+    if (sessionId) {
+      updatePlayerInSessionStorage(sessionId, { userId: username, role: selectedRole, color: null });
+    }
   };
 
   const handleCancel = () => {
@@ -186,6 +196,10 @@ function RoleSelect() {
         type: 'SELECT_COLOR',
         payload: { sessionId, userId: username, color }
     });
+
+    if (sessionId) {
+      updatePlayerInSessionStorage(sessionId, { userId: username, role, color });
+    }
   };
 
   const isNextDisabled = !role || (role === 'Hippo Player' && !selectedColor)
