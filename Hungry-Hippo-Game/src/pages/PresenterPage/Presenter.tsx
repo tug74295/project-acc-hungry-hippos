@@ -8,15 +8,45 @@ import { HIPPO_COLORS } from '../../config/hippoColors';
 /**
  * Presenter - React component that displays the session ID to the host after creating a new game.
  *
- * Purpose:
- * - Allows the host to view the game session code.
- * - Provides instructions to share the session code with other players.
- * - Includes a button to cancel the new game and return to the landing page.
- * - Shows a waiting lobby with connected users and their roles.
+ * The Presenter is the host interface shown after creating a new game session.
+ *
+ * ## Purpose:
+ * - Displays the session code as text and QR code.
+ * - Allows the host to copy the session ID.
+ * - Lets the host choose a game mode (Easy, Medium, Hard).
+ * - Shows a lobby with currently connected users (hippo players and AAC users).
+ * - Allows the host to start the game when all required participants are present.
+ *
+ * ## Features:
+ * - Session ID is shown and copyable.
+ * - QR code directs users to the role selection screen.
+ * - Shows up to 4 hippo slots and 1 AAC device.
+ * - Hosts can cycle between game modes (with visual + audio feedback).
+ * - Prevents game start until at least 1 AAC user and 1 Hippo player are connected.
+ * - Sends `PLAYER_JOIN`, `START_GAME`, and `START_TIMER` messages via WebSocket.
+ *
+ * ## Hooks:
+ * - `useParams`: Gets `sessionId` from the route.
+ * - `useWebSocket`: Sends messages, receives user list.
+ * - `useEffect`: Joins the session as "Presenter", plays audio on mode change.
+ * - `useNavigate`: Redirects user back or forwards to Spectator screen.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered Presenter game lobby interface.
+ *
+ * @example
+ * ```tsx
+ * <Route path="/presenter/:sessionId" element={<Presenter />} />
+ * ```
  */
+
 
 const presenterBg = '/assets/presenterBg.png';
 
+/**
+ * Mapping of game modes to their label, icon path, and number of icons.
+ * Used for rendering game mode selector UI.
+ */
 const modeDetails = {
   Easy: { label: 'Easy', iconPath: '/assets/fruits/strawberry.png', count: 1 },
   Medium: { label: 'Medium', iconPath: '/assets/fruits/strawberry.png', count: 2 },
@@ -25,15 +55,35 @@ const modeDetails = {
 
 function Presenter() {
   const navigate = useNavigate();
+    /**
+   * Session ID extracted from the route.
+   * Used to join the WebSocket session and render QR/game code.
+   */
   const { sessionId } = useParams<{ sessionId: string }>();
+    /**
+   * Whether the session ID was copied to clipboard recently.
+   */
   const [copied, setCopied] = useState(false);
+    /**
+   * Current selected game mode.
+   * Cycles between Easy, Medium, and Hard.
+   */
   const [mode, setMode] = useState<'Easy' | 'Medium' | 'Hard'>('Easy');
 
   if (!sessionId || sessionId.length < 5) {
     console.error('Invalid sessionId:', sessionId);
     return <Navigate to="/" replace />;
   }  
+    /**
+   * Hardcoded presenter ID to register as "Presenter" over WebSocket.
+   */
   const presenterId = 'presenter'; 
+    /**
+   * WebSocket context values:
+   * - `sendMessage`: function to emit WebSocket messages.
+   * - `connectedUsers`: list of all users in the session.
+   * - `isConnected`: whether WebSocket is open.
+   */
   const { sendMessage, connectedUsers, isConnected } = useWebSocket();
 
   /**
@@ -94,9 +144,17 @@ function Presenter() {
     navigate('/');
   };
 
+    /**
+   * ID to use for the Spectator client that gets opened by the presenter.
+   */
   const spectatorId = "PresenterSpectator"; // Or use presenterId, or generate unique
-
+  /**
+   * Number of connected users with AAC User role.
+   */
   const aacCount = connectedUsers.filter(u => u.role === 'AAC User').length;
+  /**
+   * List of all connected users who selected the "Hippo Player" role.
+   */
   const hippoPlayers = connectedUsers.filter(u => u.role === 'Hippo Player');
 
 
@@ -139,6 +197,10 @@ function Presenter() {
     setTimeout(() => setCopied(false), 1500);
   };
 
+    /**
+   * List of slot indices for Hippo player UI display.
+   * Each slot corresponds to a position around the pond.
+   */
   const lobbyHippoSlots = [0, 1, 2, 3];
 
   function renderHippoSlot(player: any, index: number) {

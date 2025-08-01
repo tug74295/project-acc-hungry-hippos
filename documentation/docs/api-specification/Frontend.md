@@ -5,66 +5,148 @@ description: Frontend API
 
 # Frontend API
 
-# AAC Interface
+# AACInterface.tsx
 
-## `interface AacInterfaceProps`
-
+### `AacInterfaceProps`
 Defines the props for the AacInterface component.
 
-## `onFoodSelected: (food: AacFood) => void`
+| Field       | Type     | Description                             |
+| ----------- | -------- | --------------------------------------- |
+| `sessionId` | `string` | The session ID for the current game     |
+| `userId?`   | `string` | Optional user ID                        |
+| `role?`     | `string` | Optional role of the user               |
 
-Callback function to handle food selection.
-
-- **Parameters:** `food` — The selected food item.
-- **Returns:** `void` —
-
-## `const AacInterface: React.FC<AacInterfaceProps> = (`
+### `const AacInterface: React.FC<AacInterfaceProps>`
 
 AacInterface component provides an interface for users to select foods and play associated audio clips.
 
-- **Parameters:** `props` — `AacInterfaceProps` — - The properties for the component.
+- **Parameters:**  
+  - `props`: `AacInterfaceProps` — The properties for the component.
 - **Returns:** `JSX.Element` — The rendered component.
 
-## `const [selectedFood, setSelectedFood] = React.useState<AacFood | null>(null)`
+### State
 
-Tracks the most recently selected food item
+| State Hook                                 | Type               | Purpose                                       |
+| ----------------------------------------- | ------------------ | --------------------------------------------- |
+| `selectedFood` / `setSelectedFood`        | `AacFood \| null`  | Tracks currently selected food                |
+| `selectedCategory` / `setSelectedCategory`| `string \| null`   | Tracks currently selected food category       |
+| `isAudioPlaying` / `setIsAudioPlaying`    | `boolean`          | Tracks if an audio clip is currently playing  |
 
-## `const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)`
+#### `handleFoodClick(food: AacFood): void`
 
-Tracks the currently selected food category
+- **Purpose**: Handles user clicking on a food item.
+- **Parameters:**  
+  - `food: AacFood` — The clicked food item.
+- **Returns:** `void`
 
-## `const [isAudioPlaying, setIsAudioPlaying] = React.useState(false)`
 
-Tracks whether audio is currently playing
+#### `handleCategoryClick(category): void`
 
-## `const handleFoodClick = (food: AacFood) =>`
+- **Purpose**: Handles clicking on a food category.
+- **Parameters:**  
+  - `category: { categoryName: string, ... }` — The selected category.
+- **Returns:** `void`
 
-Handles the click event for a food item.
 
-- **Parameters:** `food` — `AacFood` — - The food item that was clicked.
-- **Returns:** `void` —
+#### `handleBackClick(): void`
 
-## `audio.onerror = () =>`
+- **Purpose**: Navigates back from food view to category view.
+- **Returns:** `void`
 
-- **Exceptions:** function handles errors that may occur while playing the audio.
 
-## `const renderCategoryView = () =>`
+#### `handleVerbClick(verb: AacVerb): void`
 
-Renders the category view with buttons for each food category.
+- **Purpose**: Handles the user selecting a modifier verb (burn, freeze, etc.)
+- **Parameters:**  
+  - `verb: AacVerb` — The selected modifier.
+- **Returns:** `void`
 
-- **Returns:** `JSX.Element` — The rendered category view.
 
-## `const renderFoodsView = () =>`
+#### `playAudioWithDelay(audioPath: string | undefined): void`
 
-Renders the foods view for the selected category.
+- **Purpose**: Plays audio after a delay and updates UI state.
+- **Parameters:**  
+  - `audioPath: string \| undefined` — Path to the audio file.
+- **Returns:** `void`  
+- **Exceptions:** Logs error if audio fails to play.
 
-- **Returns:** `JSX.Elemen` — | null} The rendered foods view or null if no category is selected.
 
-## `return ( <div className="aac-container"> <div className="aac-device"> <h1> AAC Device <`
+#### `playAudioWithoutDelay(audioPath: string | undefined): void`
+
+- **Purpose**: Plays audio immediately without affecting UI state.
+- **Parameters:**  
+  - `audioPath: string \| undefined`
+- **Returns:** `void`
+
+
+#### `audio.onerror = () => { ... }`
+
+- **Purpose**: Handles audio playback errors.
+- **Exceptions:** Captures and logs playback errors.
+
+
+#### `renderCategoryView(): JSX.Element`
+
+- **Purpose**: Renders UI for selecting a food category.
+- **Returns:** `JSX.Element` — Category selection UI
+
+
+#### `renderFoodsView(): JSX.Element | null`
+
+- **Purpose**: Renders UI for selecting a food in the selected category.
+- **Returns:** `JSX.Element \| null` — Food selection UI or null if no category is selected
+
+
+#### `return ( <div className="aac-container"> <div className="aac-device"> <h1> AAC Device <`
 
 Renders the main AAC interface, including the selected food and category views.
 
 - **Returns:** `JSX.Element` — The rendered AAC interface.
+
+# AacPage.tsx
+
+Renders the AAC (Augmentative and Alternative Communication) interface for selecting food items within a specific game session.
+
+---
+
+**Parameters:**  
+- None — uses URL parameters and application context internally.
+
+**Returns:**  
+- `JSX.Element` — The rendered AAC interface or a fallback message if `sessionId` is missing.
+
+---
+
+## Route Parameters
+
+| Param      | Type     | Description                                          | Example       |
+|------------|----------|------------------------------------------------------|---------------|
+| sessionId  | `string` | Unique identifier for the game session               | `'HG20Y'`     |
+| userId     | `string` | Identifier for the AAC user                          | `'aacUser1'`  |
+| role       | `string` | The role of the user (e.g., `'AAC User'`)            | `'AAC User'`  |
+
+---
+
+## WebSocket Integration
+
+The component uses `useWebSocket` to access:
+
+- `lastMessage`: Most recent WebSocket message.
+- `connectedUsers`: Array of currently connected users.
+
+---
+
+## EventBus Integration
+
+The component listens to the following event:
+
+- `scoreUpdate` — Updates the internal `scores` state when emitted:
+  ```tsx
+  useEffect(() => {
+    const handleScoreUpdate = ({ scores }) => setScores(scores);
+    EventBus.on('scoreUpdate', handleScoreUpdate);
+    return () => EventBus.off('scoreUpdate', handleScoreUpdate);
+  }, []);
 
 # Foods.ts
 
@@ -375,76 +457,106 @@ This is the object passed back to the parent through the forwarded `ref`.
 
 # LandingPage.tsx
 
-## `LandingPage`
+### Overview
 
-Landing page interface for users to **enter a 5-character session code** or **create a new game session**.
-
-### `const [code, setCode] = useState(['', '', '', '', ''])`
-
-Stores the user-entered game code across 5 input fields.
-
-### `const inputsRef = useRef<(HTMLInputElement | null)[]>([])`
-
-Holds references to individual input boxes for managing focus and input behavior.
-
-### `const [isValidCode, setIsValidCode] = useState(true)`
-
-Tracks whether the currently entered code is valid.
+User interface for joining or creating a game session.  
+This component allows the user to enter a 5-character session code to join a game,  
+or to create a new game session by generating and saving a new session ID.
 
 ---
 
-## `const handleStart = async () =>`
+### Data Fields
 
-Validates the user-entered session code by calling the backend.
-
-- **If valid:** navigates to `/GamePage`.
-- **If invalid:** clears the inputs and focuses the first input box.
-
----
-
-## `const handleCreateGame = async () =>`
-
-Sends a request to create a new session.
-
-- **If successful:** navigates to `/GamePage`.
-- **If failed:** alerts user and logs error.
+| Field          | Type                         | Description                                               |
+|----------------|------------------------------|-----------------------------------------------------------|
+| `code`         | `string[]`                   | Stores user input for each character of the session code  |
+| `inputsRef`    | `useRef<HTMLInputElement[]>` | References the input boxes                                |
+| `isValidCode`  | `boolean`                    | Shows visual feedback when code is invalid                |
 
 ---
 
-## `const handleChange = (value: string, index: number) =>`
+### WebSocket Fields
 
-Handles single-character input changes in session code inputs.
-
-- Converts input to uppercase.
-- Automatically advances focus to the next box.
-
----
-
-## `const handleKeyDown = (e, index) =>`
-
-Handles backspace key behavior in the code inputs.
-
-- Moves focus backward if current input is empty.
+| Field            | Type         | Description                                         |
+|------------------|--------------|-----------------------------------------------------|
+| `isConnected`    | `boolean`    | WebSocket connection status                         |
+| `lastMessage`    | `any`        | Most recent message received                        |
+| `sendMessage`    | `(msg) => void` | Sends message to WebSocket                         |
+| `clearLastMessage` | `() => void` | Clears the latest received message                 |
 
 ---
 
-## `const handlePaste = (e) =>`
+### `handleStart(): void`
 
-Allows user to paste the entire 5-character code.
+Attempts to join an existing game session using the entered 5-character code.
 
-- Splits characters and fills all inputs.
-- Automatically focuses the next available box.
+- **Purpose**:  
+  Validates the session with the backend. If valid, generates a user ID and navigates to the RoleSelect screen.  
+  If invalid, resets input and shows error feedback.
+
+- **Pre-condition**:  
+  Code must be exactly 5 characters.
+
+- **Post-condition**:  
+  Navigates to `/roleselect/:gameCode` with a generated `userId`.
+
+- **Error Handling**:  
+  Logs validation failure and resets inputs if the session is invalid.
 
 ---
 
-## `return (...)`
+### `handleCreateGame(): void`
 
-Renders the complete landing UI:
+Sends a request to the server to create a new game session.  
+If successful, navigates to the presenter screen with the session ID.
 
-- **Logo**
-- **Code input fields**
-- **Create Game link**
-- **Join Game button**
+- **Error Handling**:  
+  Shows an alert if not connected to the server.
+
+---
+
+### `handleChange(value: string, index: number): void`
+
+Handles user input and moves focus to the next input box.
+
+- **Parameters**:
+  - `value`: Character entered
+  - `index`: Input index in the session code
+
+---
+
+### `handleKeyDown(e: KeyboardEvent, index: number): void`
+
+Handles backspace to move focus to the previous input box.
+
+- **Parameters**:
+  - `e`: Keyboard event
+  - `index`: Index of input field
+
+---
+
+### `handlePaste(e: ClipboardEvent): void`
+
+Allows user to paste a full 5-character code.
+
+- **Behavior**:  
+  Distributes characters across input fields and focuses the next empty input.
+
+---
+
+### Return
+
+- **Returns**: `JSX.Element` — The rendered landing page UI.
+
+---
+
+### Navigation Logic
+
+- If `SESSION_VALIDATED` is received:  
+  Navigates to `/roleselect/:gameCode` with a randomly generated `userId`.
+
+- If `SESSION_CREATED` is received:  
+  Navigates to `/presenter/:sessionId`.
 
 ---
 
@@ -462,7 +574,7 @@ A **reusable styled button** component that executes a callback function when cl
 
 ---
 
-## `interface ButtonClickProps`
+### `interface ButtonClickProps`
 
 Props for the `ButtonClick` component:
 
@@ -471,7 +583,7 @@ Props for the `ButtonClick` component:
 
 ---
 
-## `function ButtonClick({ text, onClick }: ButtonClickProps): JSX.Element`
+### `function ButtonClick({ text, onClick }: ButtonClickProps): JSX.Element`
 
 Renders the button with styles and binds the click event.
 
@@ -621,3 +733,179 @@ SET EDGE SYNC WITH BACKEND
 
  ---
 
+# Presenter.tsx
+
+## Data Fields
+
+| Field            | Type                            | Purpose                                                                                  |
+| ---------------- | ------------------------------- | ---------------------------------------------------------------------------------------- |
+| `presenterBg`    | `string`                       | Path to the background image shown behind hippos and AAC device.                         |
+| `modeDetails`    | `Record<string, {label: string, iconPath: string, count: number}>` | Metadata for each game mode (label, icon, count) used in the mode selector UI.           |
+| `navigate`       | `ReturnType<typeof useNavigate>` | React Router navigation function.                                                       |
+| `sessionId`      | `string \| undefined`           | Session ID extracted from URL parameters, used for WebSocket joining and QR code.        |
+| `copied`         | `boolean`                      | State tracking if the session code was copied to clipboard (for tooltip display).        |
+| `mode`           | `'Easy' \| 'Medium' \| 'Hard'` | Currently selected game mode.                                                           |
+| `presenterId`    | `string`                       | Hardcoded userId for the Presenter client.                                              |
+| `sendMessage`    | `(msg: any) => void`           | WebSocket send function from context.                                                   |
+| `connectedUsers` | `Array<{ userId: string, role: string, color?: string }>` | List of all connected users in the session, received via WebSocket.                      |
+| `isConnected`    | `boolean`                      | Whether the WebSocket connection is currently open.                                     |
+| `modes`          | `Array<'Easy' \| 'Medium' \| 'Hard'>` | Array of game modes in cycle order.                                                    |
+| `spectatorId`    | `string`                       | User ID used when the Presenter opens a Spectator client to watch the game.             |
+| `aacCount`       | `number`                      | Number of connected AAC Users in the session.                                          |
+| `hippoPlayers`   | `Array<any>`                   | List of connected Hippo Players in the session.                                        |
+| `lobbyHippoSlots`| `Array<number>`                | Indices representing the 4 hippo slots displayed in the lobby UI.                      |
+
+---
+
+## Lifecycle & Effects
+
+### `useEffect(() => {...}, [mode])`
+- **Purpose**: Plays audio feedback corresponding to the current selected game mode.
+- **Pre-conditions**: `mode` must be one of `'Easy'`, `'Medium'`, or `'Hard'`.
+- **Returns**: void
+
+### `useEffect(() => {...}, [sessionId, isConnected, sendMessage])`
+- **Purpose**: When WebSocket connects, send a `PLAYER_JOIN` message to register as the Presenter.
+- **Pre-conditions**: `sessionId` must be valid and WebSocket must be connected.
+- **Returns**: void
+
+---
+
+## Functions
+
+### `cycleMode(direction: 'left' | 'right'): void`
+- **Purpose**: Changes the current game mode by cycling left (previous) or right (next).
+- **Parameters**: `'left'` or `'right'`
+- **Returns**: void
+
+### `playModeAudio(selectedMode: 'Easy' | 'Medium' | 'Hard'): void`
+- **Purpose**: Plays the audio file associated with the given game mode.
+- **Parameters**: `selectedMode` - The mode to play audio for.
+- **Returns**: void
+
+### `handleCancel(): void`
+- **Purpose**: Navigates back to the landing page when the cancel button is clicked.
+- **Returns**: void
+
+### `handleCopy(): void`
+- **Purpose**: Copies the current session ID to the clipboard and shows a tooltip.
+- **Returns**: void
+
+### `handleStartGame(): void`
+- **Purpose**: Sends messages to start the game and opens a Spectator client, then navigates there.
+- **Pre-conditions**: `sessionId` must be valid; at least 1 Hippo and 1 AAC user connected.
+- **Returns**: void
+
+### `renderHippoSlot(player: any, index: number): JSX.Element`
+- **Purpose**: Renders a UI slot for a hippo player, including colored hippo images if occupied.
+- **Parameters**:
+  - `player` - User occupying the slot or undefined.
+  - `index` - Slot index (0-3).
+- **Returns**: JSX element representing the hippo slot.
+
+---
+
+## Validation
+
+- If `sessionId` is missing or invalid (less than 5 characters), the component redirects to the landing page (`/`).
+
+---
+
+# RoleSelect.tsx
+
+## Data Fields
+
+| Field               | Type                              | Purpose                                                                                      |
+| ------------------- | --------------------------------- | -------------------------------------------------------------------------------------------- |
+| `navigate`          | `ReturnType<typeof useNavigate>`   | React Router navigation function.                                                           |
+| `sessionId`         | `string \| undefined`              | Session ID from route parameters.                                                           |
+| `location`          | `ReturnType<typeof useLocation>`   | React Router location object; used to get passed userId state.                              |
+| `role`              | `string`                         | Current selected role (`'Hippo Player'`, `'AAC User'`, or empty string).                    |
+| `selectedColor`     | `string \| null`                  | Selected hippo color for Hippo Player role.                                                |
+| `username`          | `string`                         | Randomly generated user ID or passed userId from location state.                            |
+| `waiting`           | `boolean`                        | Whether the user clicked "Next" and is waiting for the game to start.                       |
+| `connectedUsers`    | `Array<{ userId: string, role: string, color?: string }>` | List of all connected users in the session.                                                |
+| `gameStarted`       | `boolean`                        | Whether the game has started (from WebSocket context).                                      |
+| `sendMessage`       | `(msg: any) => void`              | WebSocket send function.                                                                    |
+| `isConnected`       | `boolean`                        | WebSocket connection status.                                                                |
+| `takenColors`       | `string[]`                      | Hippo colors currently taken by connected Hippo Players.                                   |
+| `hippoPlayersCount` | `number`                        | Number of connected Hippo Players.                                                         |
+| `aacUsersCount`     | `number`                        | Number of connected AAC Users.                                                             |
+| `isHippoRoleFull`   | `boolean`                       | True if Hippo Player role is full (4 players).                                             |
+| `isAacRoleFull`     | `boolean`                       | True if AAC User role is full (1 user).                                                    |
+
+---
+
+## Lifecycle & Effects
+
+### `useEffect(() => {...}, [gameStarted, waiting, role, selectedColor, sessionId, username, navigate])`
+- **Purpose**: Navigates to the appropriate game screen once the game has started and user clicked "Next".
+- **Pre-conditions**: `waiting` must be true (after "Next" clicked), and `gameStarted` must become true.
+- **Returns**: void
+
+### `useEffect(() => {...}, [sessionId, username, isConnected, sendMessage])`
+- **Purpose**: Sends initial `PLAYER_JOIN` with role `"pending"` to WebSocket on mount.
+- **Pre-conditions**: `sessionId` and `username` must be defined; WebSocket must be connected.
+- **Returns**: void
+
+### `useEffect(() => {...}, [connectedUsers])`
+- **Purpose**: Tracks which hippo colors are taken by filtering connected Hippo Players.
+- **Returns**: void
+
+### `useEffect(() => {...}, [connectedUsers, role, isAacRoleFull])`
+- **Purpose**: Resets role if AAC User role is full and current role is AAC User.
+- **Returns**: void
+
+---
+
+## Functions
+
+### `handleStart(): void`
+- **Purpose**: Validates selection and sends `PLAYER_JOIN` with chosen role and color; sets waiting state.
+- **Pre-conditions**: Role must be selected; Hippo Player requires a color.
+- **Returns**: void
+
+### `handleRoleSelect(selectedRole: string): void`
+- **Purpose**: Handles switching roles, releasing color if switching from Hippo Player.
+- **Parameters**: `selectedRole` - the new selected role string.
+- **Returns**: void
+
+### `handleColorSelect(color: string): void`
+- **Purpose**: Sets selected color and sends `SELECT_COLOR` WebSocket message.
+- **Parameters**: `color` - hippo color string.
+- **Returns**: void
+
+### `handleCancel(): void`
+- **Purpose**: Navigates back to the landing page on cancel.
+- **Returns**: void
+
+---
+
+## Validation
+
+- Requires valid `sessionId`.
+- Generates a random username if none provided from location state.
+
+---
+
+# Victory.tsx
+
+## Data Fields
+
+| Field         | Type                            | Purpose                                                        |
+| ------------- | ------------------------------- | -------------------------------------------------------------- |
+| `location`    | `ReturnType<typeof useLocation>` | React Router location object, used to access passed state data.|
+| `scores`      | `Record<string, number>`         | Player scores extracted from `location.state`. Defaults to `{}`.|
+| `navigate`    | `ReturnType<typeof useNavigate>` | React Router navigation function.                              |
+| `colors`      | `Record<string, string>`         | Maps player IDs to their hippo colors from `location.state`.  |
+| `sortedPlayers`| `[string, number][]`             | Array of `[playerId, score]` tuples sorted descending by score.|
+
+---
+
+## Functions
+
+### `handleCancel(): void`
+- **Purpose**: Navigates the user back to the home page when cancel button is clicked.
+- **Returns**: void
+
+---
