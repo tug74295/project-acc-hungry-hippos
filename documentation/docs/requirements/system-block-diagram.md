@@ -50,7 +50,7 @@ classDiagram
 
 **Figure 1**. High level design of the AAC Hungry Hippos application.
 
-# Description
+## Description
 
 Our project is built with a modern, real-time architecture. The frontend, constructed with React and Phaser, is hosted on Vercel. This client-side application is responsible for rendering all user interfaces, including the game lobby, the AAC device, and the Phaser game canvas itself.
 

@@ -5,7 +5,7 @@ description: Frontend API
 
 # Frontend API
 
-# AACInterface.tsx
+## AACInterface.tsx
 
 ### `AacInterfaceProps`
 Defines the props for the AacInterface component.
@@ -103,7 +103,7 @@ Renders the main AAC interface, including the selected food and category views.
 
 - **Returns:** `JSX.Element` — The rendered AAC interface.
 
-# AacPage.tsx
+## AacPage.tsx
 
 Renders the AAC (Augmentative and Alternative Communication) interface for selecting food items within a specific game session.
 
@@ -117,7 +117,7 @@ Renders the AAC (Augmentative and Alternative Communication) interface for selec
 
 ---
 
-## Route Parameters
+### Route Parameters
 
 | Param      | Type     | Description                                          | Example       |
 |------------|----------|------------------------------------------------------|---------------|
@@ -127,7 +127,7 @@ Renders the AAC (Augmentative and Alternative Communication) interface for selec
 
 ---
 
-## WebSocket Integration
+### WebSocket Integration
 
 The component uses `useWebSocket` to access:
 
@@ -136,7 +136,7 @@ The component uses `useWebSocket` to access:
 
 ---
 
-## EventBus Integration
+### EventBus Integration
 
 The component listens to the following event:
 
@@ -148,30 +148,30 @@ The component listens to the following event:
     return () => EventBus.off('scoreUpdate', handleScoreUpdate);
   }, []);
 
-# Foods.ts
+## Foods.ts
 
-## `export interface AacFood`
+#### `export interface AacFood`
 
 Defines the structure for a single food item in the AAC system.
 
-## `export interface AacCategory`
+#### `export interface AacCategory`
 
 Defines the structure for a food category in the AAC system.
 
-## `export interface AacData`
+#### `export interface AacData`
 
 Defines the structure for the entire AAC data, which includes multiple categories.
 
-## `export const AAC_DATA: AacData = aacData as AacData`
+#### `export const AAC_DATA: AacData = aacData as AacData`
 
 Exports the AAC data, which includes categories and their respective foods. This data is imported from a JSON file.
 
 
-# Game.ts
+## Game.ts
 
-## `class: Game extends Phaser.Scene`
+### `class: Game extends Phaser.Scene`
 
-## Data Fields
+### Data Fields
 
 | Field                     | Type                                     | Purpose                                         |
 | ------------------------- | ---------------------------------------- | ----------------------------------------------- |
@@ -197,16 +197,16 @@ Exports the AAC data, which includes categories and their respective foods. This
 | `swipeHint`               | `Phaser.GameObjects.Image \| undefined`  | Swipe hint image                                |
 | `timerText`               | `Phaser.GameObjects.Text`                | Countdown timer UI                              |
 
-## Methods
+### Methods
 
-### `constructor()`
+#### `constructor()`
 -   **Purpose**: Initializes the Phaser scene with ID `"Game"`.
 -   **Pre-conditions**: None
 -   **Post-conditions**: Scene is registered with the Phaser runtime.
 -   **Returns**: `Game` instance
 -   **Exceptions**: None
 
-### `init(data)`
+#### `init(data)`
 -   **Purpose**: Initializes the scene with player/session/game mode info.
 -   **Parameters**:
     -   `data: { sendMessage, localPlayerId, sessionId, role, connectedUsers?, modeSettings? }`
@@ -215,21 +215,21 @@ Exports the AAC data, which includes categories and their respective foods. This
 -   **Returns**: void
 -   **Exceptions**: None
 
-### `preload()`
+#### `preload()`
 -   **Purpose**: Loads images and assets into memory.
 -   **Pre-conditions**: None
 -   **Post-conditions**: Images available to use in scene.
 -   **Returns**: void
 -   **Exceptions**: None
 
-### `create()`
+#### `create()`
 -   **Purpose**: Builds the game world, sets up input and listeners.
 -   **Pre-conditions**: `preload()` must have been called.
 -   **Post-conditions**: Scene is active.
 -   **Returns**: void
 -   **Exceptions**: None
 
-### `update()`
+#### `update()`
 -   **Purpose**: Handles input, movement, and syncs positions.
 -   **Pre-conditions**: `create()` must have been called.
 -   **Post-conditions**: Scene reflects latest state each frame.
@@ -239,17 +239,16 @@ Exports the AAC data, which includes categories and their respective foods. This
 
 * * * * *
 
-Gameplay Methods
-----------------
+### Gameplay Methods
 
-### `addPlayer(playerId: string, color?: string)`
+#### `addPlayer(playerId: string, color?: string)`
 -   **Purpose**: Adds a new hippo to the scene at an available edge.
 -   **Pre-conditions**: `connectedUsers` passed to `init()`
 -   **Post-conditions**: Hippo sprite is visible and tracked
 -   **Returns**: void
 -   **Exceptions**: None
 
-### `getEdgeCursors(edge, cursors)`
+#### `getEdgeCursors(edge, cursors)`
 -   **Purpose**: Remaps arrow keys to match orientation of assigned edge.
 -   **Parameters**:
     -   `edge: Edge` -- assigned side of screen
@@ -257,7 +256,7 @@ Gameplay Methods
 -   **Returns**: Remapped `CursorKeys` object
 -   **Exceptions**: None
 
-### `handlePointer(pointer)`
+#### `handlePointer(pointer)`
 -   **Purpose**: Updates hippo position based on touch/mouse drag.
 -   **Parameters**:
     -   `pointer: Phaser.Input.Pointer`
@@ -268,17 +267,16 @@ Gameplay Methods
 
 * * * * *
 
-WebSocket Interaction
----------------------
+### WebSocket Interaction
 
-### `requestStartTimer()`
+#### `requestStartTimer()`
 -   **Purpose**: Sends `"START_TIMER"` message to backend
 -   **Pre-conditions**: Scene must be active
 -   **Post-conditions**: Backend starts countdown
 -   **Returns**: void
 -   **Exceptions**: None
 
-### `applyModeSettings(settings)`
+#### `applyModeSettings(settings)`
 -   **Purpose**: Updates game difficulty rules
 -   **Parameters**: `settings: ModeSettings`
 -   **Pre-conditions**: Called before game starts
@@ -287,10 +285,9 @@ WebSocket Interaction
 
 * * * * *
 
-EventBus Integration
---------------------
+### EventBus Integration
 
-### `applyEffectToPlayer(userId, effect)`
+#### `applyEffectToPlayer(userId, effect)`
 -   **Purpose**: Applies freeze, grow, burn effect with tint to a hippo
 -   **Parameters**:
     -   `userId: string`
@@ -300,7 +297,7 @@ EventBus Integration
 -   **Returns**: void
 -   **Exceptions**: None
 
-### `handleFruitCollision(playerId, fruit)`
+#### `handleFruitCollision(playerId, fruit)`
 -   **Purpose**: Triggered when a hippo touches fruit
 -   **Parameters**:
     -   `playerId: string`
@@ -317,10 +314,9 @@ EventBus Integration
 
 * * * * *
 
-Food Management
----------------
+### Food Management
 
-### `setTargetFood(foodId, effect?)`
+#### `setTargetFood(foodId, effect?)`
 -   **Purpose**: Marks a fruit as the AAC target.
 -   **Parameters**:
     -   `foodId: string`
@@ -328,14 +324,14 @@ Food Management
 -   **Returns**: void
 -   **Exceptions**: None
 
-### `removeFoodByInstanceId(instanceId)`
+#### `removeFoodByInstanceId(instanceId)`
 -   **Purpose**: Deletes a fruit from the screen.
 -   **Parameters**:
     -   `instanceId: string`
 -   **Returns**: void
 -   **Exceptions**: None
 
-### `syncFoodState(serverFoods)`
+#### `syncFoodState(serverFoods)`
 -   **Purpose**: Matches client-side fruits to server state
 -   **Parameters**:
     -   `serverFoods: FoodState[]`
@@ -345,36 +341,33 @@ Food Management
 
 * * * * *
 
-Timer
-----------
+### Timer
 
-### `updateTimerUI(secondsLeft)`
+#### `updateTimerUI(secondsLeft)`
 -   **Purpose**: Changes on-screen timer text.
 -   **Parameters**: `secondsLeft: number`
 -   **Returns**: void
 -   **Exceptions**: None
 
-### `handleGameOver()`
+#### `handleGameOver()`
 -   **Purpose**: Stops game and displays "Game Over" overlay
 -   **Returns**: void
 -   **Exceptions**: None
 
 * * * * *
 
-Utility
--------
+### Utility
 
-### `getEdgeAssignments()`
+#### `getEdgeAssignments()`
 -   **Purpose**: Returns mapping of players to their screen edges
 -   **Returns**: `Record<string, string>`
 -   **Exceptions**: None
 
 
 
-# PhaserGame.tsx
+## PhaserGame.tsx
 
-Overview
-------------------
+### Overview
 
 This is a React component that:
 -   Mounts and manages a Phaser game instance
@@ -389,8 +382,7 @@ This is a React component that:
 
 * * * * *
 
-**Ref Type: `IRefPhaserGame`**
-------------------------------
+### **Ref Type: `IRefPhaserGame`**
 
 This is the object passed back to the parent through the forwarded `ref`.
 | Field   | Type                   | Purpose                                                   |
@@ -401,15 +393,14 @@ This is the object passed back to the parent through the forwarded `ref`.
 
 * * * * *
 
-**Local State (Inside Component)**
-----------------------------------
+### **Local State (Inside Component)**
 
 | Field  | Type                                   | Purpose                                                                                               |
 | ------ | -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `game` | `React.RefObject<Phaser.Game \| null>` | Mutable reference to the Phaser game instance that doesn't change value when the component re-renders |
 | `ref`  | `React.ForwardedRef<IRefPhaserGame>`   | Exposes `{ game, scene }` to parent via `ref.current` or callback                                     |
 
-### `useLayoutEffect()`
+#### `useLayoutEffect()`
 - **Purpose**: Creates the Phaser game instance on mount and destroys it on unmount.
 - **Parameters**: None directly (hook-based).
 - **Pre-conditions**:
@@ -425,7 +416,7 @@ This is the object passed back to the parent through the forwarded `ref`.
 
 * * * * *
 
-### `useEffect()`
+#### `useEffect()`
 - **Purpose**: Waits for `'current-scene-ready'` from the Phaser game and:
     -   Injects AAC food keys into the scene
     -   Calls `currentActiveScene(scene)` if provided
@@ -445,7 +436,7 @@ This is the object passed back to the parent through the forwarded `ref`.
 
 * * * * *
 
-### `return ( <div id="game-container" /> )`
+#### `return ( <div id="game-container" /> )`
 - **Purpose**: Renders a DOM element into which the Phaser game will mount its canvas.
 - **Pre-conditions**: Used by `StartGame("game-container")`.
 - **Post-conditions**: Phaser canvas is injected into this `div`.
@@ -455,7 +446,7 @@ This is the object passed back to the parent through the forwarded `ref`.
 
 ---
 
-# LandingPage.tsx
+## LandingPage.tsx
 
 ### Overview
 
@@ -486,7 +477,7 @@ or to create a new game session by generating and saving a new session ID.
 
 ---
 
-### `handleStart(): void`
+#### `handleStart(): void`
 
 Attempts to join an existing game session using the entered 5-character code.
 
@@ -505,7 +496,7 @@ Attempts to join an existing game session using the entered 5-character code.
 
 ---
 
-### `handleCreateGame(): void`
+#### `handleCreateGame(): void`
 
 Sends a request to the server to create a new game session.  
 If successful, navigates to the presenter screen with the session ID.
@@ -515,7 +506,7 @@ If successful, navigates to the presenter screen with the session ID.
 
 ---
 
-### `handleChange(value: string, index: number): void`
+#### `handleChange(value: string, index: number): void`
 
 Handles user input and moves focus to the next input box.
 
@@ -525,7 +516,7 @@ Handles user input and moves focus to the next input box.
 
 ---
 
-### `handleKeyDown(e: KeyboardEvent, index: number): void`
+#### `handleKeyDown(e: KeyboardEvent, index: number): void`
 
 Handles backspace to move focus to the previous input box.
 
@@ -535,7 +526,7 @@ Handles backspace to move focus to the previous input box.
 
 ---
 
-### `handlePaste(e: ClipboardEvent): void`
+#### `handlePaste(e: ClipboardEvent): void`
 
 Allows user to paste a full 5-character code.
 
@@ -544,7 +535,7 @@ Allows user to paste a full 5-character code.
 
 ---
 
-### Return
+#### Return
 
 - **Returns**: `JSX.Element` — The rendered landing page UI.
 
@@ -560,13 +551,13 @@ Allows user to paste a full 5-character code.
 
 ---
 
-# ButtonClick.tsx
+## ButtonClick.tsx
 
-## `ButtonClick` Component
+### `ButtonClick` Component
 
 A **reusable styled button** component that executes a callback function when clicked.
 
-### Usage
+#### Usage
 
 ```tsx
 <ButtonClick text="Join Game" onClick={handleStart} />
@@ -574,7 +565,7 @@ A **reusable styled button** component that executes a callback function when cl
 
 ---
 
-### `interface ButtonClickProps`
+#### `interface ButtonClickProps`
 
 Props for the `ButtonClick` component:
 
@@ -583,7 +574,7 @@ Props for the `ButtonClick` component:
 
 ---
 
-### `function ButtonClick({ text, onClick }: ButtonClickProps): JSX.Element`
+#### `function ButtonClick({ text, onClick }: ButtonClickProps): JSX.Element`
 
 Renders the button with styles and binds the click event.
 
@@ -596,9 +587,9 @@ Renders the button with styles and binds the click event.
 
 ---
 
-# PhaserPage.tsx
+## PhaserPage.tsx
 
-## Data Fields
+### Data Fields
 | Field              | Type                                      | Purpose                                                                               |
 | ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------- |
 | `currentFood`      | `AacFood \| null`                         | The current food the AAC user has selected as the target.                             |
@@ -619,10 +610,9 @@ Renders the button with styles and binds the click event.
 
 * * * * *
 
-JOIN on MOUNT
-----------
+### JOIN on MOUNT
 
-### `useEffect(() => {...}, [sessionId, userId, role])`
+#### `useEffect(() => {...}, [sessionId, userId, role])`
 -   **Purpose**: Joins the WebSocket session when the component mounts.
 -   **Parameters**: None directly.
 -   **Pre-conditions**: Requires valid `sessionId`, `userId`, and `role`.
@@ -631,10 +621,9 @@ JOIN on MOUNT
 
 * * * * *
 
-REMOTE PLAYER MOVEMENT SYNC
-----------
+### REMOTE PLAYER MOVEMENT SYNC
 
-### `useEffect(() => {...}, [lastMessage, userId, clearLastMessage])`
+#### `useEffect(() => {...}, [lastMessage, userId, clearLastMessage])`
 -   **Purpose**: Updates remote player movement when a `PLAYER_MOVE_BROADCAST` is received.
 -   **Parameters**:
     -   `lastMessage`: contains the payload with `userId`, `x`, `y`.
@@ -644,10 +633,9 @@ REMOTE PLAYER MOVEMENT SYNC
 
 * * * * *
 
-GAME MODE BROADCAST
-----------
+### GAME MODE BROADCAST
 
-### `useEffect(() => {...}, [lastMessage, clearLastMessage])`
+#### `useEffect(() => {...}, [lastMessage, clearLastMessage])`
 -   **Purpose**: Applies game mode settings when `START_GAME_BROADCAST` is received.
 -   **Parameters**:
     -   `lastMessage.payload.mode: GameMode`
@@ -657,10 +645,9 @@ GAME MODE BROADCAST
 
 * * * * *
 
-FOOD STATE SYNC
-----------
+### FOOD STATE SYNC
 
-### `useEffect(() => {...}, [lastMessage, clearLastMessage])`
+#### `useEffect(() => {...}, [lastMessage, clearLastMessage])`
 -   **Purpose**: Handles multiple WebSocket message types:
     -   `FOOD_STATE_UPDATE`: syncs food state via `EventBus`.
     -   `AAC_TARGET_FOOD`: sets the target food in the scene and sidebar.
@@ -673,10 +660,9 @@ FOOD STATE SYNC
 
 * * * * *
 
-FRUIT EATEN LOCAL (EMITTED FROM PHASER)
-----------
+### FRUIT EATEN LOCAL (EMITTED FROM PHASER)
 
-### `useEffect(() => {...}, [sendMessage, sessionId])`
+#### `useEffect(() => {...}, [sendMessage, sessionId])`
 -   **Purpose**: Emits `FRUIT_EATEN` to backend when triggered by the Phaser scene.
 -   **Parameters**: `instanceId` from `EventBus`.
 -   **Pre-conditions**: Requires `sessionId` and `sendMessage`.
@@ -685,10 +671,9 @@ FRUIT EATEN LOCAL (EMITTED FROM PHASER)
 
 * * * * *
 
-SCORE UPDATE BROADCAST (EVENTBUS)
-----------
+### SCORE UPDATE BROADCAST (EVENTBUS)
 
-### `useEffect(() => {...}, [])`
+#### `useEffect(() => {...}, [])`
 -   **Purpose**: Updates the local scoreboard when `scoreUpdate` is emitted from `EventBus`.
 -   **Parameters**: `{ scores }`
 -   **Pre-conditions**: None
@@ -697,10 +682,9 @@ SCORE UPDATE BROADCAST (EVENTBUS)
 
 * * * * *
 
-TIMER UPDATE BROADCAST (EVENTBUS)
-----------
+### TIMER UPDATE BROADCAST (EVENTBUS)
 
-### `useEffect(() => {...}, [])`
+#### `useEffect(() => {...}, [])`
 -   **Purpose**: Updates the timer when `TIMER_UPDATE` is emitted from `EventBus`.
 -   **Parameters**: `time: number`
 -   **Pre-conditions**: Timer must be active
@@ -709,10 +693,9 @@ TIMER UPDATE BROADCAST (EVENTBUS)
 
 * * * * *
 
-GAME OVER → VICTORY NAVIGATION
-----------
+### GAME OVER → VICTORY NAVIGATION
 
-### `useEffect(() => {...}, [navigate, sessionId, scores, connectedUsers])`
+#### `useEffect(() => {...}, [navigate, sessionId, scores, connectedUsers])`
 -   **Purpose**: Navigates to the Victory page when `gameOver` is emitted.
 -   **Parameters**: none
 -   **Pre-conditions**: `sessionId` must exist
@@ -721,10 +704,9 @@ GAME OVER → VICTORY NAVIGATION
 
 * * * * *
 
-SET EDGE SYNC WITH BACKEND
-----------
+### SET EDGE SYNC WITH BACKEND
 
-### `useEffect(() => {...}, [sendMessage, sessionId, userId, location.state?.role])`
+#### `useEffect(() => {...}, [sendMessage, sessionId, userId, location.state?.role])`
 -   **Purpose**: Sends `SET_EDGE` to backend after `edges-ready` is emitted from the scene.
 -   **Parameters**: `{ sessionId, userId, edge }`
 -   **Pre-conditions**: User must not be a Spectator, and edge must be known.
@@ -733,9 +715,9 @@ SET EDGE SYNC WITH BACKEND
 
  ---
 
-# Presenter.tsx
+## Presenter.tsx
 
-## Data Fields
+### Data Fields
 
 | Field            | Type                            | Purpose                                                                                  |
 | ---------------- | ------------------------------- | ---------------------------------------------------------------------------------------- |
@@ -757,46 +739,46 @@ SET EDGE SYNC WITH BACKEND
 
 ---
 
-## Lifecycle & Effects
+### Lifecycle & Effects
 
-### `useEffect(() => {...}, [mode])`
+#### `useEffect(() => {...}, [mode])`
 - **Purpose**: Plays audio feedback corresponding to the current selected game mode.
 - **Pre-conditions**: `mode` must be one of `'Easy'`, `'Medium'`, or `'Hard'`.
 - **Returns**: void
 
-### `useEffect(() => {...}, [sessionId, isConnected, sendMessage])`
+#### `useEffect(() => {...}, [sessionId, isConnected, sendMessage])`
 - **Purpose**: When WebSocket connects, send a `PLAYER_JOIN` message to register as the Presenter.
 - **Pre-conditions**: `sessionId` must be valid and WebSocket must be connected.
 - **Returns**: void
 
 ---
 
-## Functions
+### Functions
 
-### `cycleMode(direction: 'left' | 'right'): void`
+#### `cycleMode(direction: 'left' | 'right'): void`
 - **Purpose**: Changes the current game mode by cycling left (previous) or right (next).
 - **Parameters**: `'left'` or `'right'`
 - **Returns**: void
 
-### `playModeAudio(selectedMode: 'Easy' | 'Medium' | 'Hard'): void`
+#### `playModeAudio(selectedMode: 'Easy' | 'Medium' | 'Hard'): void`
 - **Purpose**: Plays the audio file associated with the given game mode.
 - **Parameters**: `selectedMode` - The mode to play audio for.
 - **Returns**: void
 
-### `handleCancel(): void`
+#### `handleCancel(): void`
 - **Purpose**: Navigates back to the landing page when the cancel button is clicked.
 - **Returns**: void
 
-### `handleCopy(): void`
+#### `handleCopy(): void`
 - **Purpose**: Copies the current session ID to the clipboard and shows a tooltip.
 - **Returns**: void
 
-### `handleStartGame(): void`
+#### `handleStartGame(): void`
 - **Purpose**: Sends messages to start the game and opens a Spectator client, then navigates there.
 - **Pre-conditions**: `sessionId` must be valid; at least 1 Hippo and 1 AAC user connected.
 - **Returns**: void
 
-### `renderHippoSlot(player: any, index: number): JSX.Element`
+#### `renderHippoSlot(player: any, index: number): JSX.Element`
 - **Purpose**: Renders a UI slot for a hippo player, including colored hippo images if occupied.
 - **Parameters**:
   - `player` - User occupying the slot or undefined.
@@ -805,15 +787,15 @@ SET EDGE SYNC WITH BACKEND
 
 ---
 
-## Validation
+### Validation
 
 - If `sessionId` is missing or invalid (less than 5 characters), the component redirects to the landing page (`/`).
 
 ---
 
-# RoleSelect.tsx
+## RoleSelect.tsx
 
-## Data Fields
+### Data Fields
 
 | Field               | Type                              | Purpose                                                                                      |
 | ------------------- | --------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -836,61 +818,61 @@ SET EDGE SYNC WITH BACKEND
 
 ---
 
-## Lifecycle & Effects
+### Lifecycle & Effects
 
-### `useEffect(() => {...}, [gameStarted, waiting, role, selectedColor, sessionId, username, navigate])`
+#### `useEffect(() => {...}, [gameStarted, waiting, role, selectedColor, sessionId, username, navigate])`
 - **Purpose**: Navigates to the appropriate game screen once the game has started and user clicked "Next".
 - **Pre-conditions**: `waiting` must be true (after "Next" clicked), and `gameStarted` must become true.
 - **Returns**: void
 
-### `useEffect(() => {...}, [sessionId, username, isConnected, sendMessage])`
+#### `useEffect(() => {...}, [sessionId, username, isConnected, sendMessage])`
 - **Purpose**: Sends initial `PLAYER_JOIN` with role `"pending"` to WebSocket on mount.
 - **Pre-conditions**: `sessionId` and `username` must be defined; WebSocket must be connected.
 - **Returns**: void
 
-### `useEffect(() => {...}, [connectedUsers])`
+#### `useEffect(() => {...}, [connectedUsers])`
 - **Purpose**: Tracks which hippo colors are taken by filtering connected Hippo Players.
 - **Returns**: void
 
-### `useEffect(() => {...}, [connectedUsers, role, isAacRoleFull])`
+#### `useEffect(() => {...}, [connectedUsers, role, isAacRoleFull])`
 - **Purpose**: Resets role if AAC User role is full and current role is AAC User.
 - **Returns**: void
 
 ---
 
-## Functions
+### Functions
 
-### `handleStart(): void`
+#### `handleStart(): void`
 - **Purpose**: Validates selection and sends `PLAYER_JOIN` with chosen role and color; sets waiting state.
 - **Pre-conditions**: Role must be selected; Hippo Player requires a color.
 - **Returns**: void
 
-### `handleRoleSelect(selectedRole: string): void`
+#### `handleRoleSelect(selectedRole: string): void`
 - **Purpose**: Handles switching roles, releasing color if switching from Hippo Player.
 - **Parameters**: `selectedRole` - the new selected role string.
 - **Returns**: void
 
-### `handleColorSelect(color: string): void`
+#### `handleColorSelect(color: string): void`
 - **Purpose**: Sets selected color and sends `SELECT_COLOR` WebSocket message.
 - **Parameters**: `color` - hippo color string.
 - **Returns**: void
 
-### `handleCancel(): void`
+#### `handleCancel(): void`
 - **Purpose**: Navigates back to the landing page on cancel.
 - **Returns**: void
 
 ---
 
-## Validation
+### Validation
 
 - Requires valid `sessionId`.
 - Generates a random username if none provided from location state.
 
 ---
 
-# Victory.tsx
+## Victory.tsx
 
-## Data Fields
+### Data Fields
 
 | Field         | Type                            | Purpose                                                        |
 | ------------- | ------------------------------- | -------------------------------------------------------------- |
@@ -902,9 +884,9 @@ SET EDGE SYNC WITH BACKEND
 
 ---
 
-## Functions
+### Functions
 
-### `handleCancel(): void`
+#### `handleCancel(): void`
 - **Purpose**: Navigates the user back to the home page when cancel button is clicked.
 - **Returns**: void
 
