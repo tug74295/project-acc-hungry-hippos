@@ -653,8 +653,8 @@ wss.on('connection', (ws) => {
 
     // If the role is Presenter and the game hasn't started, broadcast SESSION_CLOSED
     if (userId === 'presenter' && sessions[sessionId] && !sessions[sessionId].gameStarted) {
-      console.log(`[WSS] Presenter for session ${sessionId} disconnected. Starting 5s reconnect timer...`);
-      reconnectionTimers[sessionId] = setTimeout(() => {
+      console.log(`[WSS] Presenter for session ${sessionId} disconnected. Starting 10s reconnect timer...`);
+      reconnectionTimers[sessionId] = setTimeout(async () => {
 
         // Before closing, double-check if the presenter has rejoined.
         const sessionClients = sessions[sessionId] ? Array.from(sessions[sessionId]) : [];
@@ -665,11 +665,20 @@ wss.on('connection', (ws) => {
           broadcast(sessionId, { type: 'SESSION_CLOSED' });
           cleanupSession(sessionId);
           delete sessions[sessionId];
+
+          if (IS_PROD) {
+            try {
+              await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
+              console.log(`[WSS] Deleted timed-out session ${sessionId} from database.`);
+            } catch (err) {
+              console.error(`[WSS] Error deleting timed-out session ${sessionId} from DB:`, err);
+            }
+          }
         } else {
           console.log(`[WSS] Reconnect timer for ${sessionId} fired, but presenter has returned. Aborting closure.`);
         }
         delete reconnectionTimers[sessionId];
-      }, 5000);
+      }, 10000);
     }
 
     // Remove the client from the ws
