@@ -105,6 +105,7 @@ const setupDatabase = async () => {
     `);
     // Create a table to store session data
     await client.query(`
+      DROP TABLE IF EXISTS game_statistics;
       CREATE TABLE IF NOT EXISTS game_statistics (
         id INT PRIMARY KEY DEFAULT 1,
         total_sessions_played INT DEFAULT 0,
@@ -255,12 +256,6 @@ wss.on('connection', (ws) => {
             await pool.query(`
               INSERT INTO players (session_id, user_id, role) VALUES ($1, $2, $3)
               ON CONFLICT (session_id, user_id) DO UPDATE SET role = EXCLUDED.role`, [sessionId, userId, role]);
-
-            if (role === 'Hippo Player') {
-                await pool.query('UPDATE game_statistics SET total_hippo_players = total_hippo_players + 1, last_updated = NOW() WHERE id = 1');
-            } else if (role === 'AAC User') {
-                await pool.query('UPDATE game_statistics SET total_aac_users = total_aac_users + 1, last_updated = NOW() WHERE id = 1');
-            }
           } catch (err) {
             console.error('Error adding player to database:', err);
           }
@@ -307,16 +302,26 @@ wss.on('connection', (ws) => {
         if (IS_PROD) {
           try {
             await pool.query(
-                "DELETE FROM players WHERE session_id = $1 AND role = 'Presenter'",
-                [sessionId]
+              "DELETE FROM players WHERE session_id = $1 AND role = 'Presenter'",
+              [sessionId]
             );
             await pool.query(
-            `UPDATE game_statistics SET mode_counts = jsonb_set(
+              `UPDATE game_statistics SET mode_counts = jsonb_set(
               mode_counts,
               '{${mode}}',
               (COALESCE(mode_counts->>'${mode}', '0')::int + 1)::text::jsonb
             ) WHERE id = 1`
           );
+            if (hippoCount > 0 || aacCount > 0) {
+              await pool.query(
+                `UPDATE game_statistics SET 
+                  total_hippo_players = total_hippo_players + $1, 
+                  total_aac_users = total_aac_users + $2,
+                  last_updated = NOW()
+                WHERE id = 1`,
+                [hippoCount, aacCount]
+              );
+            }
             console.log(`[WSS] Cleaned up 'Presenter' role for session ${sessionId}.`);
           } catch (err) {
               console.error('[WSS] Error cleaning up presenter role:', err);
