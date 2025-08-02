@@ -130,7 +130,7 @@ const setupDatabase = async () => {
   }
 }
 
-// Function to get a weighted random food item from the list
+// Function to get a weighted random food item from the lis
 // This function will give more weight to the target food, making it more likely to be selected
 function getWeightedRandomFood(allFoods, targetId) {
   const weightedList = [];
