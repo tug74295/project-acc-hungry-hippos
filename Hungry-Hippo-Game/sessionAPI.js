@@ -301,7 +301,7 @@ wss.on('connection', (ws) => {
             `UPDATE game_statistics SET mode_counts = jsonb_set(
               mode_counts,
               '{${mode}}',
-              (COALESCE(mode_counts->>'${mode}', ''0'')::int + 1)::text::jsonb
+              (COALESCE(mode_counts->>'${mode}', '0')::int + 1)::text::jsonb
             ) WHERE id = 1`
           );
         }
