@@ -36,7 +36,12 @@ function LandingPage() {
   /** Boolean flag to indicate if entered code is valid or not */
   const [isValidCode, setIsValidCode] = useState(true);
 
-  const { isConnected, lastMessage, sendMessage, clearLastMessage } = useWebSocket();
+  const { isConnected, lastMessage, sendMessage, clearLastMessage, resetGameState } = useWebSocket();
+
+  // Reset game state when component mounts
+  useEffect(() => {
+    resetGameState();
+  }, [resetGameState]);
 
   useEffect(() => {
     if (lastMessage) {

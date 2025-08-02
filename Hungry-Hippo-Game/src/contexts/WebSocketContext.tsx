@@ -190,7 +190,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Method to reset game state
   const resetGameState = useCallback(() => {
-    console.log('[WS_CONTEXT] Resetting game state (gameStarted: false)');
     setGameStarted(false);
   }, []);
 
