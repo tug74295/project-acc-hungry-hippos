@@ -111,25 +111,6 @@ const setupDatabase = async () => {
   }
 }
 
-const purgeDatabase = async () => {
-  if (!IS_PROD) {
-    console.log('Skipping database purge in local development.');
-    return;
-  }
-  const client = await pool.connect();
-  try {
-    console.log('PURGING ALL DATABASE DATA...');
-    // TRUNCATE is faster than DELETE and resets primary key counters.
-    // CASCADE is needed because players has a foreign key reference to sessions.
-    await client.query('TRUNCATE TABLE sessions, players CASCADE;');
-    console.log('DATABASE PURGE COMPLETE.');
-  } catch (err) {
-    console.error('Error purging database:', err);
-  } finally {
-    client.release();
-  }
-};
-
 // Function to get a weighted random food item from the list
 // This function will give more weight to the target food, making it more likely to be selected
 function getWeightedRandomFood(allFoods, targetId) {
@@ -453,19 +434,25 @@ wss.on('connection', (ws) => {
         let secondsLeft = 180;
         //console.log('[WSS] SECONDSLEFT INIT:', secondsLeft); 
         const interval = setInterval(() => {
-          if(secondsLeft <= 0) {
+          if (secondsLeft <= 0) {
             //console.log(`[WSS] Timer ended for session ${sessionId}`);
             broadcast(sessionId, { type: 'TIMER_UPDATE', secondsLeft: 0 });
             broadcast(sessionId, { type: 'GAME_OVER' });
 
+            console.log(`[WSS] Game over. Cleaning up session ${sessionId} from database.`);
+            if (IS_PROD) {
+                try {
+                    pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
+                    console.log(`[WSS] Successfully deleted session ${sessionId} and all associated players.`);
+                } catch (err) {
+                    console.error(`[WSS] Error cleaning up session ${sessionId}:`, err);
+                }
+            }
+
             clearInterval(fruitIntervals[sessionId]);
-
             cleanupSession(sessionId); 
-
-
             delete fruitIntervals[sessionId];
             delete fruitQueues[sessionId];
-
             clearInterval(interval);
           }
           else
@@ -721,25 +708,6 @@ wss.on('connection', (ws) => {
     //   delete sessions[sessionId];
     // }
 
-    // Remove the client from the database
-    let remainingPlayers = 0;
-    if (IS_PROD) {
-      try {
-        await pool.query('DELETE FROM players WHERE session_id = $1 AND user_id = $2', [sessionId, userId]);
-        const result = await pool.query('SELECT COUNT(*) FROM players WHERE session_id = $1', [sessionId]);
-        remainingPlayers = parseInt(result.rows[0].count, 10);
-
-        // If no players remain, remove the session from the database
-        if (remainingPlayers === 0) {
-          await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
-          console.log(`WSS Session ${sessionId} was empty and has been removed from the database.`);
-        } else {
-          console.log(`WSS Player ${userId} removed from session ${sessionId}. Remaining players: ${remainingPlayers}`);
-        }
-      } catch (err) {
-        console.error('Error removing player from database:', err);
-      }
-    }
   });
 });
 
@@ -792,10 +760,8 @@ function generateUniqueSessionId(existingSessions, length = 5) {
 const PORT = process.env.PORT || 4000;
 // Start the Express server
 setupDatabase().then(() => {
-  purgeDatabase().then(() => {
-    server.listen(PORT, () => {
-      console.log(`Server listening on ${PORT}`);
-    });
+  server.listen(PORT, () => {
+    console.log(`Server listening on ${PORT}`);
   });
 });
 
