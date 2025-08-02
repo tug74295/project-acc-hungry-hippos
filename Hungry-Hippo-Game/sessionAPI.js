@@ -105,7 +105,6 @@ const setupDatabase = async () => {
     `);
     // Create a table to store session data
     await client.query(`
-      DROP TABLE IF EXISTS game_statistics;
       CREATE TABLE IF NOT EXISTS game_statistics (
         id INT PRIMARY KEY DEFAULT 1,
         total_sessions_played INT DEFAULT 0,
@@ -311,7 +310,16 @@ wss.on('connection', (ws) => {
               '{${mode}}',
               (COALESCE(mode_counts->>'${mode}', '0')::int + 1)::text::jsonb
             ) WHERE id = 1`
-          );
+            );
+            let hippoCount = 0;
+            let aacCount = 0;
+            for (const client of sessions[sessionId]) {
+              if (client.role === 'Hippo Player') {
+                hippoCount++;
+              } else if (client.role === 'AAC User') {
+                aacCount++;
+              }
+            }
             if (hippoCount > 0 || aacCount > 0) {
               await pool.query(
                 `UPDATE game_statistics SET 
