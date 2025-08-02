@@ -9,6 +9,7 @@ interface IWebSocketContext {
   clearLastMessage?: () => void;
   connectedUsers: { userId: string; role: string; color?: string }[];
   gameStarted: boolean;
+  resetGameState: () => void;
 }
 
 const WebSocketContext = createContext<IWebSocketContext | null>(null);
@@ -186,6 +187,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     sendMessage({ type: 'START_TIMER', payload: { sessionId } });
   }, [sendMessage, sessionId]);
 
+
+  // Method to reset game state
+  const resetGameState = useCallback(() => {
+    console.log('[WS_CONTEXT] Resetting game state (gameStarted: false)');
+    setGameStarted(false);
+  }, []);
+
   const value = {
     isConnected,
     lastMessage,
@@ -195,6 +203,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     connectedUsers,
     gameStarted,
     sessionId,
+    resetGameState
   };
 
   return (

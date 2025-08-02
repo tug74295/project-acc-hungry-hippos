@@ -427,7 +427,7 @@ wss.on('connection', (ws) => {
         const { sessionId } = data.payload;
         //console.log(`[WSS] Starting timer for session ${sessionId}`);
 
-        let secondsLeft = 180;
+        let secondsLeft = 5;
         //console.log('[WSS] SECONDSLEFT INIT:', secondsLeft); 
         const interval = setInterval(() => {
           if(secondsLeft <= 0) {
