@@ -475,16 +475,6 @@ wss.on('connection', (ws) => {
             broadcast(sessionId, { type: 'TIMER_UPDATE', secondsLeft: 0 });
             broadcast(sessionId, { type: 'GAME_OVER' });
 
-            console.log(`[WSS] Game over. Cleaning up session ${sessionId} from database.`);
-            if (IS_PROD) {
-                try {
-                    await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
-                    console.log(`[WSS] Successfully deleted session ${sessionId} and all associated players.`);
-                } catch (err) {
-                    console.error(`[WSS] Error cleaning up session ${sessionId}:`, err);
-                }
-            }
-
             clearInterval(fruitIntervals[sessionId]);
             cleanupSession(sessionId); 
             delete fruitIntervals[sessionId];
@@ -719,6 +709,26 @@ wss.on('connection', (ws) => {
       return;
     }
     console.log(`WSS Client ${userId} disconnected from session ${sessionId}`);
+
+    let remainingPlayers = 0;
+    if (IS_PROD && sessionId && userId) {
+        try {
+            await pool.query('DELETE FROM players WHERE session_id = $1 AND user_id = $2', [sessionId, userId]);
+            
+            const result = await pool.query('SELECT COUNT(*) FROM players WHERE session_id = $1', [sessionId]);
+            remainingPlayers = parseInt(result.rows[0].count, 10);
+
+            // If no players remain, remove the session from the database
+            if (remainingPlayers === 0) {
+                await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
+                console.log(`WSS Session ${sessionId} was empty and has been removed from the database.`);
+            } else {
+                console.log(`WSS Player ${userId} removed from session ${sessionId}. Remaining players: ${remainingPlayers}`);
+            }
+        } catch (err) {
+            console.error('Error removing player from database:', err);
+        }
+    }
   
     // Remove the session from the sessions object if it is empty
     if (sessions[sessionId] && sessions[sessionId].size === 0) {
