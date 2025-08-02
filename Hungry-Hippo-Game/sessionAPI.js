@@ -103,6 +103,23 @@ const setupDatabase = async () => {
         UNIQUE(session_id, user_id)
       );
     `);
+    // Create a table to store session data
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS game_statistics (
+        id INT PRIMARY KEY DEFAULT 1,
+        total_sessions_played INT DEFAULT 0,
+        hippo_color_counts JSONB DEFAULT '{}'::jsonb,
+        mode_counts JSONB DEFAULT '{}'::jsonb,
+        total_correct_eats INT DEFAULT 0,
+        total_wrong_eats INT DEFAULT 0,
+        aac_food_counts JSONB DEFAULT '{}'::jsonb,
+        aac_verb_counts JSONB DEFAULT '{}'::jsonb,
+        last_updated TIMESTAMPTZ
+      );
+    `);
+    await client.query(`
+      INSERT INTO game_statistics (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+    `);
     console.log('Database setup complete');
   } catch (err) {
     console.error('Error setting up database:', err);
@@ -186,6 +203,7 @@ wss.on('connection', (ws) => {
             sessionId = generateSessionId();
             try {
               await pool.query('INSERT INTO sessions (session_id) VALUES ($1)', [sessionId]);
+              await pool.query('UPDATE game_statistics SET total_sessions_played = total_sessions_played + 1, last_updated = NOW() WHERE id = 1');
               break;
             } catch (err) {
               console.error('Error creating session:', err);
@@ -277,6 +295,16 @@ wss.on('connection', (ws) => {
       if (data.type === 'START_GAME') {
         const { sessionId, mode } = data.payload;
         console.log(`[WSS] Start game received for session ${sessionId} with mode ${mode}`);
+
+        if (IS_PROD) {
+          await pool.query(
+            `UPDATE game_statistics SET mode_counts = jsonb_set(
+              mode_counts,
+              '{${mode}}',
+              (COALESCE(mode_counts->>'${mode}', ''0'')::int + 1)::text::jsonb
+            ) WHERE id = 1`
+          );
+        }
 
         if (sessions[sessionId]) {
           sessions[sessionId].gameStarted = true;
@@ -433,7 +461,7 @@ wss.on('connection', (ws) => {
 
         let secondsLeft = 180;
         //console.log('[WSS] SECONDSLEFT INIT:', secondsLeft); 
-        const interval = setInterval(() => {
+        const interval = setInterval(async () => {
           if (secondsLeft <= 0) {
             //console.log(`[WSS] Timer ended for session ${sessionId}`);
             broadcast(sessionId, { type: 'TIMER_UPDATE', secondsLeft: 0 });
@@ -442,7 +470,7 @@ wss.on('connection', (ws) => {
             console.log(`[WSS] Game over. Cleaning up session ${sessionId} from database.`);
             if (IS_PROD) {
                 try {
-                    pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
+                    await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
                     console.log(`[WSS] Successfully deleted session ${sessionId} and all associated players.`);
                 } catch (err) {
                     console.error(`[WSS] Error cleaning up session ${sessionId}:`, err);
@@ -484,6 +512,27 @@ wss.on('connection', (ws) => {
 
         const gameMode = sessionGameModes[sessionId] || 'Easy';
         const finalEffect = MODE_CONFIG[gameMode].allowEffect ? effect : null;
+
+        if (IS_PROD) {
+          await pool.query(
+            `UPDATE game_statistics SET aac_food_counts = jsonb_set(
+              aac_food_counts,
+              '{${food.id}}',
+              (COALESCE(aac_food_counts->>'${food.id}', '0')::int + 1)::text::jsonb
+            ) WHERE id = 1`
+          );
+
+          if (finalEffect) {
+            await pool.query(
+              `UPDATE game_statistics SET aac_verb_counts = jsonb_set(
+                aac_verb_counts,
+                '{${finalEffect.id}}',
+                (COALESCE(aac_verb_counts->>'${finalEffect.id}', '0')::int + 1)::text::jsonb
+              ) WHERE id = 1`
+            );
+          }
+        }
+        
 
         if (fruitQueues[sessionId]) {
           // Pushes AAC-selected food to the front of the queue
@@ -574,6 +623,14 @@ wss.on('connection', (ws) => {
           type: 'SCORE_UPDATE_BROADCAST',
           payload: { scores: scoresBySession[sessionId] }
         });
+
+        if (IS_PROD) {
+          if (isCorrect) {
+            await pool.query('UPDATE game_statistics SET total_correct_eats = total_correct_eats + 1 WHERE id = 1');
+          } else {
+            await pool.query('UPDATE game_statistics SET total_wrong_eats = total_wrong_eats + 1 WHERE id = 1');
+          }
+        }
       }
 
       // When a player selects a color, broadcast it to the session
@@ -597,6 +654,16 @@ wss.on('connection', (ws) => {
             type: 'COLOR_UPDATE',
             payload: { takenColors }
           });
+        }
+        // If in production, update the database with the color selection
+        if (IS_PROD && color) {
+            await pool.query(
+              `UPDATE game_statistics SET hippo_color_counts = jsonb_set(
+                hippo_color_counts,
+                '{${color}}',
+                (COALESCE(hippo_color_counts->>'${color}', '0')::int + 1)::text::jsonb
+              ) WHERE id = 1`
+            );
         }
       }
 
