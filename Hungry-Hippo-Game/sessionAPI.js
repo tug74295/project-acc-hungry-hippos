@@ -103,6 +103,25 @@ const setupDatabase = async () => {
         UNIQUE(session_id, user_id)
       );
     `);
+    // Create a table to store session data
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS game_statistics (
+        id INT PRIMARY KEY DEFAULT 1,
+        total_sessions_played INT DEFAULT 0,
+        total_hippo_players INT DEFAULT 0,
+        total_aac_users INT DEFAULT 0,
+        hippo_color_counts JSONB DEFAULT '{}'::jsonb,
+        mode_counts JSONB DEFAULT '{}'::jsonb,
+        total_correct_eats INT DEFAULT 0,
+        total_wrong_eats INT DEFAULT 0,
+        aac_food_counts JSONB DEFAULT '{}'::jsonb,
+        aac_verb_counts JSONB DEFAULT '{}'::jsonb,
+        last_updated TIMESTAMPTZ
+      );
+    `);
+    await client.query(`
+      INSERT INTO game_statistics (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+    `);
     console.log('Database setup complete');
   } catch (err) {
     console.error('Error setting up database:', err);
@@ -186,6 +205,7 @@ wss.on('connection', (ws) => {
             sessionId = generateSessionId();
             try {
               await pool.query('INSERT INTO sessions (session_id) VALUES ($1)', [sessionId]);
+              await pool.query('UPDATE game_statistics SET total_sessions_played = total_sessions_played + 1, last_updated = NOW() WHERE id = 1');
               break;
             } catch (err) {
               console.error('Error creating session:', err);
@@ -196,6 +216,8 @@ wss.on('connection', (ws) => {
           type: 'SESSION_CREATED',
           payload: { sessionId }
         }));
+        sessions[sessionId] = new Set();
+        sessions[sessionId].statsLogged = false;
       }
 
       if (data.type === 'PLAYER_MOVE') {
@@ -218,9 +240,6 @@ wss.on('connection', (ws) => {
         ws.role = role;
         ws.color = color;
 
-        if (!sessions[sessionId]) {
-          sessions[sessionId] = new Set(); 
-        }
         sessions[sessionId].add(ws);
         console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
 
@@ -278,6 +297,46 @@ wss.on('connection', (ws) => {
         const { sessionId, mode } = data.payload;
         console.log(`[WSS] Start game received for session ${sessionId} with mode ${mode}`);
 
+        if (IS_PROD && sessions[sessionId]) {
+          if (!sessions[sessionId].statsLogged) {
+            try {
+              await pool.query(
+                "DELETE FROM players WHERE session_id = $1 AND role = 'Presenter'",
+                [sessionId]
+              );
+              await pool.query(
+                `UPDATE game_statistics SET mode_counts = jsonb_set(
+                mode_counts,
+                '{${mode}}',
+                (COALESCE(mode_counts->>'${mode}', '0')::int + 1)::text::jsonb
+              ) WHERE id = 1`
+              );
+              let hippoCount = 0;
+              let aacCount = 0;
+              for (const client of sessions[sessionId]) {
+                if (client.role === 'Hippo Player') {
+                  hippoCount++;
+                } else if (client.role === 'AAC User') {
+                  aacCount++;
+                }
+              }
+              if (hippoCount > 0 || aacCount > 0) {
+                await pool.query(
+                  `UPDATE game_statistics SET 
+                    total_hippo_players = total_hippo_players + $1, 
+                    total_aac_users = total_aac_users + $2,
+                    last_updated = NOW()
+                  WHERE id = 1`,
+                  [hippoCount, aacCount]
+                );
+              }
+              sessions[sessionId].statsLogged = true;
+            } catch (err) {
+                console.error('[WSS] Error cleaning up presenter role:', err);
+            }
+          }
+        }
+
         if (sessions[sessionId]) {
           sessions[sessionId].gameStarted = true;
         }
@@ -313,10 +372,10 @@ wss.on('connection', (ws) => {
         const SCREEN_WIDTH = 1024;
         const SCREEN_HEIGHT = 1024;
 
-        // spawn mark (first spawn after 2s)
+        // spawn mark (first spawn after 3s)
         lastSpawnAt[sessionId] = Date.now();
 
-        // 50ms game loop; spawns happen every 2000ms
+        // 50ms game loop; spawns happen every 3000ms
         const TICK_INTERVAL = 50;
         fruitIntervals[sessionId] = setInterval(() => {
           if (!sessions[sessionId]) {
@@ -434,7 +493,7 @@ wss.on('connection', (ws) => {
         let secondsLeft = 180;
         //console.log('[WSS] SECONDSLEFT INIT:', secondsLeft); 
         const interval = setInterval(() => {
-          if(secondsLeft <= 0) {
+          if (secondsLeft <= 0) {
             //console.log(`[WSS] Timer ended for session ${sessionId}`);
             broadcast(sessionId, { type: 'TIMER_UPDATE', secondsLeft: 0 });
             broadcast(sessionId, { type: 'GAME_OVER' });
@@ -478,6 +537,26 @@ wss.on('connection', (ws) => {
 
         const gameMode = sessionGameModes[sessionId] || 'Easy';
         const finalEffect = MODE_CONFIG[gameMode].allowEffect ? effect : null;
+
+        if (IS_PROD) {
+          await pool.query(
+            `UPDATE game_statistics SET aac_food_counts = jsonb_set(
+              aac_food_counts,
+              '{${food.id}}',
+              (COALESCE(aac_food_counts->>'${food.id}', '0')::int + 1)::text::jsonb
+            ) WHERE id = 1`
+          );
+
+          if (finalEffect) {
+            await pool.query(
+              `UPDATE game_statistics SET aac_verb_counts = jsonb_set(
+                aac_verb_counts,
+                '{${finalEffect.id}}',
+                (COALESCE(aac_verb_counts->>'${finalEffect.id}', '0')::int + 1)::text::jsonb
+              ) WHERE id = 1`
+            );
+          }
+        }
 
         if (fruitQueues[sessionId]) {
           // Pushes AAC-selected food to the front of the queue
@@ -568,6 +647,14 @@ wss.on('connection', (ws) => {
           type: 'SCORE_UPDATE_BROADCAST',
           payload: { scores: scoresBySession[sessionId] }
         });
+
+        if (IS_PROD) {
+          if (isCorrect) {
+            await pool.query('UPDATE game_statistics SET total_correct_eats = total_correct_eats + 1 WHERE id = 1');
+          } else {
+            await pool.query('UPDATE game_statistics SET total_wrong_eats = total_wrong_eats + 1 WHERE id = 1');
+          }
+        }
       }
 
       // When a player selects a color, broadcast it to the session
@@ -591,6 +678,16 @@ wss.on('connection', (ws) => {
             type: 'COLOR_UPDATE',
             payload: { takenColors }
           });
+        }
+        // If in production, update the database with the color selection
+        if (IS_PROD && color) {
+          await pool.query(
+            `UPDATE game_statistics SET hippo_color_counts = jsonb_set(
+              hippo_color_counts,
+              '{${color}}',
+              (COALESCE(hippo_color_counts->>'${color}', '0')::int + 1)::text::jsonb
+            ) WHERE id = 1`
+          );
         }
       }
 
@@ -638,6 +735,26 @@ wss.on('connection', (ws) => {
       return;
     }
     console.log(`WSS Client ${userId} disconnected from session ${sessionId}`);
+
+    let remainingPlayers = 0;
+    if (IS_PROD && sessionId && userId) {
+      try {
+        await pool.query('DELETE FROM players WHERE session_id = $1 AND user_id = $2', [sessionId, userId]);
+        
+        const result = await pool.query('SELECT COUNT(*) FROM players WHERE session_id = $1', [sessionId]);
+        remainingPlayers = parseInt(result.rows[0].count, 10);
+
+        // If no players remain, remove the session from the database
+        if (remainingPlayers === 0) {
+          await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
+          console.log(`WSS Session ${sessionId} was empty and has been removed from the database.`);
+        } else {
+          console.log(`WSS Player ${userId} removed from session ${sessionId}. Remaining players: ${remainingPlayers}`);
+        }
+      } catch (err) {
+        console.error('Error removing player from database:', err);
+      }
+    }
   
     // Remove the session from the sessions object if it is empty
     if (sessions[sessionId] && sessions[sessionId].size === 0) {
@@ -648,7 +765,7 @@ wss.on('connection', (ws) => {
     // If the role is Presenter and the game hasn't started, broadcast SESSION_CLOSED
     if (userId === 'presenter' && sessions[sessionId] && !sessions[sessionId].gameStarted) {
       console.log(`[WSS] Presenter for session ${sessionId} disconnected. Starting 5s reconnect timer...`);
-      reconnectionTimers[sessionId] = setTimeout(() => {
+      reconnectionTimers[sessionId] = setTimeout(async () => {
 
         // Before closing, double-check if the presenter has rejoined.
         const sessionClients = sessions[sessionId] ? Array.from(sessions[sessionId]) : [];
@@ -659,6 +776,15 @@ wss.on('connection', (ws) => {
           broadcast(sessionId, { type: 'SESSION_CLOSED' });
           cleanupSession(sessionId);
           delete sessions[sessionId];
+
+          if (IS_PROD) {
+            try {
+              await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
+              console.log(`[WSS] Deleted timed-out session ${sessionId} from database.`);
+            } catch (err) {
+              console.error(`[WSS] Error deleting timed-out session ${sessionId} from DB:`, err);
+            }
+          }
         } else {
           console.log(`[WSS] Reconnect timer for ${sessionId} fired, but presenter has returned. Aborting closure.`);
         }
@@ -702,25 +828,6 @@ wss.on('connection', (ws) => {
     //   delete sessions[sessionId];
     // }
 
-    // Remove the client from the database
-    let remainingPlayers = 0;
-    if (IS_PROD) {
-      try {
-        await pool.query('DELETE FROM players WHERE session_id = $1 AND user_id = $2', [sessionId, userId]);
-        const result = await pool.query('SELECT COUNT(*) FROM players WHERE session_id = $1', [sessionId]);
-        remainingPlayers = parseInt(result.rows[0].count, 10);
-
-        // If no players remain, remove the session from the database
-        if (remainingPlayers === 0) {
-          await pool.query('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
-          console.log(`WSS Session ${sessionId} was empty and has been removed from the database.`);
-        } else {
-          console.log(`WSS Player ${userId} removed from session ${sessionId}. Remaining players: ${remainingPlayers}`);
-        }
-      } catch (err) {
-        console.error('Error removing player from database:', err);
-      }
-    }
   });
 });
 
