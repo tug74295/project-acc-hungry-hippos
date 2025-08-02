@@ -108,6 +108,8 @@ const setupDatabase = async () => {
       CREATE TABLE IF NOT EXISTS game_statistics (
         id INT PRIMARY KEY DEFAULT 1,
         total_sessions_played INT DEFAULT 0,
+        total_hippo_players INT DEFAULT 0,
+        total_aac_users INT DEFAULT 0,
         hippo_color_counts JSONB DEFAULT '{}'::jsonb,
         mode_counts JSONB DEFAULT '{}'::jsonb,
         total_correct_eats INT DEFAULT 0,
@@ -253,6 +255,12 @@ wss.on('connection', (ws) => {
             await pool.query(`
               INSERT INTO players (session_id, user_id, role) VALUES ($1, $2, $3)
               ON CONFLICT (session_id, user_id) DO UPDATE SET role = EXCLUDED.role`, [sessionId, userId, role]);
+
+            if (role === 'Hippo Player') {
+                await pool.query('UPDATE game_statistics SET total_hippo_players = total_hippo_players + 1, last_updated = NOW() WHERE id = 1');
+            } else if (role === 'AAC User') {
+                await pool.query('UPDATE game_statistics SET total_aac_users = total_aac_users + 1, last_updated = NOW() WHERE id = 1');
+            }
           } catch (err) {
             console.error('Error adding player to database:', err);
           }
