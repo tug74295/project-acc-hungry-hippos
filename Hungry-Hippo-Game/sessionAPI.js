@@ -317,8 +317,10 @@ wss.on('connection', (ws) => {
               (COALESCE(mode_counts->>'${mode}', '0')::int + 1)::text::jsonb
             ) WHERE id = 1`
           );
-        } catch (err) {
-            console.error('[WSS] Error cleaning up presenter role:', err);
+            console.log(`[WSS] Cleaned up 'Presenter' role for session ${sessionId}.`);
+          } catch (err) {
+              console.error('[WSS] Error cleaning up presenter role:', err);
+          }
         }
 
         if (sessions[sessionId]) {
