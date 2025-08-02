@@ -105,6 +105,7 @@ const setupDatabase = async () => {
     `);
     // Create a table to store session data
     await client.query(`
+      DROP TABLE IF EXISTS game_statistics;
       CREATE TABLE IF NOT EXISTS game_statistics (
         id INT PRIMARY KEY DEFAULT 1,
         total_sessions_played INT DEFAULT 0,
