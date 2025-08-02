@@ -53,7 +53,7 @@ const allowedOrigins = [
   'http://localhost:3003',
   'http://localhost:3004',
   'http://localhost:3005',
-  'https://project-acc-hungry-hippos.vercel.app'
+  'https://www.draexico.com'
 ];
 
 server.on('upgrade', (request, socket, head) => {
@@ -110,6 +110,25 @@ const setupDatabase = async () => {
     client.release();
   }
 }
+
+const purgeDatabase = async () => {
+  if (!IS_PROD) {
+    console.log('Skipping database purge in local development.');
+    return;
+  }
+  const client = await pool.connect();
+  try {
+    console.log('PURGING ALL DATABASE DATA...');
+    // TRUNCATE is faster than DELETE and resets primary key counters.
+    // CASCADE is needed because players has a foreign key reference to sessions.
+    await client.query('TRUNCATE TABLE sessions, players CASCADE;');
+    console.log('DATABASE PURGE COMPLETE.');
+  } catch (err) {
+    console.error('Error purging database:', err);
+  } finally {
+    client.release();
+  }
+};
 
 // Function to get a weighted random food item from the list
 // This function will give more weight to the target food, making it more likely to be selected
@@ -773,8 +792,10 @@ function generateUniqueSessionId(existingSessions, length = 5) {
 const PORT = process.env.PORT || 4000;
 // Start the Express server
 setupDatabase().then(() => {
-  server.listen(PORT, () => {
-    console.log(`Server listening on ${PORT}`);
+  purgeDatabase().then(() => {
+    server.listen(PORT, () => {
+      console.log(`Server listening on ${PORT}`);
+    });
   });
 });
 
