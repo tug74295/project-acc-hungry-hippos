@@ -34,7 +34,7 @@ const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 const scoresBySession = {};
 const fruitQueues = {};      
 const fruitIntervals = {}; 
-const TARGET_FOOD_WEIGHT = 12; // Weight for the target food in the queue
+const TARGET_FOOD_WEIGHT = 16; // Weight for the target food in the queue
 
 const sessionGameModes = {};
 let foodInstanceCounter = 0
@@ -312,9 +312,8 @@ wss.on('connection', (ws) => {
         lastSpawnAt[sessionId] = Date.now();
 
         // 50ms game loop; spawns happen every 2000ms
+        const TICK_INTERVAL = 50;
         fruitIntervals[sessionId] = setInterval(() => {
-
-
           if (!sessions[sessionId]) {
             clearInterval(fruitIntervals[sessionId]);
             delete fruitIntervals[sessionId];
@@ -324,9 +323,9 @@ wss.on('connection', (ws) => {
           const gameMode = sessionGameModes[sessionId] || 'Easy';
           const speed = MODE_CONFIG[gameMode].fruitSpeed;
 
-          // spawn every 2s
+          // spawn every 3s
           const now = Date.now();
-          if (now - lastSpawnAt[sessionId] >= 2000) {
+          if (now - lastSpawnAt[sessionId] >= 3000) {
             lastSpawnAt[sessionId] = now;
 
             if (fruitQueues[sessionId] && fruitQueues[sessionId].length > 0) {
@@ -394,7 +393,7 @@ wss.on('connection', (ws) => {
           }
 
           // physics tick @ 50ms
-          const timeStep = 0.05;
+          const timeStep = TICK_INTERVAL / 1000; // convert to seconds
           activeFoods[sessionId].forEach(food => {
             food.x += food.vx * timeStep;
             food.y += food.vy * timeStep;
@@ -414,7 +413,7 @@ wss.on('connection', (ws) => {
             food.y > -BOUNDARY_BUFFER &&
             food.y < 1024 + BOUNDARY_BUFFER
           );
-        }, 30);
+        }, TICK_INTERVAL);
 
         broadcast(sessionId, {
           type: 'START_GAME_BROADCAST',
