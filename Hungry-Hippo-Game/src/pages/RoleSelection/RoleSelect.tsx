@@ -73,7 +73,8 @@ function RoleSelect() {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
-  const { connectedUsers, gameStarted, sendMessage, isConnected } = useWebSocket();
+  const [showClosedSession, setShowClosedSession] = useState(false);
+  const { connectedUsers, gameStarted, sendMessage, isConnected, lastMessage, clearLastMessage } = useWebSocket();
 
   // State to track colors already taken by connected users
   const [takenColors, setTakenColors] = useState<string[]>([]);
@@ -85,6 +86,14 @@ function RoleSelect() {
   const aacUsersCount = connectedUsers.filter(user => user.role === 'AAC User').length;
   const isHippoRoleFull = hippoPlayersCount >= HIPPO_PLAYER_LIMIT;
   const isAacRoleFull = aacUsersCount >= AAC_USER_LIMIT;
+
+  // If presenter closes the session before game starts, go back to main page
+  useEffect(() => {
+    if (lastMessage?.type === 'SESSION_CLOSED') {
+        setShowClosedSession(true);
+        clearLastMessage?.();
+    }
+  }, [lastMessage, clearLastMessage]);
 
   // Play audio when the component mounts
   useEffect(() => {
@@ -243,6 +252,19 @@ function RoleSelect() {
 
   return (
     <div className={styles.containerImg}>
+      {/* Popup for session closed by host */}
+      {showClosedSession && (
+        <div className={styles.closedSessionOverlay}>
+          <div className={styles.closedSessionContent}>
+            <button onClick={handleCancel} className={styles.closedSessionCloseButton}>✖</button>
+            <h3>Session Closed</h3>
+            <p>The host has left the lobby.</p>
+            <button onClick={handleCancel} className={styles.closedSessionOkButton}>
+                OK
+            </button>
+        </div>
+      </div>
+      )}
       <div className={styles.roleContainer}>
         <button
           className={styles.closeButton}
