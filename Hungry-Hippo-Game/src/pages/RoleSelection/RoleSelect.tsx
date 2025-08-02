@@ -52,6 +52,13 @@ import { updatePlayerInSessionStorage } from '../../components/Storage/Storage';
  * - ButtonClick component triggers `handleStart` on click.
  */
 
+function playAudio(src: string) {
+  const audio = new Audio(src);
+  audio.play().catch(error => {
+    console.error('Error playing audio:', error);
+  });
+}
+
 function RoleSelect() {
   const navigate = useNavigate();
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -66,7 +73,8 @@ function RoleSelect() {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [username] = useState(location.state?.userId || generateUsername());
   const [waiting, setWaiting] = useState(false);
-  const { connectedUsers, gameStarted, sendMessage, isConnected } = useWebSocket();
+  const [showClosedSession, setShowClosedSession] = useState(false);
+  const { connectedUsers, gameStarted, sendMessage, isConnected, lastMessage, clearLastMessage } = useWebSocket();
 
   // State to track colors already taken by connected users
   const [takenColors, setTakenColors] = useState<string[]>([]);
@@ -79,10 +87,23 @@ function RoleSelect() {
   const isHippoRoleFull = hippoPlayersCount >= HIPPO_PLAYER_LIMIT;
   const isAacRoleFull = aacUsersCount >= AAC_USER_LIMIT;
 
+  // If presenter closes the session before game starts, go back to main page
+  useEffect(() => {
+    if (lastMessage?.type === 'SESSION_CLOSED') {
+        setShowClosedSession(true);
+        clearLastMessage?.();
+    }
+  }, [lastMessage, clearLastMessage]);
+
+  // Play audio when the component mounts
+  useEffect(() => {
+    playAudio('/audio/role-select/select-your-role.mp3');
+  }, []);
+
   // Effect to handle WebSocket connection and game resetting
   useEffect(() => {
     const handleResetGame = () => {
-      console.log('[RoleSelect] RESET_GAME received – entering waiting state');
+      console.log('[RoleSelect] RESET_GAME received - entering waiting state');
       setWaiting(true);
     };
 
@@ -166,6 +187,7 @@ function RoleSelect() {
         return;
     }
 
+    playAudio('/audio/role-select/waiting-for-game-to-start.mp3');
     sendMessage({
         type: 'PLAYER_JOIN',
         payload: {
@@ -185,6 +207,12 @@ function RoleSelect() {
 
   // Handle role selection
   const handleRoleSelect = (selectedRole: string) => {
+    if (selectedRole === 'Hippo Player') {
+      playAudio('/audio/role-select/hippo-player.mp3');
+    } else if (selectedRole === 'AAC User') {
+      playAudio('/audio/role-select/aac-user.mp3');
+    }
+
     // If switching from Hippo Player to AAC User, release the color
     if (role === 'Hippo Player' && selectedColor) {
       sendMessage({
@@ -205,15 +233,18 @@ function RoleSelect() {
   };
 
   // Handle color selection for Hippo Player
-  const handleColorSelect = (color: string) => {
-    setSelectedColor(color);
+  const handleColorSelect = (hippo: { color: string, audioSrc: string }) => {
+    setSelectedColor(hippo.color);
+    const audio = new Audio(hippo.audioSrc);
+    audio.play();
+
     sendMessage({
         type: 'SELECT_COLOR',
-        payload: { sessionId, userId: username, color }
+        payload: { sessionId, userId: username, color: hippo.color }
     });
 
     if (sessionId) {
-      updatePlayerInSessionStorage(sessionId, { userId: username, role, color });
+      updatePlayerInSessionStorage(sessionId, { userId: username, role, color: hippo.color });
     }
   };
 
@@ -221,6 +252,19 @@ function RoleSelect() {
 
   return (
     <div className={styles.containerImg}>
+      {/* Popup for session closed by host */}
+      {showClosedSession && (
+        <div className={styles.closedSessionOverlay}>
+          <div className={styles.closedSessionContent}>
+            <button onClick={handleCancel} className={styles.closedSessionCloseButton}>✖</button>
+            <h3>Session Closed</h3>
+            <p>The host has left the lobby.</p>
+            <button onClick={handleCancel} className={styles.closedSessionOkButton}>
+                OK
+            </button>
+        </div>
+      </div>
+      )}
       <div className={styles.roleContainer}>
         <button
           className={styles.closeButton}
@@ -268,7 +312,7 @@ function RoleSelect() {
                               key={hippo.color}
                               className={`${styles.colorButton} ${selectedColor === hippo.color ? styles.selected : ''}`}
                               disabled={takenColors.includes(hippo.color) && hippo.color !== selectedColor}
-                              onClick={() => handleColorSelect(hippo.color)}
+                              onClick={() => handleColorSelect(hippo)}
                           >
                               <img src={hippo.imgSrc} alt={hippo.color} className={styles.hippoImage} />
                           </button>

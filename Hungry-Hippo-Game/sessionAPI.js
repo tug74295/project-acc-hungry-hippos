@@ -30,11 +30,12 @@ const server = http.createServer();
 const wss = new WebSocket.Server({ noServer: true });
 
 const sessions = {};
+const reconnectionTimers = {};
 const sessionFilePath = path.resolve(__dirname, './src/data/sessionID.json');
 const scoresBySession = {};
 const fruitQueues = {};      
 const fruitIntervals = {}; 
-const TARGET_FOOD_WEIGHT = 12; // Weight for the target food in the queue
+const TARGET_FOOD_WEIGHT = 16; // Weight for the target food in the queue
 
 const sessionGameModes = {};
 let foodInstanceCounter = 0
@@ -277,6 +278,10 @@ wss.on('connection', (ws) => {
         const { sessionId, mode } = data.payload;
         console.log(`[WSS] Start game received for session ${sessionId} with mode ${mode}`);
 
+        if (sessions[sessionId]) {
+          sessions[sessionId].gameStarted = true;
+        }
+
         // Store mode and reset per-session state
         sessionGameModes[sessionId] = mode;
         activeFoods[sessionId] = [];
@@ -312,9 +317,8 @@ wss.on('connection', (ws) => {
         lastSpawnAt[sessionId] = Date.now();
 
         // 50ms game loop; spawns happen every 2000ms
+        const TICK_INTERVAL = 50;
         fruitIntervals[sessionId] = setInterval(() => {
-
-
           if (!sessions[sessionId]) {
             clearInterval(fruitIntervals[sessionId]);
             delete fruitIntervals[sessionId];
@@ -324,9 +328,9 @@ wss.on('connection', (ws) => {
           const gameMode = sessionGameModes[sessionId] || 'Easy';
           const speed = MODE_CONFIG[gameMode].fruitSpeed;
 
-          // spawn every 2s
+          // spawn every 3s
           const now = Date.now();
-          if (now - lastSpawnAt[sessionId] >= 2000) {
+          if (now - lastSpawnAt[sessionId] >= 3000) {
             lastSpawnAt[sessionId] = now;
 
             if (fruitQueues[sessionId] && fruitQueues[sessionId].length > 0) {
@@ -394,7 +398,7 @@ wss.on('connection', (ws) => {
           }
 
           // physics tick @ 50ms
-          const timeStep = 0.05;
+          const timeStep = TICK_INTERVAL / 1000; // convert to seconds
           activeFoods[sessionId].forEach(food => {
             food.x += food.vx * timeStep;
             food.y += food.vy * timeStep;
@@ -414,7 +418,7 @@ wss.on('connection', (ws) => {
             food.y > -BOUNDARY_BUFFER &&
             food.y < 1024 + BOUNDARY_BUFFER
           );
-        }, 30);
+        }, TICK_INTERVAL);
 
         broadcast(sessionId, {
           type: 'START_GAME_BROADCAST',
@@ -634,19 +638,33 @@ wss.on('connection', (ws) => {
       return;
     }
     console.log(`WSS Client ${userId} disconnected from session ${sessionId}`);
-
-  //   ws.on('close', async () => {
-  // const { sessionId, userId } = ws;
   
+    // Remove the session from the sessions object if it is empty
+    if (sessions[sessionId] && sessions[sessionId].size === 0) {
+      cleanupSession(sessionId);
+      delete sessions[sessionId];
+    }
 
-  // Remove the session from the sessions object if it is empty
-  if (sessions[sessionId] && sessions[sessionId].size === 0) {
-    cleanupSession(sessionId); // 🟢 Clean up intervals and state!
-    delete sessions[sessionId];
-  }
-  // ...existing DB code...
-//});
+    // If the role is Presenter and the game hasn't started, broadcast SESSION_CLOSED
+    if (userId === 'presenter' && sessions[sessionId] && !sessions[sessionId].gameStarted) {
+      console.log(`[WSS] Presenter for session ${sessionId} disconnected. Starting 5s reconnect timer...`);
+      reconnectionTimers[sessionId] = setTimeout(() => {
 
+        // Before closing, double-check if the presenter has rejoined.
+        const sessionClients = sessions[sessionId] ? Array.from(sessions[sessionId]) : [];
+        const isPresenterConnected = sessionClients.some(client => client.role === 'Presenter');
+
+        if (!isPresenterConnected) {
+          console.log(`[WSS] Presenter for ${sessionId} did not reconnect in time. Closing session.`);
+          broadcast(sessionId, { type: 'SESSION_CLOSED' });
+          cleanupSession(sessionId);
+          delete sessions[sessionId];
+        } else {
+          console.log(`[WSS] Reconnect timer for ${sessionId} fired, but presenter has returned. Aborting closure.`);
+        }
+        delete reconnectionTimers[sessionId];
+      }, 5000);
+    }
 
     // Remove the client from the ws
     if (sessions[sessionId]) {
