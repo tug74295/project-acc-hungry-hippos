@@ -92,73 +92,163 @@ For production, the WebSocketServer uses the DatabaseService to save and load se
 
 ```mermaid
 classDiagram
-direction RL
+  direction TB
 
-class App {
-  +LandingPage
-  +GamePage
-}
+  class App {
+    +<Routes> BrowserRouter
+  }
 
-class LandingPage {
-  -code: string[]
-  -inputsRef: HTMLInputElement[]
-  -handleStart()
-  -handleCreateGame()
-  -handleChange()
-}
+  class WebSocketContext {
+    +isConnected: boolean
+    +connectedUsers: User[]
+    +lastMessage: Message
+    +sendMessage(message)
+    +resetGameState()
+    +clearLastMessage()
+  }
 
-class GamePage {
-  -phaserRef: IRefPhaserGame
-  -fruitStack: Fruit[]
-  -handleSelectedFruit()
-}
+  class AacInterface {
+    +selectedItem: AacFood
+    +selectedCategory: string
+    +activeVerb: AacVerb
+    +handleFoodClick(food)
+    +handleVerbClick(verb)
+    +handleCategoryClick(category)
+  }
 
-class AacInterface {
-  -selectedFruit: Fruit
-  +onFruitSelected(fruit)
-}
+  class PhaserGame {
+    +ref: game, scene
+    +currentActiveScene(scene)
+  }
 
-class PhaserGame {
-  +scene: GameScene
-}
+  class Game {
+    +players: Map~string, Hippo~
+    +foods: Group
+    +addPlayer()
+    +setTargetFood(foodId, effect)
+    +applyModeSettings(settings)
+    +update()
+  }
 
-class ButtonClick {
-  +text: string
-  +onClick()
-}
+  class Hippo {
+    +targetX: number
+    +targetY: number
+    +freeze(duration)
+    +updatePointerFlip()
+    +snapToEdge(edge)
+    +setTargetPosition(x, y)
+    +update()
+  }
 
-class Fruit {
-  +id: string
-  +name: string
-  +imagePath: string
-}
+  class MoveStrategy {
+    <<interface>>
+    +update(sprite, cursors)
+  }
+
+  class EdgeSlideStrategy {
+    +update()
+  }
+
+  class WalkStrategy {
+    +update()
+  }
+
+  class JumpStrategy {
+    +update()
+  }
+
+  class Presenter {
+    +handleStartGame()
+    +cycleMode()
+  }
+
+  class RoleSelect {
+    +handleRoleSelect(role)
+    +handleColorSelect(color)
+    +handleStart()
+  }
+
+  class PhaserPage {
+    +phaserRef: PhaserGame
+    +currentFood: AacFood
+    +setCurrentFood()
+    +setScores()
+    +sendMessage()
+  }
+
+  class Victory {
+    +scores: Map~string, number~
+    +handlePlayAgain()
+  }
+
+  class Storage {
+    +updatePlayerInSessionStorage()
+  }
+
+  class Foods {
+    +AAC_DATA: AacData
+    +AAC_VERBS: AacVerb[]
+  }
+
+  class EventBus {
+    +emit(event, data)
+    +on(event, handler)
+    +off(event, handler)
+  }
+
+  class Leaderboard {
+    +scores: Record<string, number>
+    +colors: Record<string, string>
+    +userId: string
+  }
+
+  class MovementStore {
+    +subscribe(listener)
+    +unsubscribe(listener)
+    +notifyMove(payload)
+  }
+
+  %% Relationships
+  App --> WebSocketContext
+  App --> PhaserPage
+  App --> AacInterface
+  App --> Presenter
+  App --> RoleSelect
+  App --> Victory
+
+  WebSocketContext --> EventBus
+  WebSocketContext --> MovementStore
+
+  AacInterface --> EventBus
+  AacInterface --> Foods
+  AacInterface --> WebSocketContext : uses
+
+  PhaserGame --> Game
+  PhaserPage --> PhaserGame
+  PhaserPage --> WebSocketContext : uses
+  PhaserPage --> EventBus : listens
+  PhaserPage --> Leaderboard
+
+  Game --> Hippo : creates
+  Game --> MovementStore
+  Hippo --> MoveStrategy
+  MoveStrategy <|.. EdgeSlideStrategy
+  MoveStrategy <|.. WalkStrategy
+  MoveStrategy <|.. JumpStrategy
+
+  RoleSelect --> Storage
+  RoleSelect --> WebSocketContext
+  Presenter --> WebSocketContext
+  Victory --> WebSocketContext
+  Victory --> EventBus
 
 
-class GameScene {
-  -fruits: Group
-  -fruitKeys: string[]
-  -lanePositions: number[]
-  -fruitSpawnTimer: TimerEvent
-  +startSpawningFruit()
-  +addFruitManually(fruitKey: string)
-  +spawnFruit()
-  +update()
-}
-
-App --> LandingPage
-App --> GamePage
-
-LandingPage --> ButtonClick
-GamePage --> AacInterface
-GamePage --> PhaserGame
-AacInterface --> Fruit
-GamePage --> Fruit
-
-PhaserGame --> GameScene : manages
 ```
 
 ### Relationships
 
-This diagram illustrates the architecture of our frontend.
+Starts at the App component, which wraps the entire application in a WebSocketProvider and defines the routing for all gameplay views. Each route represents a distinct user page tied to the player's current role in the session.
 
-The frontend of the game is built with React and Phaser, structured into key pages and components. The App component handles routing between the LandingPage and GamePage. On the LandingPage, users can join or create a game. The GamePage displays both the AAC interface—where users select fruits—and the game area powered by Phaser. The selected fruit is sent to the PhaserGame, which triggers falling fruit animations. Game logic, including asset loading and physics, is managed in the GameScene class. This setup cleanly separates UI and game logic, supporting accessibility and smooth interaction.
+PhaserPage mounts the PhaserGame wrapper, which instantiates the Game scene which manages game physics, player movement, collision, and food effects. Each player is represented by a Hippo object, whose movement behavior is controlled by MoveStrategy implementations like EdgeSlideStrategy, WalkStrategy, or JumpStrategy.
+
+Communication between components and game is done through the EventBus and WebSocketContext, which listen for updates and synchronizes state across the network. The MovementStore allows syncing of player position. The Foods module provides access to the AAC vocabulary, while Storage handles session reloads. UI components like Leaderboard, Victory give feedback tied to game state.
