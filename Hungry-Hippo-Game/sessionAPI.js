@@ -305,13 +305,20 @@ wss.on('connection', (ws) => {
         console.log(`[WSS] Start game received for session ${sessionId} with mode ${mode}`);
 
         if (IS_PROD) {
-          await pool.query(
+          try {
+            await pool.query(
+                "DELETE FROM players WHERE session_id = $1 AND role = 'Presenter'",
+                [sessionId]
+            );
+            await pool.query(
             `UPDATE game_statistics SET mode_counts = jsonb_set(
               mode_counts,
               '{${mode}}',
               (COALESCE(mode_counts->>'${mode}', '0')::int + 1)::text::jsonb
             ) WHERE id = 1`
           );
+        } catch (err) {
+            console.error('[WSS] Error cleaning up presenter role:', err);
         }
 
         if (sessions[sessionId]) {
