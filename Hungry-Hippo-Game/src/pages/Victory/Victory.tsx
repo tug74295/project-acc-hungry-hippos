@@ -28,7 +28,7 @@ const Victory: React.FC = () => {
   const role = state?.role;
   const color = state?.color;
 
-  const { sendMessage } = useWebSocket();
+  const { sendMessage, lastMessage, clearLastMessage } = useWebSocket();
 
   /**
    * Handles the cancel button click event.
@@ -40,6 +40,15 @@ const Victory: React.FC = () => {
 
     // Sort players by score (highest first)
   const sortedPlayers = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+  // --- ERROR HANDLING ---
+  useEffect(() => {
+    if (lastMessage?.type === 'ERROR_MESSAGE' && lastMessage?.payload?.code === 'SESSION_NOT_FOUND') {
+      alert(`An error occurred: ${lastMessage.payload.message}`);
+      clearLastMessage?.();
+      navigate('/');
+    }
+  }, [lastMessage, navigate, clearLastMessage]);
 
   useEffect(() => {
     const handleReset = () => {

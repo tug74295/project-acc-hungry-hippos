@@ -87,6 +87,27 @@ function RoleSelect() {
   const isHippoRoleFull = hippoPlayersCount >= HIPPO_PLAYER_LIMIT;
   const isAacRoleFull = aacUsersCount >= AAC_USER_LIMIT;
 
+  // --- ERROR HANDLING ---
+  useEffect(() => {
+    if (lastMessage?.type !== 'ERROR_MESSAGE') return;
+    const errorCode = lastMessage.payload.code;
+    const errorMessage = lastMessage.payload.message;
+    switch (errorCode) {
+      case 'SESSION_NOT_FOUND':
+        alert(`An error occurred: ${errorMessage}`);
+        navigate('/');
+        break;
+      case 'COLOR_ALREADY_TAKEN':
+        alert('Color already taken. Please select a different color.');
+        break;
+      default :
+        alert(`An unexpected error occurred: ${errorMessage}`);
+        navigate('/');
+        break;
+    }
+    clearLastMessage?.();
+  }, [lastMessage, navigate, clearLastMessage]);
+
   // If presenter closes the session before game starts, go back to main page
   useEffect(() => {
     if (lastMessage?.type === 'SESSION_CLOSED') {

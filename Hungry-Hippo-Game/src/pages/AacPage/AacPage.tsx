@@ -37,12 +37,21 @@ const AacPage: React.FC = () => {
   /**
    * Get last message and connectedUsers from WebSocket context.
    */
-  const { lastMessage, connectedUsers } = useWebSocket();
+  const { lastMessage, connectedUsers, clearLastMessage } = useWebSocket();
 
   /**
    * State to hold scores for the game.
    */
   const [scores, setScores] = useState<Record<string, number>>({});
+
+  // --- ERROR HANDLING ---
+  useEffect(() => {
+    if (lastMessage?.type === 'ERROR_MESSAGE' && lastMessage?.payload?.code === 'SESSION_NOT_FOUND') {
+      alert(`An error occurred: ${lastMessage.payload.message}`);
+      clearLastMessage?.();
+      navigate('/');
+    }
+  }, [lastMessage, navigate, clearLastMessage]);
 
   /**
    * Effect hook to listen for score updates from the EventBus.
