@@ -28,6 +28,7 @@ vi.mock('../../contexts/WebSocketContext', () => {
       lastMessage: null,
       sendMessage: mockSendMessage,
       clearLastMessage: vi.fn(),
+      resetGameState: vi.fn(),
     }),
     WebSocketProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };

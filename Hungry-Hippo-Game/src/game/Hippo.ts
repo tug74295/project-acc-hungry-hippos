@@ -147,21 +147,5 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
         this.moveStrategy = strategy;
     }
 
-    /**
-     * Toggles the state of the Hippo's mouth between open and closed, and updates its sprite frame accordingly.
-     * Assumes frame 0 is 'mouth open' and frame 3 is 'mouth closed'.
-     */
-    // public toggleMouth() {
-    //     this.mouthOpen = !this.mouthOpen;
-    //     const frameIndex = this.mouthOpen ? 0 : 3;
-    //     this.setFrame(frameIndex);
-    // }
-
-    // /**
-    //  * Checks if the Hippo's mouth is currently open.
-    //  * @returns True if the mouth is open, false otherwise.
-    //  */
-    // public isMouthOpen(): boolean {
-    //     return this.mouthOpen;
-    // }
+    
 }
