@@ -84,7 +84,7 @@ function Presenter() {
    * - `connectedUsers`: list of all users in the session.
    * - `isConnected`: whether WebSocket is open.
    */
-  const { sendMessage, connectedUsers, isConnected } = useWebSocket();
+  const { sendMessage, connectedUsers, isConnected, lastMessage, clearLastMessage } = useWebSocket();
 
   /**
    * List of available game modes in the order they should cycle through.
@@ -118,6 +118,15 @@ function Presenter() {
         : (currentIndex + 1) % modes.length;
     setMode(modes[newIndex]);
   };
+
+  // --- ERROR HANDLING ---
+  useEffect(() => {
+    if (lastMessage?.type === 'ERROR_MESSAGE' && lastMessage?.payload?.code === 'SESSION_NOT_FOUND') {
+      alert(`An error occurred: ${lastMessage.payload.message}`);
+      clearLastMessage?.();
+      navigate('/');
+    }
+  }, [lastMessage, navigate, clearLastMessage]);
 
   // Play audio for the initial mode when the component mounts
   useEffect(() => {

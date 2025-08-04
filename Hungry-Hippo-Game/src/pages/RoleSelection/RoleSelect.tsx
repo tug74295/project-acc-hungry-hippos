@@ -87,6 +87,25 @@ function RoleSelect() {
   const isHippoRoleFull = hippoPlayersCount >= HIPPO_PLAYER_LIMIT;
   const isAacRoleFull = aacUsersCount >= AAC_USER_LIMIT;
 
+  // --- ERROR HANDLING ---
+  useEffect(() => {
+    if (lastMessage?.type !== 'ERROR_MESSAGE') return;
+    const errorCode = lastMessage.payload.code;
+    const errorMessage = lastMessage.payload.message;
+    // Handle specific error codes
+    switch (errorCode) {
+      case 'SESSION_NOT_FOUND':
+        alert(`An error occurred: ${errorMessage}`);
+        navigate('/');
+        break;
+      default :
+        alert(`An unexpected error occurred: ${errorMessage}`);
+        navigate('/');
+        break;
+    }
+    clearLastMessage?.();
+  }, [lastMessage, navigate, clearLastMessage]);
+
   // If presenter closes the session before game starts, go back to main page
   useEffect(() => {
     if (lastMessage?.type === 'SESSION_CLOSED') {
@@ -155,12 +174,18 @@ function RoleSelect() {
 
   // Listen for updates on which colors are taken by other players
   useEffect(() => {
-    const colors = connectedUsers
-      .filter(user => user.role === 'Hippo Player' && user.color)
-      .map(user => user.color)
-      .filter((color): color is string => typeof color === 'string');
-    setTakenColors(colors);
-  }, [connectedUsers]);
+    if (lastMessage?.type === 'COLOR_UPDATE') {
+      // Get the array of colors from the message payload
+      const newTakenColors = lastMessage.payload.takenColors || [];
+      
+      // Update the state to disable the buttons
+      setTakenColors(newTakenColors);
+      
+      // Clear the message so this doesn't run again
+      clearLastMessage?.();
+    }
+  }, [lastMessage, clearLastMessage]);
+
 
   // Reset role if AAC User is selected and the role is full
   useEffect(() => {
@@ -248,6 +273,32 @@ function RoleSelect() {
     }
   };
 
+  // Handle going back or canceling
+  // If we're on the "Waiting..." screen, go back to role selection.
+  const handleGoBackOrCancel = () => {
+    if (waiting) {
+      setWaiting(false);
+      setRole('');
+      setSelectedColor(null);
+      sendMessage({
+        type: 'PLAYER_JOIN',
+        payload: {
+          sessionId,
+          userId: username,
+          role: 'pending',
+          color: null
+        },
+      });
+
+      sendMessage({
+        type: 'REQUEST_COLOR_UPDATE',
+        payload: { sessionId }
+      });
+    } else {
+      navigate('/');
+    }
+};
+
   const isNextDisabled = !role || (role === 'Hippo Player' && !selectedColor)
 
   return (
@@ -268,7 +319,7 @@ function RoleSelect() {
       <div className={styles.roleContainer}>
         <button
           className={styles.closeButton}
-          onClick={handleCancel}
+          onClick={handleGoBackOrCancel}
           aria-label="Close"
         >
           ✖

@@ -79,6 +79,17 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const data = JSON.parse(event.data);
       // console.log('[WS_CONTEXT] Message from server:', data);
 
+      if (data.type === 'ERROR_MESSAGE') {
+        console.error('[WS_CONTEXT] Received error from server:', data.payload.message);
+        setLastMessage(data);
+        return;
+      }
+
+      if (data.type === 'COLOR_UPDATE') {
+        setLastMessage(data);
+        return;
+      }
+
       if (data.type === 'TIMER_UPDATE') {
        // console.log(`[WS_CONTEXT] Timer update: ${data.secondsLeft} seconds left`);
         EventBus.emit('TIMER_UPDATE', data.secondsLeft);

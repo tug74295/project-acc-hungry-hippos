@@ -240,6 +240,15 @@ wss.on('connection', (ws) => {
         ws.role = role;
         ws.color = color;
 
+        if (!sessions[sessionId]) {
+          sendError(ws, {
+            code: 'SESSION_NOT_FOUND',
+            message: `Session ${sessionId} not found`,
+            sessionId,
+          });
+          return;
+        }
+
         sessions[sessionId].add(ws);
         console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
 
@@ -691,6 +700,21 @@ wss.on('connection', (ws) => {
         }
       }
 
+      // When a client requests an update on taken colors, broadcast the current state
+      if (data.type === 'REQUEST_COLOR_UPDATE') {
+      const { sessionId } = data.payload;
+        if (sessions[sessionId]) {
+          const takenColors = Array.from(sessions[sessionId])
+            .map(client => client.color)
+            .filter(c => c);
+
+          broadcast(sessionId, {
+            type: 'COLOR_UPDATE',
+            payload: { takenColors }
+          });
+        }
+      }
+
       // When a presenter clicks "End Game", broadcast to all clients in the session
       if (data.type === 'RESET_GAME') {
         const { sessionId } = data.payload;
@@ -725,6 +749,7 @@ wss.on('connection', (ws) => {
 
     } catch (error) {
         console.error('WSS Error processing message:', error);
+        sendError(ws, { message: 'Server error' });
     }
   });
 
@@ -923,3 +948,11 @@ function clearFruitQueue(sessionId) {
   fruitQueues[sessionId] = [];
 }
 
+function sendError(ws, { code = 'SERVER_ERROR', message, ...meta }) {
+  ws.send(
+    JSON.stringify({
+      type: 'ERROR_MESSAGE',
+      payload: { code, message, ...meta },
+    }),
+  );
+}

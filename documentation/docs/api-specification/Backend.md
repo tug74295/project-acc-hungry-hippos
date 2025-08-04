@@ -94,6 +94,41 @@ The server operates by receiving messages from clients and broadcasting **state 
 
 ---
 
+## Error Handling and Edge Cases
+
+### Error Message Shape
+
+| Message Type | Payload Shape | Example |
+|--------------|---------------|---------|
+| `ERROR_MESSAGE` | `{ code: string, message: string, [meta] }` | `{ "code": "SESSION_NOT_FOUND", "message": "An error occured. Session ABCDE doesn’t exist", "sessionId": "ABCDE" }` |
+
+### Error Codes
+
+| Code | Description | Trigger |
+|------|-------------|-----------------|
+| `SESSION_NOT_FOUND` | Session ID doesn’t exist (file or DB) | `PLAYER_JOIN`, `START_GAME` |
+| `SERVER_ERROR` | Any uncaught exception | top-level `try/catch` |
+
+### Edge-Case Handling
+
+- **Non-existent session**  
+  Every handler validates `sessionId`. If inactive, the server rejects the action and replies with `SESSION_NOT_FOUND`.
+
+- **Duplicate player join**  
+  Re-sending `PLAYER_JOIN` for the same socket/user is harmless; the server ignores duplicates.
+
+- **Presenter disconnects before game start**  
+  - *Players still in lobby*: a 10s reconnect timer starts. If the presenter fails to return, the server broadcasts `SESSION_CLOSED` and all clients navigate home.  
+  - *Lobby empty*: the session is removed from memory and database immediately.
+
+- **AAC queue overflow**  
+  When `fruitQueues[sessionId]` already holds `QUEUE_MAX` items, the oldest entry is dropped to make space. No error is sent.
+
+- **Game-timer expiry**  
+  At 0s the server broadcasts `GAME_OVER`, wipes active game state, and leaves session/player rows intact so the lobby can start another round. The session is deleted from the DB only after the last player disconnects.
+
+---
+
 ## Utility Functions
 
 ### `generateSessionId(length = 5)`
