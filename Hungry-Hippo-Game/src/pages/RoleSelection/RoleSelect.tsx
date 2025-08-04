@@ -174,6 +174,19 @@ function RoleSelect() {
     }
   }, [sessionId, username, isConnected, sendMessage]);
 
+  useEffect(() => {
+    if (lastMessage?.type === 'COLOR_UPDATE') {
+      // Get the array of colors from the message payload
+      const newTakenColors = lastMessage.payload.takenColors || [];
+      
+      // Update the state to disable the buttons
+      setTakenColors(newTakenColors);
+      
+      // Clear the message so this doesn't run again
+      clearLastMessage?.();
+    }
+  }, [lastMessage, clearLastMessage]);
+
   // Listen for updates on which colors are taken by other players
   useEffect(() => {
     const colors = connectedUsers

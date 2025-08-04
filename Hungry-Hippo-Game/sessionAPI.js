@@ -683,15 +683,6 @@ wss.on('connection', (ws) => {
             .map(client => client.color)
             .filter(c => c);
 
-          if (takenColors.includes(color)) {
-            sendError(ws, {
-              code: 'COLOR_ALREADY_TAKEN',
-              message: `${color} is already taken`,
-              color,
-            });
-            return;
-          }
-
           broadcast(sessionId, {
             type: 'COLOR_UPDATE',
             payload: { takenColors }

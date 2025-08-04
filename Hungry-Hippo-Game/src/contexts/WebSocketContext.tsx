@@ -85,6 +85,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return;
       }
 
+      if (data.type === 'COLOR_UPDATE') {
+        setLastMessage(data);
+        return;
+      }
+
       if (data.type === 'TIMER_UPDATE') {
        // console.log(`[WS_CONTEXT] Timer update: ${data.secondsLeft} seconds left`);
         EventBus.emit('TIMER_UPDATE', data.secondsLeft);
