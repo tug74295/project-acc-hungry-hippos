@@ -20,8 +20,12 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('../../contexts/WebSocketContext', () => ({
   useWebSocket: () => ({
-    gameStarted: false,    // navigation won't trigger
+    connectedUsers: [],
+    gameStarted: false,
     sendMessage: vi.fn(),
+    isConnected: true,
+    lastMessage: undefined,
+    clearLastMessage: vi.fn(),
   }),
 }));
 
