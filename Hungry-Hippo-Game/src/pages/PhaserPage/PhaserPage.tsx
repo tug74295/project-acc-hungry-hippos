@@ -50,6 +50,15 @@ const PhaserPage: React.FC = () => {
       .map(user => [user.userId, user.color as string]) // safe to cast now
   );
 
+  // --- ERROR HANDLING ---
+  useEffect(() => {
+    if (lastMessage?.type === 'ERROR_MESSAGE' && lastMessage?.payload?.code === 'SESSION_NOT_FOUND') {
+      alert(`An error occurred: ${lastMessage.payload.message}`);
+      clearLastMessage?.();
+      navigate('/');
+    }
+  }, [lastMessage, navigate, clearLastMessage]);
+
   // --- INITIALIZE PLAYER IN SESSION STORAGE ---
   // This is to ensure the player is registered in session storage
   useEffect(() => {
