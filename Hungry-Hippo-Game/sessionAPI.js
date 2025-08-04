@@ -240,6 +240,15 @@ wss.on('connection', (ws) => {
         ws.role = role;
         ws.color = color;
 
+        if (!sessions[sessionId]) {
+          sendError(ws, {
+            code: 'SESSION_NOT_FOUND',
+            message: `Session ${sessionId} not found`,
+            sessionId,
+          });
+          return;
+        }
+
         sessions[sessionId].add(ws);
         console.log(`WSS User ${userId} joined session ${sessionId}. Total clients in session: ${sessions[sessionId].size}`);
 
@@ -674,6 +683,15 @@ wss.on('connection', (ws) => {
             .map(client => client.color)
             .filter(c => c);
 
+          if (takenColors.includes(color)) {
+            sendError(ws, {
+              code: 'COLOR_ALREADY_TAKEN',
+              message: `${color} is already taken`,
+              color,
+            });
+            return;
+          }
+
           broadcast(sessionId, {
             type: 'COLOR_UPDATE',
             payload: { takenColors }
@@ -725,6 +743,7 @@ wss.on('connection', (ws) => {
 
     } catch (error) {
         console.error('WSS Error processing message:', error);
+        sendError(ws, { message: 'Server error' });
     }
   });
 
@@ -923,3 +942,11 @@ function clearFruitQueue(sessionId) {
   fruitQueues[sessionId] = [];
 }
 
+function sendError(ws, { code = 'SERVER_ERROR', message, ...meta }) {
+  ws.send(
+    JSON.stringify({
+      type: 'ERROR_MESSAGE',
+      payload: { code, message, ...meta },
+    }),
+  );
+}
