@@ -17,7 +17,7 @@ interface AacInterfaceProps {
  * @param {AacInterfaceProps} props - The properties for the component.
  * @returns {JSX.Element} The rendered component.
  */
-const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }) => {
+  const AacInterface: React.FC<AacInterfaceProps> = ({ sessionId,  userId, role  }) => {
   const [selectedItem, setSelectedItem] = React.useState<AacFood | null>(null);
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
   const [activeVerb, setActiveVerb] = React.useState<AacVerb | null>(null);

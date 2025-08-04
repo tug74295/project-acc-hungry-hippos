@@ -104,6 +104,33 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
 
 
 
+// Prevent iPad/iPhone swipe navigation during gameplay, but allow edge gestures for system nav
+
+
+  useEffect(() => {
+  const container = document.getElementById('game-container');
+  if (!container || !('ontouchstart' in window)) return;
+
+  function preventEdgeSwipe(e: TouchEvent) {
+    const touch = e.touches[0];
+    if (!touch) return;
+    // Allow system gesture if <10px from left/right edge
+    const atLeftEdge = touch.clientX < 10;
+    const atRightEdge = touch.clientX > window.innerWidth - 10;
+    if (!atLeftEdge && !atRightEdge) {
+      e.preventDefault();
+    }
+  }
+
+  container.addEventListener('touchstart', preventEdgeSwipe, { passive: false });
+  container.addEventListener('touchmove', preventEdgeSwipe, { passive: false });
+
+  return () => {
+    container.removeEventListener('touchstart', preventEdgeSwipe);
+    container.removeEventListener('touchmove', preventEdgeSwipe);
+  };
+}, []);
+
 
     /**
      * Renders the HTML container that will hold the Phaser canvas.

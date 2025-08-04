@@ -2,13 +2,14 @@
  * @vitest-environment jsdom
  */
 
+import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
-import AacInterface from './AacInterface';
-import { AacFood } from '../Foods';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// 1. Mock the AAC_DATA import 
+// ---- MOCKS ----
+
+// 1. Mock the Foods module (AAC_DATA and verbs)
 vi.mock('../Foods', () => ({
   AAC_DATA: {
     categories: [
@@ -16,15 +17,29 @@ vi.mock('../Foods', () => ({
         categoryName: 'Fruits',
         categoryIcon: '/fake/fruits.png',
         foods: [
-          { id: 'apple', name: 'Apple', imagePath: '/fake/apple.png', audioPath: '/fake/apple.mp3' },
-          { id: 'banana', name: 'Banana', imagePath: '/fake/banana.png', audioPath: '/fake/banana.mp3' },
+          { id: 'apple', name: 'Apple', imagePath: '/fake/apple.png', audioPath: '/fake/apple.mp3' },   // <-- Added name
+          { id: 'banana', name: 'Banana', imagePath: '/fake/banana.png', audioPath: '/fake/banana.mp3' }, // <-- Added name
         ],
       },
     ],
   },
+  AAC_VERBS: [],
 }));
 
-// Mock the audio object globally to prevent actual audio playback
+// 2. Mock WebSocket context and spy on sendMessage
+const mockSendMessage = vi.fn();
+vi.mock('../contexts/WebSocketContext', () => ({
+  useWebSocket: () => ({
+    sendMessage: mockSendMessage,
+  }),
+}));
+
+// 3. Mock storage (optional, only if your code calls it on mount)
+vi.mock('../components/Storage/Storage', () => ({
+  updatePlayerInSessionStorage: vi.fn(),
+}));
+
+// 4. Mock Audio globally to prevent errors
 const mockAudio = vi.fn(() => ({
   play: vi.fn(),
   onended: vi.fn(),
@@ -32,13 +47,51 @@ const mockAudio = vi.fn(() => ({
 }));
 vi.stubGlobal('Audio', mockAudio);
 
+// ---- ACTUAL TESTS ----
+
+import AacInterface from './AacInterface'; // Import after mocks
+
 describe('AacInterface Component', () => {
-  it('should call onFoodSelected with the correct food when a food item is clicked', async () => {
-    const mockOnFoodSelected = vi.fn();
-    
-    // Render the AacInterface component with the mock callback.
-    render(<AacInterface onFoodSelected={mockOnFoodSelected} />);
-    
+  beforeEach(() => {
+    mockSendMessage.mockClear();
+  });
+
+  it('calls sendMessage with the correct payload when food is clicked', async () => {
+    render(
+      <AacInterface sessionId="test-session" userId="user1" role="AAC User" />
+    );
+
+    const user = userEvent.setup();
+    // Click to open category
+    const categoryButton = screen.getByRole('button', { name: /fruits/i });
+    await user.click(categoryButton);
+
+    // Click food
+    const appleButton = await screen.findByRole('button', { name: /apple/i });
+    await user.click(appleButton);
+
+    // Assert the right WebSocket message was sent
+    expect(mockSendMessage).toHaveBeenCalledWith({
+      type: "AAC_FOOD_SELECTED",
+      payload: {
+        sessionId: "test-session",
+        userId: "user1",
+        role: "AAC User",
+        food: {
+          id: "apple",
+          name: "Apple",
+          imagePath: "/fake/apple.png",
+          audioPath: "/fake/apple.mp3",
+        },
+        effect: null,
+      },
+    });
+  });
+
+  it('shows the selected food in the UI when clicked', async () => {
+    render(
+      <AacInterface sessionId="test-session" userId="user1" role="AAC User" />
+    );
     const user = userEvent.setup();
     const categoryButton = screen.getByRole('button', { name: /fruits/i });
     await user.click(categoryButton);
@@ -46,14 +99,13 @@ describe('AacInterface Component', () => {
     const appleButton = await screen.findByRole('button', { name: /apple/i });
     await user.click(appleButton);
 
-    expect(mockOnFoodSelected).toHaveBeenCalledTimes(1);
+    // UI should update with selection
+    expect(screen.getByText(/you selected: Apple/i)).toBeInTheDocument();
 
-    const expectedAppleData: AacFood = {
-      id: 'apple',
-      name: 'Apple',
-      imagePath: '/fake/apple.png',
-      audioPath: '/fake/apple.mp3',
-    };
-    expect(mockOnFoodSelected).toHaveBeenCalledWith(expectedAppleData);
+    // If there are multiple images with alt="Apple", use getAllByAltText:
+    expect(screen.getAllByAltText('Apple').length).toBeGreaterThan(0);
+
+    // OR if you want to check exactly one is selected (optional, only if your component guarantees this)
+    // expect(screen.getByAltText('Apple')).toBeInTheDocument();
   });
 });

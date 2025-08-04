@@ -463,44 +463,6 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
         //     });
         //   }
         // });
-    
-      //  movementStore.subscribe(({ userId, x, y }) => {
-      //     const player = this.players[userId];
-      //     if (player && userId !== this.localPlayerId) {
-      //       const edge = this.edgeAssignments[userId] as Edge;
-      //       const prevX = player.targetX;
-      //       const prevY = player.targetY;
-      //       player.updatePointerFlip(prevX, prevY, edge, x, y);
-      //       player.setTargetPosition(x, y);
-      //     }
-      //   });
-
-    // EventBus.on('sync-food-state', (foodStates: FoodState[]) => {
-    //   this.syncFoodState(foodStates);
-    // });
-
-    // EventBus.on('apply-player-effect', (data: { targetUserId: string, effect: AacVerb }) => {
-    //   if (data.targetUserId !== this.localPlayerId) {
-    //     this.applyEffectToPlayer(data.targetUserId, data.effect);
-    //   }
-    // });
-   
-    // EventBus.on('external-message', (data: any) => {
-    //   if(data.type == 'gameOver')
-    //   {
-    //     this.handleGameOver();
-    //   }
-    // });
-
-    // EventBus.on('start-game', () => {
-    //   //console.log('[Game.ts] start-game event received, requesting timer start.')
-    //   this.requestStartTimer();
-    // });
-
-    // EventBus.on('TIMER_UPDATE', (secondsLeft: number) => {
-    //   //console.log(`[Game.ts] TIMER_UPDATE received: ${secondsLeft} seconds left`);
-    //   this.updateTimerUI(secondsLeft);
-    // });
 
   }
 
@@ -510,19 +472,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
   
     
   update() {
-    // Check if user has interacted with the game on mobile
-    // this.input.once('pointerdown', () => {
-    //   this.hasUserInteracted = true;
-    //   this.swipeHint?.destroy();
-    // });
-
-    // // Check if user has interacted with the game on keyboard
-    // this.input.keyboard?.on('keydown', () => {
-    //   if (!this.hasUserInteracted) {
-    //     this.hasUserInteracted = true;
-    //     this.swipeHint?.destroy();
-    //   }
-    // });
+  
 
     if (this.hippo && this.role !== 'Spectator') {
       if (this.usePointerControl) {
