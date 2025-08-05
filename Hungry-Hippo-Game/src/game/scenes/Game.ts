@@ -414,8 +414,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
   EventBus.on('external-message', this.onExternalMessage);
   EventBus.on('start-game', this.onStartGame);
   EventBus.on('TIMER_UPDATE', this.onTimerUpdate);
-
-
+  EventBus.on('players-updated', this.handlePlayersUpdated, this);
 
   // movementStore subscription (and save the unsubscribe function!)
     this.unsubscribeMove = movementStore.subscribe(({ userId, x, y }) => {
@@ -519,6 +518,19 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
       }
     }
   }
+
+  private handlePlayersUpdated(updatedUsers: { userId: string; role: string; color?: string }[]) {
+  const activeIds = updatedUsers.map(u => u.userId);
+  for (const userId of Object.keys(this.players)) {
+    if (!activeIds.includes(userId)) {
+      // Remove the Hippo sprite
+      this.players[userId].destroy();
+      delete this.players[userId];
+      delete this.playerScores[userId];
+      delete this.edgeAssignments[userId];
+    }
+  }
+}
 
   private applyEffectToPlayer(targetUserId: string, effect: AacVerb) {
     const targetHippo = this.players[targetUserId];
