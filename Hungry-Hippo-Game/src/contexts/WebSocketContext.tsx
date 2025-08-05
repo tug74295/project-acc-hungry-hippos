@@ -115,11 +115,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
        return;
       }
 
-      if (data.type === 'USERS_LIST_UPDATE') {
-        setConnectedUsers(data.payload.users);
-        return; 
-      }  
-
       if (data.type === 'START_GAME_BROADCAST') {
       //  console.log('[WS_CONTEXT] Game started!');
         setGameStarted(true);
@@ -161,6 +156,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (data.type === 'USERS_LIST_UPDATE') {
         console.log('[WS_CONTEXT] Users updated from local storage:', data.payload.users);
         setConnectedUsers(data.payload.users);
+        EventBus.emit('players-updated', data.payload.users);
         setLastMessage(data);
         return;
       }
