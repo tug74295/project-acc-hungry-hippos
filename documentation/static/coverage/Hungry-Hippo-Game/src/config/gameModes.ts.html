@@ -3,15 +3,15 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for Hungry-Hippo-Game/src/pages/RoleSelection/RoleSelectHost.tsx</title>
+    <title>Code coverage report for Hungry-Hippo-Game/src/config/gameModes.ts</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="../../../../prettify.css" />
-    <link rel="stylesheet" href="../../../../base.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="../../../../favicon.png" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style type='text/css'>
         .coverage-summary .sorter {
-            background-image: url(../../../../sort-arrow-sprite.png);
+            background-image: url(../../../sort-arrow-sprite.png);
         }
     </style>
 </head>
@@ -19,7 +19,7 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">Hungry-Hippo-Game/src/pages/RoleSelection</a> RoleSelectHost.tsx</h1>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">Hungry-Hippo-Game/src/config</a> gameModes.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
@@ -96,7 +96,8 @@
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a>
 <a name='L33'></a><a href='#L33'>33</a>
-<a name='L34'></a><a href='#L34'>34</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -129,56 +130,58 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { getSessionId } from '../../utils/session';</span></span></span>
-<span class="cstat-no" title="statement not covered" >import styles from './RoleSelect.module.css';</span>
-<span class="cstat-no" title="statement not covered" >import ButtonClick from '../../components/ButtonClick/ButtonClick';</span>
-<span class="cstat-no" title="statement not covered" >import { FaArrowLeft } from 'react-icons/fa';</span>
-<span class="cstat-no" title="statement not covered" >import { useNavigate } from 'react-router-dom';</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >export type GameMode = 'Easy' | 'Medium' | 'Hard';</span></span></span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >function RoleSelect() {</span>
-<span class="cstat-no" title="statement not covered" >  const sessionId = getSessionId();</span>
-<span class="cstat-no" title="statement not covered" >  const navigate = useNavigate();</span>
-<span class="cstat-no" title="statement not covered" >  </span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >  const createCode = () =&gt; {    </span>
-<span class="cstat-no" title="statement not covered" >    // TODO: implement actual validation logic</span>
-<span class="cstat-no" title="statement not covered" >  };</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >  return (</span>
-<span class="cstat-no" title="statement not covered" >    &lt;div className={styles.containerImg}&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;button </span>
-<span class="cstat-no" title="statement not covered" >        className={styles.backButton} </span>
-<span class="cstat-no" title="statement not covered" >        onClick={() =&gt; navigate('/')} </span>
-<span class="cstat-no" title="statement not covered" >        aria-label="Go back"</span>
-<span class="cstat-no" title="statement not covered" >      &gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;FaArrowLeft size={24} /&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;/button&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;h2 className={styles.sessionText2}&gt; You are the host. &lt;/h2&gt;      </span>
-<span class="cstat-no" title="statement not covered" >      &lt;h2 className={styles.sessionText2}&gt; Game Code: {sessionId} &lt;/h2&gt;      </span>
-<span class="cstat-no" title="statement not covered" >      &lt;ButtonClick text="Start Game" onClick={createCode} /&gt;</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >    &lt;/div&gt;</span>
-<span class="cstat-no" title="statement not covered" >    </span>
-<span class="cstat-no" title="statement not covered" >  );</span>
+<span class="cstat-no" title="statement not covered" >export interface ModeSettings {</span>
+<span class="cstat-no" title="statement not covered" >  fruitSpeed: number;  </span>
+<span class="cstat-no" title="statement not covered" >  allowPenalty: boolean;</span>
+<span class="cstat-no" title="statement not covered" >  allowEffect: boolean;</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export default RoleSelect;</span></pre></td></tr></table></pre>
+<span class="cstat-no" title="statement not covered" >/**</span>
+<span class="cstat-no" title="statement not covered" > * Maps each `GameMode` to its corresponding game settings.</span>
+<span class="cstat-no" title="statement not covered" > * </span>
+<span class="cstat-no" title="statement not covered" > * - `Easy`: fruitSpeed = 100, no penalty.</span>
+<span class="cstat-no" title="statement not covered" > * - `Medium`: fruitSpeed = 125, penalty applied.</span>
+<span class="cstat-no" title="statement not covered" > * - `Hard`: fruitSpeed = 150, penalty applied.</span>
+<span class="cstat-no" title="statement not covered" > * </span>
+<span class="cstat-no" title="statement not covered" > * Can be used to dynamically configure game behavior based on user-selected mode.</span>
+<span class="cstat-no" title="statement not covered" > */</span>
+<span class="cstat-no" title="statement not covered" >export const MODE_CONFIG: Record&lt;GameMode, ModeSettings&gt; = {</span>
+<span class="cstat-no" title="statement not covered" >  Easy: {</span>
+<span class="cstat-no" title="statement not covered" >    fruitSpeed: 100,</span>
+<span class="cstat-no" title="statement not covered" >    allowPenalty: false,</span>
+<span class="cstat-no" title="statement not covered" >    allowEffect: false,</span>
+<span class="cstat-no" title="statement not covered" >  },</span>
+<span class="cstat-no" title="statement not covered" >  Medium: {</span>
+<span class="cstat-no" title="statement not covered" >    fruitSpeed: 125,</span>
+<span class="cstat-no" title="statement not covered" >    allowPenalty: true,</span>
+<span class="cstat-no" title="statement not covered" >    allowEffect: true,</span>
+<span class="cstat-no" title="statement not covered" >  },</span>
+<span class="cstat-no" title="statement not covered" >  Hard: {</span>
+<span class="cstat-no" title="statement not covered" >    fruitSpeed: 150,</span>
+<span class="cstat-no" title="statement not covered" >    allowPenalty: true,</span>
+<span class="cstat-no" title="statement not covered" >    allowEffect: true,</span>
+<span class="cstat-no" title="statement not covered" >  },</span>
+<span class="cstat-no" title="statement not covered" >};</span>
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-06-16T16:37:43.032Z
+                at 2025-08-05T17:15:02.038Z
             </div>
-        <script src="../../../../prettify.js"></script>
+        <script src="../../../prettify.js"></script>
         <script>
             window.onload = function () {
                 prettyPrint();
             };
         </script>
-        <script src="../../../../sorter.js"></script>
-        <script src="../../../../block-navigation.js"></script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
     </body>
 </html>
     
