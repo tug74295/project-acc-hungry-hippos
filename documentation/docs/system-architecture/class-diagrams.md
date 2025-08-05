@@ -46,11 +46,6 @@ classDiagram
         +send(data)
     }
 
-    class Food {
-        +id: string
-        +name: string
-    }
-
     class FoodInstance {
         +instanceId: string
         +foodId: string
@@ -74,7 +69,6 @@ classDiagram
     WebSocketServer "1" *-- "*" Session : manages
     Session "1" *-- "*" Client : tracks
     Session "1" o-- "*" FoodInstance : spawns
-    FoodInstance "1" -- "1" Food : is an instance of
     WebSocketServer ..> DatabaseService : persists
 ```
 
