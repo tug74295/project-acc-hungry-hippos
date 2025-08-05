@@ -18,26 +18,34 @@ title: Sequence Diagram – Start Game Session (Host)
 ---
 
 sequenceDiagram
-    participant Host
+    actor Host
+    participant HostClient
     participant Server
-    participant Players
+    participant PlayerClient
+    actor Player
 
-    Host->>Server: Select "No code? Create new game!"
+    Host ->> HostClient: “Create new game”
+    HostClient ->> Server: POST /sessions
     activate Server
-    Server->>Server: Generate game code + QR code
-    Server-->>Host: Send code and QR for display
+    Server ->> Server: Generate game code + QR
+    Server -->> HostClient: code + QR
     deactivate Server
 
-    Host->>Players: Share code/QR
+    HostClient -->> Host: Display code + QR
+    Host -->> Player: Share code / QR
 
     loop Each player joins
-        Players->>Server: Join using code
-        Server->>Server: Register player and assign role
-        Server-->>Host: Show new avatar & role
+        Player ->> PlayerClient: Enter code
+        PlayerClient ->> Server: Join <code>
+        Server ->> Server: Register player & assign role
+        Server -->> HostClient: New avatar + role
+        HostClient -->> Host: Update lobby
     end
 
-    Server-->>Host: One AAC user + one hippo joined
-    Host->>Server: Begin game
+    Server -->> HostClient: AAC + Hippo present
+    HostClient -->> Host: “Start game?” prompt
+    Host ->> HostClient: Click “Begin”
+    HostClient ->> Server: start_game
 
 ```
 
@@ -58,22 +66,34 @@ title: Sequence Diagram 2 - Join Game Session
 ---
 
 sequenceDiagram
-    participant Host
-    participant Player
-    participant Game
+    actor Host
+    actor Player
 
-    Host->>Player: Share game code
-    Player->>Game: Open game and enter code
-    Game-->>Player: Validate code / accept
-    alt Select role: Hippo Player
-        Player->>Game: Choose Hippo Player
-        Game-->>Player: Prompt for hippo color
-        Player->>Game: Select color
-    else Select role: AAC User
-        Player->>Game: Choose AAC User
+    participant HostClient
+    participant PlayerClient
+    participant Server
+
+    Host ->> HostClient: Code + QR on-screen
+    HostClient -->> Host: Displayed
+    Host -->> Player: Share code / QR
+
+    Player ->> PlayerClient: Launch app, enter code
+    PlayerClient ->> Server: VALIDATE_SESSION
+    Server -->> PlayerClient: SESSION_VALIDATED
+
+    alt Role = Hippo Player
+        Player ->> PlayerClient: Select “Hippo”
+        PlayerClient ->> Server: PLAYER_JOIN
+        Server -->> PlayerClient: “Pick color”
+        Player ->> PlayerClient: Choose color
+        PlayerClient ->> Server: COLOR_UPDATED
+    else Role = AAC User
+        Player ->> PlayerClient: Select “AAC User”
+        PlayerClient ->> Server: PLAYER_JOIN
     end
-    Game-->>Player: Joined lobby (waiting)
-    Player-->>Host: Wait for host to start game
+
+    Server -->> PlayerClient: Lobby state
+    PlayerClient -->> Player: Waiting for host…
 
 
 

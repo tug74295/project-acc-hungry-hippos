@@ -175,13 +175,8 @@ function RoleSelect() {
   // Listen for updates on which colors are taken by other players
   useEffect(() => {
     if (lastMessage?.type === 'COLOR_UPDATE') {
-      // Get the array of colors from the message payload
       const newTakenColors = lastMessage.payload.takenColors || [];
-      
-      // Update the state to disable the buttons
       setTakenColors(newTakenColors);
-      
-      // Clear the message so this doesn't run again
       clearLastMessage?.();
     }
   }, [lastMessage, clearLastMessage]);
@@ -190,7 +185,7 @@ function RoleSelect() {
   // Reset role if AAC User is selected and the role is full
   useEffect(() => {
     if (!waiting && role === 'AAC User' && isAacRoleFull) {
-        setRole('');
+      setRole('');
     }
   }, [connectedUsers, role, isAacRoleFull]);
   /**
@@ -234,6 +229,10 @@ function RoleSelect() {
   const handleRoleSelect = (selectedRole: string) => {
     if (selectedRole === 'Hippo Player') {
       playAudio('/audio/role-select/hippo-player.mp3');
+      sendMessage({
+        type: 'REQUEST_COLOR_UPDATE',
+        payload: { sessionId }
+      });
     } else if (selectedRole === 'AAC User') {
       playAudio('/audio/role-select/aac-user.mp3');
     }

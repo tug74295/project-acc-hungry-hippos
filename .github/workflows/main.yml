@@ -30,7 +30,14 @@ jobs:
         run: npm install  
 
       - name: Run Vitest tests
-        run: npx vitest run ./src/game/Hippo.test.ts
+        run: npx vitest run --coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: documentation/static/coverage/
+
   
 
     
