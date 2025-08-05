@@ -21,6 +21,7 @@ export class Hippo extends Phaser.Physics.Arcade.Sprite {
 
     public targetX: number = 0;
     public targetY: number = 0;
+    public hasSynced = false;
 
     private pointerSpeed: number = 10;
 

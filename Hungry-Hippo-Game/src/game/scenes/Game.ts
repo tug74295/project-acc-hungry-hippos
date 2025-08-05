@@ -426,6 +426,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
       const prevY = player.targetY;
       player.updatePointerFlip(prevX, prevY, edge, x, y);
       player.setTargetPosition(x, y);
+      player.hasSynced = true;
     }
     });
 
@@ -490,7 +491,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
       }
       const newX = this.hippo.x;
       const newY = this.hippo.y;
-      if (this.lastSentX !== newX || this.lastSentY !== newY) {
+      if (this.hasUserInteracted && (this.lastSentX !== newX || this.lastSentY !== newY)) {
         const now = Date.now();
         if (!this.lastMoveSentAt || now - this.lastMoveSentAt > 40) {
           this.lastSentX = newX;
@@ -513,7 +514,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
       }
     }
     for (const [id, hippo] of Object.entries(this.players)) {
-      if (id !== this.localPlayerId) {
+      if (id !== this.localPlayerId && hippo.hasSynced) {
         hippo.update();
       }
     }
