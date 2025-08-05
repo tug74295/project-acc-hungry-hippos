@@ -13,15 +13,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
   View Full Test Coverage Report
 </a>
 
-Frontend testing is done via Vitest and React Testing Library. 
+The project's frontend testing is built on a foundation of Vitest, chosen for its seamless integration with the Vite development environment, along with the React Testing Library (RTL).
+This combination was selected for its high performance and robust built-in mocking capabilities. RTL focuses on testing components from the user's perspective by interacting with the rendered output rather than internal implementation details.
+The setup is configured to automatically generate code coverage reports, providing a clear measure of test effectiveness.
 
-| Student | Library | Why We Chose It | Key Features | Modules Covered |
-| --------| --------| ----------------| -------------| ----------------|
-| Kostandin Jorgji | Vitest & React Testing Library | Vite integration, fast TypeScript support, RTL mirrors how users interact with the app | userEvent & render | AacInterface.tsx, Foods.ts
-| Omais Khan | Vitest | Works out-of-the-box with Vite + TypeScript | vi.fn(), isolated test logic | Game.ts |
-| Jasmine Liu | Vitest | Straightforward setup to run tests | Easily generate coverage reports with a command  | LandingPage.tsx & ButtonClick.tsx |
-| Mohammed K | Vitest | Excellent for react and Javascript application | Fast execution, Built in Mocking, Isolated test Logic | Hippo.ts
-| Student |
+---
 
 # Frontend
 
