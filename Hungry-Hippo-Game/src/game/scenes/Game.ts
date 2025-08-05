@@ -112,6 +112,7 @@ export class Game extends Scene {
     console.log('[Game] Preload called');
     this.load.image('background', '/assets/presenterBg.png');
     this.load.image('swipeHand', '/assets/swipeHand.png');
+    this.load.image('tree', '/assets/tree.png');
 
     AAC_DATA.categories.forEach(category => {
       category.foods.forEach(food => {
@@ -344,6 +345,12 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     const bg = this.add.image(512, 512, 'background');
     bg.setOrigin(0.5, 0.5);
     bg.setDisplaySize(this.scale.width, this.scale.height);
+
+    const tree = this.add.image(512, 512, 'tree');
+    tree.setOrigin(0.5, 0.5);
+    tree.setScale(0.20);
+    tree.setDepth(3);
+
 
     if (this.role === 'Spectator'){this.physics.pause();}
         this.input.keyboard!.on('keydown', () => {
@@ -653,6 +660,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
         const spawnX = foodState.x * this.scale.width;
         const spawnY = foodState.y * this.scale.height;
         const newFood = this.foods.create(spawnX, spawnY, foodState.foodId) as Phaser.Physics.Arcade.Image;
+        newFood.setDepth(2);
         newFood.setData('instanceId', foodState.instanceId);
         newFood.setScale(0.12);
         newFood.body?.setCircle(newFood.width * 0.5);
