@@ -58,39 +58,41 @@ The server operates by receiving messages from clients and broadcasting **state 
 
 ### Client-to-Server Messages
 
-| Message Type            | Payload Shape                              | Example                                            | Description |
-|-------------------------|--------------------------------------------|----------------------------------------------------|-------------|
-| `CREATE_SESSION`        | `{}`                                       | `{}`                                               | Requests a new unique session ID. |
-| `VALIDATE_SESSION`      | `{ sessionId: string }`                    | `{ "ABCDE" }`                                      | Validates session ID. |
-| `PLAYER_JOIN`           | `{ sessionId, userId, role, color }`       | `{ "ABCDE", "User123", "Hippo Player", "blue" }`   | Adds user to session and syncs presence. |
-| `PLAYER_MOVE`           | `{ sessionId, userId, x, y }`              | `{ "ABCDE", "User123", 100, 200 }`                 | Sends current player position. |
-| `AAC_FOOD_SELECTED`     | `{ sessionId, food, effect }`              | `{ "ABCDE", { "apple" }, null }`                   | Target food selection by AAC user. |
-| `START_GAME`            | `{ sessionId, mode }`                      | `{ "ABCDE", "Medium" }`                            | Initializes game loop, spawns food. |
-| `START_TIMER`           | `{ sessionId }`                            | `{ "ABCDE" }`                                      | Starts countdown (180s). |
-| `SET_EDGE`              | `{ sessionId, userId, edge }`              | `{ "ABCDE", "User123", "bottom" }`                 | Assigns spawn angle per player. |
-| `FRUIT_EATEN`           | `{ sessionId, instanceId }`                | `{ "ABCDE", "food-12-User123" }`                   | Tells server to remove food from list. |
-| `FRUIT_EATEN_BY_PLAYER` | `{ sessionId, userId, isCorrect, effect }` | `{ "ABCDE", "User123", true, "grow" }`             | Updates score and clears effect. |
-| `PLAYER_EFFECT_APPLIED` | `{ sessionId, targetUserId, effect }`      | `{ "ABCDE", "User123", "freeze" }`                 | Triggers visual effect. |
-| `SELECT_COLOR`          | `{ sessionId, userId, color }`             | `{ "ABCDE", "User123", "green" }`                  | Assigns a color to a user. |
+| Message Type            | Payload Shape                              | Example (explicit keys)                                                                | Description                                       |
+|-------------------------|--------------------------------------------|----------------------------------------------------------------------------------------|---------------------------------------------------|
+| `CREATE_SESSION`        | `{}`                                       | `{}`                                                                                   | Requests a new unique session ID.                 |
+| `VALIDATE_SESSION`      | `{ sessionId: string }`                    | `{ "sessionId": "ABCDE" }`                                                             | Validates session ID.                             |
+| `PLAYER_JOIN`           | `{ sessionId, userId, role, color }`       | `{ "sessionId": "ABCDE", "userId": "User123", "role": "Hippo Player", "color": "blue" }`| Adds user to session and syncs presence.          |
+| `PLAYER_MOVE`           | `{ sessionId, userId, x, y }`              | `{ "sessionId": "ABCDE", "userId": "User123", "x": 100, "y": 200 }`                    | Sends current player position.                    |
+| `AAC_FOOD_SELECTED`     | `{ sessionId, food, effect }`              | `{ "sessionId": "ABCDE", "food": "apple", "effect": null }`                            | Target food selection by AAC user.                |
+| `START_GAME`            | `{ sessionId, mode }`                      | `{ "sessionId": "ABCDE", "mode": "Medium" }`                                           | Initializes game loop and spawns food.            |
+| `START_TIMER`           | `{ sessionId }`                            | `{ "sessionId": "ABCDE" }`                                                             | Starts countdown (180 s).                         |
+| `SET_EDGE`              | `{ sessionId, userId, edge }`              | `{ "sessionId": "ABCDE", "userId": "User123", "edge": "bottom" }`                      | Assigns spawn angle per player.                   |
+| `FRUIT_EATEN`           | `{ sessionId, instanceId }`                | `{ "sessionId": "ABCDE", "instanceId": "food-12-User123" }`                            | Tells server to remove food from list.            |
+| `FRUIT_EATEN_BY_PLAYER` | `{ sessionId, userId, isCorrect, effect }` | `{ "sessionId": "ABCDE", "userId": "User123", "isCorrect": true, "effect": "grow" }`   | Updates score and clears effect.                  |
+| `PLAYER_EFFECT_APPLIED` | `{ sessionId, targetUserId, effect }`      | `{ "sessionId": "ABCDE", "targetUserId": "User123", "effect": "freeze" }`              | Triggers visual effect.                           |
+| `SELECT_COLOR`          | `{ sessionId, userId, color }`             | `{ "sessionId": "ABCDE", "userId": "User123", "color": "green" }`                      | Assigns a color to a user.                        |
+
 
 ---
 
 ### Server → Client Broadcasts
 
-| Message Type               | Payload Shape                                | Example                                                               | Description |
-|----------------------------|----------------------------------------------|-----------------------------------------------------------------------|-------------|
-| `SESSION_CREATED`          | `{ sessionId: string }`                      | `{ "ABCDE" }`                                                         | A new session was created. |
-| `SESSION_VALIDATED`        | `{ sessionId: string, isValid: boolean }`    | `{ "ABCDE", true }`                                                   | Result of a validation request. |
-| `PLAYER_JOINED_BROADCAST`  | `{ userId, role, color }`                    | `{ "User123", "Hippo Player", "blue" }`                               | Sent when new player joins. |
-| `USERS_LIST_UPDATE`        | `{ users: [{ userId, role, color }] }`       | `{ [{ "User123", "Hippo Player", "blue" }, { "User456", "AAC User" }] }` | Updated player list. |
-| `FOOD_STATE_UPDATE`        | `{ foods: [...] }`                           | `{ [{ "food-12-User123", "apple", 100, 200 }] }`                      | Broadcasts food positions. |
-| `AAC_TARGET_FOOD`          | `{ targetFoodId, targetFoodData, effect }`   | `{ "apple", { "apple" }, null }`                                      | Designates target food. |
-| `SCORE_UPDATE_BROADCAST`   | `{ scores: { [userId]: number } }`           | `{ "User123": 3, "User456": 1 }`                                     | Live score updates. |
-| `REMOVE_FOOD`              | `{ instanceId: string }`                     | `{ "food-12-User123" }`                                               | Removes food from client canvas. |
-| `PLAYER_EFFECT_BROADCAST`  | `{ targetUserId, effect }`                   | `{ "User456", "freeze" }`                                            | Applies power-up or penalty effect. |
-| `COLOR_UPDATE`             | `{ takenColors: string[] }`                  | `{ ["blue", "red"] }`                                                 | Sends all chosen player colors. |
-| `TIMER_UPDATE`             | `{ secondsLeft: number }`                    | `{ 45 }`                                                              | Countdown timer for game end. |
-| `GAME_OVER`                | `{}`                                         | `{}`                                                                  | Signals game end state. |
+| Message Type               | Payload Shape                                | Example (explicit keys)                                                                                        | Description                              |
+|----------------------------|----------------------------------------------|----------------------------------------------------------------------------------------------------------------|------------------------------------------|
+| `SESSION_CREATED`          | `{ sessionId: string }`                      | `{ "sessionId": "ABCDE" }`                                                                                     | A new session was created.               |
+| `SESSION_VALIDATED`        | `{ sessionId: string, isValid: boolean }`    | `{ "sessionId": "ABCDE", "isValid": true }`                                                                    | Result of a validation request.          |
+| `PLAYER_JOINED_BROADCAST`  | `{ userId, role, color }`                    | `{ "userId": "User123", "role": "Hippo Player", "color": "blue" }`                                             | Sent when a new player joins.            |
+| `USERS_LIST_UPDATE`        | `{ users: [{ userId, role, color }] }`       | `{ "users": [{ "userId": "User123", "role": "Hippo Player", "color": "blue" }, { "userId": "User456", "role": "AAC User", "color": "null" }] }` | Updated player list. |
+| `FOOD_STATE_UPDATE`        | `{ foods: [...] }`                           | `{ "foods": [{ "instanceId": "food-12-User123", "type": "apple", "x": 100, "y": 200 }] }`                      | Broadcasts food positions.               |
+| `AAC_TARGET_FOOD`          | `{ targetFoodId, targetFoodData, effect }`   | `{ "targetFoodId": "apple", "targetFoodData": { "type": "apple" }, "effect": null }`                           | Designates target food.                  |
+| `SCORE_UPDATE_BROADCAST`   | `{ scores: { [userId]: number } }`           | `{ "scores": { "User123": 3, "User456": 1 } }`                                                                 | Live score updates.                      |
+| `REMOVE_FOOD`              | `{ instanceId: string }`                     | `{ "instanceId": "food-12-User123" }`                                                                          | Removes food from client canvas.         |
+| `PLAYER_EFFECT_BROADCAST`  | `{ targetUserId, effect }`                   | `{ "targetUserId": "User456", "effect": "freeze" }`                                                            | Applies power-up or penalty effect.      |
+| `COLOR_UPDATE`             | `{ takenColors: string[] }`                  | `{ "takenColors": ["blue", "red"] }`                                                                           | Sends all chosen player colors.          |
+| `TIMER_UPDATE`             | `{ secondsLeft: number }`                    | `{ "secondsLeft": 45 }`                                                                                        | Countdown timer for game end.            |
+| `GAME_OVER`                | `{}`                                         | `{}`                                                                                                           | Signals game end state.                  |
+
 
 ---
 
