@@ -169,9 +169,9 @@ sequenceDiagram
     WebSocket_Server->>WebSocket_Server: Update targetFoodId and effect
     WebSocket_Server->>WebSocket_Server: Unshift food into queue
 
-    WebSocket_Server-->>Phaser_Scene: Broadcast AAC_TARGET_FOOD
-    WebSocket_Server-->>AAC_Interface: Confirm selection to AAC user
-    WebSocket_Server-->>Spectator_UI: Broadcast AAC_TARGET_FOOD
+    WebSocket_Server-->>WebSocket_Client: AAC_TARGET_FOOD
+    WebSocket_Client-->>Phaser_Scene: Emit setTargetFood
+    WebSocket_Client-->>Spectator_UI: Emit setTargetFood
 
 ```
 
@@ -196,7 +196,6 @@ sequenceDiagram
     participant Phaser_Scene as Game Scene
     participant WebSocket_Client as WebSocket Context
     participant WebSocket_Server as WebSocket Server
-    participant AAC_Interface as AAC Interface
     participant Spectator_UI as Spectator View
 
     Hippo_Player->>Phaser_Scene: Move hippo toward food
@@ -211,15 +210,15 @@ sequenceDiagram
     end
 
     WebSocket_Client->>WebSocket_Server: Forward score update and food removal
-
     WebSocket_Server->>WebSocket_Server: Update scores
 
-    WebSocket_Server-->>Hippo_Player: SCORE_UPDATE_BROADCAST
-    WebSocket_Server-->>AAC_Interface: SCORE_UPDATE_BROADCAST
-    WebSocket_Server-->>Spectator_UI: SCORE_UPDATE_BROADCAST
+    WebSocket_Server-->>WebSocket_Client: SCORE_UPDATE_BROADCAST
+    WebSocket_Client-->>Phaser_Scene: Emit scoreUpdate
+    WebSocket_Client-->>Spectator_UI: Emit scoreUpdate
 
-    WebSocket_Server-->>Hippo_Player: REMOVE_FOOD
-    WebSocket_Server-->>Spectator_UI: REMOVE_FOOD
+    WebSocket_Server-->>WebSocket_Client: REMOVE_FOOD
+    WebSocket_Client-->>Phaser_Scene: Emit removeFruit
+    WebSocket_Client-->>Spectator_UI: Emit removeFruit
 
 ```
 
