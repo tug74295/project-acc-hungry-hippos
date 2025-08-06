@@ -447,29 +447,81 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
     EventBus.emit('edges-ready', this.edgeAssignments); 
     
     
-        // // Delay animation for swipe hand
-        // this.time.delayedCall(100, () => {
-        //   // Play animation only for the hippo users, not on spectator
-        //   if (this.role === 'Hippo Player') {
-        //     this.swipeHint = this.add.image(this.scale.width / 2, this.scale.height * 0.7, 'swipeHand')
-        //       .setOrigin(0.5)
-        //       .setDepth(1000)
-        //       .setScale(0.6);
-    
-        //     // Add swipe hint animation
-        //     this.tweens.add({
-        //       targets: this.swipeHint,
-        //       x: {
-        //         from: this.scale.width / 2 - 60,
-        //         to: this.scale.width / 2 + 60
-        //       },
-        //       duration: 800,
-        //       ease: 'Sine.easeInOut',
-        //       yoyo: true,
-        //       repeat: -1
-        //     });
-        //   }
-        // });
+    // Delay animation for swipe hand
+    this.time.delayedCall(100, () => {
+      if (this.role === 'Hippo Player') {
+        // Play animation only for the hippo users, not on spectator
+        const edge = this.edgeAssignments[this.localPlayerId] as Edge;
+
+        let hintX = this.scale.width / 2;
+        let hintY = this.scale.height - 100;
+        let tweenProps: Partial<Phaser.Types.Tweens.TweenBuilderConfig> = {};
+        let handAngle = 0; 
+
+        // Determine hand position and angle based on edge
+        switch (edge) {
+          case 'top':
+            hintY = 140;
+            handAngle = 180; // Upside down
+            tweenProps = {
+              x: {
+                from: hintX - 60,
+                to: hintX + 60
+              }
+            };
+            break;
+          case 'left':
+            hintX = 140;
+            hintY = this.scale.height / 2;
+            handAngle = -270; // Pointing right
+            tweenProps = {
+              y: {
+                from: hintY - 60,
+                to: hintY + 60
+              }
+            };
+            break;
+          case 'right':
+            hintX = this.scale.width - 140;
+            hintY = this.scale.height / 2;
+            handAngle = 270; // Pointing left
+            tweenProps = {
+              y: {
+                from: hintY - 60,
+                to: hintY + 60
+              }
+            };
+            break;
+          case 'bottom':
+          default:
+            hintY = this.scale.height - 140;
+            handAngle = 0; // No rotation
+            tweenProps = {
+              x: {
+                from: hintX - 60,
+                to: hintX + 60
+              }
+            };
+            break;
+        }
+
+        this.swipeHint = this.add.image(hintX, hintY, 'swipeHand')
+          .setOrigin(0.5)
+          .setDepth(1000)
+          .setScale(0.6)
+          .setAngle(handAngle)
+          .setScrollFactor(0); // Important: stays on screen even if camera moves
+
+        this.tweens.add({
+          targets: this.swipeHint,
+          ...tweenProps,
+          duration: 800,
+          ease: 'Sine.easeInOut',
+          yoyo: true,
+          repeat: -1
+        });
+      }
+    });
 
   }
 
