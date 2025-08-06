@@ -324,6 +324,7 @@ function RoleSelect() {
           ✖
         </button>
 
+        {/* Waiting Screen */}
         {waiting ? (
           <div className={styles.waitingContainer}>
             {role === 'Hippo Player' && (
@@ -346,6 +347,8 @@ function RoleSelect() {
                 alt="Loading..."
                 className={styles.loadingSpinner}
               />
+              <h2 className={styles.waitingText}>Waiting . . .</h2>
+
             </div>
           </div>
 
