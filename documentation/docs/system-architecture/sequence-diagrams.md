@@ -155,24 +155,23 @@ title: Sequence Diagram 4 – Control Food Queue
 ---
 
 sequenceDiagram
-    participant AAC_User as AAC User
-    participant AAC_Interface as AAC Interface (React)
+    actor AAC_User as AAC User
+    participant AAC_Interface as AAC Interface
     participant WebSocket_Client as WebSocket Context
-    participant Game_Server as WebSocket Server
-    participant Phaser_Scene as Phaser Game Scene
-    participant Hippo_Player as Hippo Player (Phaser)
+    participant WebSocket_Server as WebSocket Server
+    participant Phaser_Scene as Game Scene
+    participant Spectator_UI as Spectator View
 
     AAC_User->>AAC_Interface: Select food and (optionally) effect
-    AAC_Interface->>WebSocket_Client: sendMessage({ type: 'AAC_FOOD_SELECTED', payload })
-    WebSocket_Client->>Game_Server: WebSocket → AAC_FOOD_SELECTED
+    AAC_Interface->>WebSocket_Client: sendMessage('AAC_FOOD_SELECTED', payload)
+    WebSocket_Client->>WebSocket_Server: WebSocket → AAC_FOOD_SELECTED
 
-    Game_Server->>Game_Server: Update currentTargetFoodId and effect
-    Game_Server->>Game_Server: Unshift food into food queue
+    WebSocket_Server->>WebSocket_Server: Update targetFoodId and effect
+    WebSocket_Server->>WebSocket_Server: Unshift food into queue
 
-    Game_Server-->>All: Broadcast AAC_TARGET_FOOD (targetFoodId, foodData, effect)
-
-    AAC_Interface-->>AAC_User: Show "You selected: [Food]"
-    Hippo_Player-->>Phaser_Scene: Display new target food in sidebar
+    WebSocket_Server-->>Phaser_Scene: Broadcast AAC_TARGET_FOOD
+    WebSocket_Server-->>AAC_Interface: Confirm selection to AAC user
+    WebSocket_Server-->>Spectator_UI: Broadcast AAC_TARGET_FOOD
 
 ```
 
@@ -193,29 +192,34 @@ title: Sequence Diagram 5 – Eats Food
 ---
 
 sequenceDiagram
-    participant Hippo_Player as Hippo Player (Phaser)
+    actor Hippo_Player as Hippo Player
     participant Phaser_Scene as Game Scene
-    participant Game_Server as WebSocket Server
     participant WebSocket_Client as WebSocket Context
-    participant AAC_User as AAC User
+    participant WebSocket_Server as WebSocket Server
+    participant AAC_Interface as AAC Interface
+    participant Spectator_UI as Spectator View
 
     Hippo_Player->>Phaser_Scene: Move hippo toward food
     Phaser_Scene->>Phaser_Scene: Detect collision with food
 
     alt Collision with correct food
         Phaser_Scene->>Phaser_Scene: Apply effect (e.g. freeze, grow)
-        Phaser_Scene->>Game_Server: sendMessage(FRUIT_EATEN_BY_PLAYER)
-        Phaser_Scene->>Game_Server: sendMessage(FRUIT_EATEN with instanceId)
+        Phaser_Scene->>WebSocket_Client: sendMessage('FRUIT_EATEN_BY_PLAYER')
+        Phaser_Scene->>WebSocket_Client: sendMessage('FRUIT_EATEN', instanceId)
     else Collision with incorrect food
-        Phaser_Scene->>Game_Server: sendMessage(FRUIT_EATEN_BY_PLAYER)
+        Phaser_Scene->>WebSocket_Client: sendMessage('FRUIT_EATEN_BY_PLAYER')
     end
 
-    Game_Server->>Game_Server: Update scores
-    Game_Server-->>All Clients: Broadcast SCORE_UPDATE_BROADCAST
-    Game_Server-->>All Clients: Broadcast REMOVE_FOOD
-    Game_Server-->>Phaser_Scene: Emit scoreUpdate, removeFruit
+    WebSocket_Client->>WebSocket_Server: Forward score update and food removal
 
-    Phaser_Scene-->>Hippo_Player: Update score, remove eaten food
+    WebSocket_Server->>WebSocket_Server: Update scores
+
+    WebSocket_Server-->>Hippo_Player: SCORE_UPDATE_BROADCAST
+    WebSocket_Server-->>AAC_Interface: SCORE_UPDATE_BROADCAST
+    WebSocket_Server-->>Spectator_UI: SCORE_UPDATE_BROADCAST
+
+    WebSocket_Server-->>Hippo_Player: REMOVE_FOOD
+    WebSocket_Server-->>Spectator_UI: REMOVE_FOOD
 
 ```
 
