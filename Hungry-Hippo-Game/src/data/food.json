@@ -2,165 +2,165 @@
     "categories": [ 
         {
             "categoryName": "Fruits",
-            "categoryIcon": "/assets/categories/fruits.png",
+            "categoryIcon": "/assets/categories/fruits.webp",
             "categoryAudioPath": "/audio/fruits/fruits.mp3",
             "foods": [
                 {
                     "id": "apple",
                     "name": "Apple",
-                    "imagePath": "/assets/fruits/apple.png",
+                    "imagePath": "/assets/fruits/apple.webp",
                     "audioPath": "/audio/fruits/apple.mp3"
                 },
                 {
                     "id": "banana",
                     "name": "Banana",
-                    "imagePath": "/assets/fruits/banana.png",
+                    "imagePath": "/assets/fruits/banana.webp",
                     "audioPath": "/audio/fruits/banana.mp3"
                 },
                 {
                     "id": "cherry",
                     "name": "Cherry",
-                    "imagePath": "/assets/fruits/cherry.png",
+                    "imagePath": "/assets/fruits/cherry.webp",
                     "audioPath": "/audio/fruits/cherry.mp3"
                 },
                 {
                     "id": "grape",
                     "name": "Grape",
-                    "imagePath": "/assets/fruits/grape.png",
+                    "imagePath": "/assets/fruits/grape.webp",
                     "audioPath": "/audio/fruits/grape.mp3"
                 },
                 {
                     "id": "peach",
                     "name": "Peach",
-                    "imagePath": "/assets/fruits/peach.png",
+                    "imagePath": "/assets/fruits/peach.webp",
                     "audioPath": "/audio/fruits/peach.mp3"
                 },
                 {
                     "id": "pear",
                     "name": "Pear",
-                    "imagePath": "/assets/fruits/pear.png",
+                    "imagePath": "/assets/fruits/pear.webp",
                     "audioPath": "/audio/fruits/pear.mp3"
                 },
                 {
                     "id": "pineapple",
                     "name": "Pineapple",
-                    "imagePath": "/assets/fruits/pineapple.png",
+                    "imagePath": "/assets/fruits/pineapple.webp",
                     "audioPath": "/audio/fruits/pineapple.mp3"
                 },
                 {
                     "id": "strawberry",
                     "name": "Strawberry",
-                    "imagePath": "/assets/fruits/strawberry.png",
+                    "imagePath": "/assets/fruits/strawberry.webp",
                     "audioPath": "/audio/fruits/strawberry.mp3"
                 }
             ]
         },
         {
             "categoryName": "Vegetables",
-            "categoryIcon": "/assets/categories/vegetables.png",
+            "categoryIcon": "/assets/categories/vegetables.webp",
             "categoryAudioPath": "/audio/vegetables/vegetables.mp3",
             "foods": [
                 {
                     "id": "avocado",
                     "name": "Avocado",
-                    "imagePath": "/assets/vegetables/avocado.png",
+                    "imagePath": "/assets/vegetables/avocado.webp",
                     "audioPath": "/audio/vegetables/avocado.mp3"
                 },
                 {
                     "id": "broccoli",
                     "name": "Broccoli",
-                    "imagePath": "/assets/vegetables/broccoli.png",
+                    "imagePath": "/assets/vegetables/broccoli.webp",
                     "audioPath": "/audio/vegetables/broccoli.mp3"
                 },
                 {
                     "id": "carrot",
                     "name": "Carrot",
-                    "imagePath": "/assets/vegetables/carrot.png",
+                    "imagePath": "/assets/vegetables/carrot.webp",
                     "audioPath": "/audio/vegetables/carrot.mp3"
                 },
                 {
                     "id": "eggplant",
                     "name": "Eggplant",
-                    "imagePath": "/assets/vegetables/eggplant.png",
+                    "imagePath": "/assets/vegetables/eggplant.webp",
                     "audioPath": "/audio/vegetables/eggplant.mp3"
                 },
                 {
                     "id": "leek",
                     "name": "Leek",
-                    "imagePath": "/assets/vegetables/leek.png",
+                    "imagePath": "/assets/vegetables/leek.webp",
                     "audioPath": "/audio/vegetables/leek.mp3"
                 },
                 {
                     "id": "lettuce",
                     "name": "Lettuce",
-                    "imagePath": "/assets/vegetables/lettuce.png",
+                    "imagePath": "/assets/vegetables/lettuce.webp",
                     "audioPath": "/audio/vegetables/lettuce.mp3"
                 },
                 {
                     "id": "mushroom",
                     "name": "Mushroom",
-                    "imagePath": "/assets/vegetables/mushroom.png",
+                    "imagePath": "/assets/vegetables/mushroom.webp",
                     "audioPath": "/audio/vegetables/mushroom.mp3"
                 },
                 {
                     "id": "onion",
                     "name": "Onion",
-                    "imagePath": "/assets/vegetables/onion.png",
+                    "imagePath": "/assets/vegetables/onion.webp",
                     "audioPath": "/audio/vegetables/onion.mp3"
                 }
             ]
         },
         {
             "categoryName": "Fast Foods",
-            "categoryIcon": "/assets/categories/fastfoods.png",
+            "categoryIcon": "/assets/categories/fastfoods.webp",
             "categoryAudioPath": "/audio/fast-foods/fast_foods.mp3",
             "foods": [
                 {
                     "id": "bacon",
                     "name": "Bacon",
-                    "imagePath": "/assets/fast-foods/bacon.png",
+                    "imagePath": "/assets/fast-foods/bacon.webp",
                     "audioPath": "/audio/fast-foods/bacon.mp3"
                 },
                 {
                     "id": "burger",
                     "name": "Burger",
-                    "imagePath": "/assets/fast-foods/burger.png",
+                    "imagePath": "/assets/fast-foods/burger.webp",
                     "audioPath": "/audio/fast-foods/burger.mp3"
                 },
                 {
                     "id": "corn-dog",
                     "name": "Corn Dog",
-                    "imagePath": "/assets/fast-foods/corn-dog.png",
+                    "imagePath": "/assets/fast-foods/corn-dog.webp",
                     "audioPath": "/audio/fast-foods/corn-dog.mp3"
                 },
                 {
                     "id": "donut",
                     "name": "Donut",
-                    "imagePath": "/assets/fast-foods/donut.png",
+                    "imagePath": "/assets/fast-foods/donut.webp",
                     "audioPath": "/audio/fast-foods/donut.mp3"
                 },
                 {
                     "id": "fries",
                     "name": "Fries",
-                    "imagePath": "/assets/fast-foods/fries.png",
+                    "imagePath": "/assets/fast-foods/fries.webp",
                     "audioPath": "/audio/fast-foods/fries.mp3"
                 },
                 {
                     "id": "hotdog",
                     "name": "Hot Dog",
-                    "imagePath": "/assets/fast-foods/hot-dog.png",
+                    "imagePath": "/assets/fast-foods/hot-dog.webp",
                     "audioPath": "/audio/fast-foods/hot-dog.mp3"
                 },
                 {
                     "id": "pizza",
                     "name": "Pizza",
-                    "imagePath": "/assets/fast-foods/pizza.png",
+                    "imagePath": "/assets/fast-foods/pizza.webp",
                     "audioPath": "/audio/fast-foods/pizza.mp3"
                 },
                 {
                     "id": "sandwich",
                     "name": "Sandwich",
-                    "imagePath": "/assets/fast-foods/sandwich.png",
+                    "imagePath": "/assets/fast-foods/sandwich.webp",
                     "audioPath": "/audio/fast-foods/sandwich.mp3"
                 }
             ]

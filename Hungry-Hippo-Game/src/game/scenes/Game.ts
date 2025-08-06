@@ -110,7 +110,7 @@ export class Game extends Scene {
 
   preload() {
     console.log('[Game] Preload called');
-    this.load.image('background', '/assets/presenterBg.png');
+    this.load.image('background', '/assets/presenterBg.webp');
     this.load.image('swipeHand', '/assets/swipeHand.png');
     this.load.image('tree', '/assets/tree.webp');
 

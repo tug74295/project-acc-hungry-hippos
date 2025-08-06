@@ -5,7 +5,7 @@
   height: 100vh;
   overflow-y: hidden;
   overflow-x: auto;
-  background-image: url('/assets/mainBackground.png');
+  background-image: url('/assets/mainBackground.webp');
   background-size: cover;
   background-repeat: no-repeat;
   padding: 1rem;
