@@ -571,3 +571,40 @@
   width: 40px;
   height: 40px;
 }
+
+.helpGifOverlay {
+  position: fixed; 
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+  background: black;
+  border-radius: 1rem;
+  padding: 0.3rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.overlayGif {
+  max-width: 80vw;
+  max-height: 60vh;
+  border-radius: 1rem;
+}
+
+.helpButton {
+  margin-left: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 1.3rem;
+  background-color: #f44336;
+  color: white;
+  border-radius: 50%;
+  border: black 3px solid;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.helpButton:hover {
+  transform: scale(1.1);
+}

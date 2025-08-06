@@ -325,7 +325,30 @@ function RoleSelect() {
         </button>
 
         {waiting ? (
-          <h2 className={styles.waitingText}>Waiting for game to start...</h2>
+          <div className={styles.waitingContainer}>
+            {role === 'Hippo Player' && (
+              <img
+                src="/assets/mode/easyCompress.gif"
+                alt="How to play Hippo Player"
+                className={styles.instructionGif}
+              />
+            )}
+            {role === 'AAC User' && (
+              <img
+                src="/assets/mode/aacCompress.gif"
+                alt="How to play AAC User"
+                className={styles.instructionGif}
+              />
+            )}
+            <div className={styles.loadingSection}>
+              <img
+                src="/assets/load.gif"
+                alt="Loading..."
+                className={styles.loadingSpinner}
+              />
+            </div>
+          </div>
+
         ) : (
           <>
             {/* Role Selection Header */}

@@ -324,3 +324,19 @@
   border: 3px solid red;
   outline: none;
 }
+
+.loadingSpinner {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  display: block;
+  margin: 20px auto;
+}
+
+.instructionGif {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+}
