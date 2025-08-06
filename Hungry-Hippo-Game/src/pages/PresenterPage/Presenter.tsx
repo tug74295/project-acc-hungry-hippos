@@ -41,7 +41,7 @@ import { HIPPO_COLORS } from '../../config/hippoColors';
  */
 
 
-const presenterBg = '/assets/presenterBg.png';
+const presenterBg = '/assets/presenterBg.webp';
 
 /**
  * Mapping of game modes to their label, icon path, and number of icons.

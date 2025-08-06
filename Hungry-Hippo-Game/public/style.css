@@ -8,7 +8,7 @@ html, body, #app {
 }
 
 body {
-  background: url('assets/mainBackground.png') center/cover no-repeat fixed;
+  background: url('assets/mainBackground.webp') center/cover no-repeat fixed;
 }
 
 .spritePosition {
