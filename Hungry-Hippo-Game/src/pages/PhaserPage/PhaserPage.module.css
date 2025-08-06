@@ -20,12 +20,22 @@
   overflow: hidden;
 }
 
+.sidebarWrapper {
+  flex: 0 0 auto;
+  padding-right: 1rem; 
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   justify-content: flex-start;
   align-items: center;
+}
+
+.sidebar h3,
+.sidebar p {
+  margin: 0.2rem;
 }
 
 .currentFood, .leaderboardBox, .timerBox, .spectatorBanner {
