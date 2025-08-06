@@ -736,6 +736,7 @@ Renders the button with styles and binds the click event.
 | `aacCount`       | `number`                      | Number of connected AAC Users in the session.                                          |
 | `hippoPlayers`   | `Array<any>`                   | List of connected Hippo Players in the session.                                        |
 | `lobbyHippoSlots`| `Array<number>`                | Indices representing the 4 hippo slots displayed in the lobby UI.                      |
+| `showHelpGif`     | `boolean`                                                            | State that determines whether the instructional mode GIF overlay is visible or hidden.   |
 
 ---
 

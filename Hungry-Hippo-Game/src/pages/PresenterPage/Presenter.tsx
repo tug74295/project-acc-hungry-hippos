@@ -54,6 +54,19 @@ const modeDetails = {
 };
 
 function Presenter() {
+  /**
+   * State to control the visibility of the "How to Play" help GIF overlay.
+   *
+   * @type {boolean}
+   * @default false
+   * 
+   * @description
+   * - `true`: The help GIF overlay is visible on screen.
+   * - `false`: The overlay is hidden.
+   *
+   * Used to toggle the instructional animation when a user clicks the "?" icon next to the game mode selector.
+   */
+  const [showHelpGif, setShowHelpGif] = useState(false);
   const navigate = useNavigate();
     /**
    * Session ID extracted from the route.
@@ -367,7 +380,39 @@ function Presenter() {
               >
                 ▶
               </button>
+
+              {/* Question mark help button */}
+              <button
+                className={styles.helpButton}
+                onClick={() => setShowHelpGif(true)}
+                aria-label="Show help"
+              >
+                ?
+              </button>
             </div>
+
+            {showHelpGif && (
+              <div className={styles.helpGifOverlay}>
+                <img
+                  src={
+                    mode === 'Easy'
+                      ? '/assets/mode/easyCompress.gif'
+                      : mode === 'Medium'
+                      ? '/assets/mode/medCompress.gif'
+                      : '/assets/mode/hardCompress.gif'
+                  }
+                  alt={`How to play: ${mode}`}
+                  className={styles.overlayGif}
+                />
+                <button
+                  className={styles.closeButton}
+                  onClick={() => setShowHelpGif(false)}
+                  aria-label="Close help overlay"
+                >
+                  ✖
+                </button>
+              </div>
+            )}
 
             {/* Start Game Button */}
             <div className={styles.startButtonWrapper}>
