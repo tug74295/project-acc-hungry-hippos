@@ -112,7 +112,7 @@ export class Game extends Scene {
     console.log('[Game] Preload called');
     this.load.image('background', '/assets/presenterBg.png');
     this.load.image('swipeHand', '/assets/swipeHand.png');
-    this.load.image('tree', '/assets/tree.png');
+    this.load.image('tree', '/assets/tree.webp');
 
     AAC_DATA.categories.forEach(category => {
       category.foods.forEach(food => {
@@ -348,7 +348,7 @@ private getEdgeCursors(edge: Edge, cursors: Phaser.Types.Input.Keyboard.CursorKe
 
     const tree = this.add.image(512, 512, 'tree');
     tree.setOrigin(0.5, 0.5);
-    tree.setScale(0.20);
+    tree.setScale(0.35);
     tree.setDepth(3);
 
 
